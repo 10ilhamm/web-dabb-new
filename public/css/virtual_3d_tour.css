@@ -1,0 +1,245 @@
+/* Virtual 3D Rooms - Guest View CSS */
+
+.vt-hero {
+    background: linear-gradient(135deg, #0f2a5c 0%, #174E93 60%, #1a6bbf 100%);
+    padding: 4rem 0 3rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.vt-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.vt-hero .container { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.vt-hero h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+.vt-hero p { font-size: 1rem; opacity: 0.8; margin: 0; }
+
+
+.vt-rooms-section { padding: 4rem 1rem; background: #f9fafb; min-height: 400px; }
+.vt-section-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center; color: #1f2937; }
+.vt-section-sub { text-align: center; color: #6b7280; margin-bottom: 3rem; }
+
+.vt-rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.vt-room-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+}
+.vt-room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.vt-room-thumb {
+    position: relative;
+    height: 190px;
+    background: #f3f4f6;
+    overflow: hidden;
+}
+.vt-room-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.vt-room-card:hover .vt-room-thumb img {
+    transform: scale(1.05);
+}
+
+.vt-room-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.vt-enter-btn {
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 58, 138, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.vt-room-card:hover .vt-enter-btn { opacity: 1; }
+.vt-enter-btn span {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid white;
+    border-radius: 9999px;
+}
+
+.vt-room-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    backdrop-filter: blur(4px);
+}
+
+.vt-room-info { padding: 1.5rem; }
+.vt-room-name { font-size: 1.15rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem; }
+.vt-room-desc { font-size: 0.875rem; color: #6b7280; line-height: 1.5; margin-bottom: 1rem; }
+.vt-room-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+
+
+/* -------------------------------------
+ * 3D VIEWER CSS
+ * ------------------------------------- */
+
+#room3d-viewer { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
+#vt3d-topbar {
+    position: absolute; top:0; left:0; width:100%; height:64px;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);
+    z-index: 100;
+}
+#vt3d-room-title { font-weight: 600; font-size: 1.1rem; }
+.vt3d-view-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: white; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+.vt3d-view-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+#vt3d-close-btn {
+    background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+}
+#vt3d-close-btn:hover { background: rgba(239, 68, 68, 0.2); color: white; border-color: rgba(239, 68, 68, 0.5); }
+
+#vt3d-scene-wrapper {
+    width: 100%; height: 100vh;
+    perspective: 600px;
+    overflow: hidden;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, #2a2a2a 0%, #111 100%);
+}
+#vt3d-scene {
+    width: 1000px; height: 600px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translateZ(600px); /* Perspective depth back */
+}
+
+.vt3d-wall, .vt3d-surface {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.6); /* Room ambient occlusion */
+    background-size: cover;
+    background-position: center;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    pointer-events: none; /* Prevent invisible walls from blocking clicks when zoomed out */
+}
+.vt3d-wall {
+    width: 1000px; height: 600px;
+}
+#vt3d-wall-front { transform: translate(-50%, -50%) translateZ(-500px); }
+#vt3d-wall-back { transform: translate(-50%, -50%) translateZ(500px) rotateY(180deg); }
+#vt3d-wall-left { transform: translate(-50%, -50%) translateX(-500px) rotateY(90deg); }
+#vt3d-wall-right { transform: translate(-50%, -50%) translateX(500px) rotateY(-90deg); }
+
+.vt3d-surface {
+    width: 1000px; height: 1000px;
+}
+#vt3d-floor { transform: translate(-50%, -50%) translateY(300px) rotateX(90deg); }
+#vt3d-ceiling { transform: translate(-50%, -50%) translateY(-300px) rotateX(-90deg); }
+
+.vt3d-media-layer {
+    position: absolute; inset: 0;
+    pointer-events: none;
+}
+.vt3d-media-item video, .vt3d-media-item img {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    background: black;
+    border-radius: 4px;
+    pointer-events: auto;
+    backface-visibility: hidden;
+}
+
+.vt3d-door-slot {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) translateZ(2px);
+    width: 160px; height: 350px;
+    border: 6px solid #475569; border-bottom: none;
+    background: #000;
+    z-index: 50;
+    pointer-events: auto;
+    transform-style: preserve-3d;
+}
+.vt3d-door-portal {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 1; 
+    z-index: 1; /* Renders BELOW the door frame */
+}
+.vt3d-door-slot:hover .vt3d-door-frame { background: #334155; }
+.vt3d-door-frame { 
+    width:100%; height:100%; position:absolute; inset: 0;
+    background: #1e293b; transition: background 0.2s, transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    z-index: 2; /* Ensure it renders ON TOP of the IMG portal */
+}
+.vt3d-door-open .vt3d-door-frame {
+    transform: rotateY(-80deg);
+}
+.vt3d-door-knob {
+    position: absolute; right: 15px; top: 180px;
+    width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1;
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,0.3);
+}
+.vt3d-door-label {
+    position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); color: white; padding: 6px 12px;
+    font-size: 0.85rem; font-weight: 500; border-radius: 6px; white-space: nowrap; pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+#vt3d-hint {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    color: white; padding: 10px 20px; border-radius: 30px;
+    font-size: 0.85rem; pointer-events: none; opacity: 0.9;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}

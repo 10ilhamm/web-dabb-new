@@ -1,0 +1,72 @@
+/* ===== Sidebar CSS - App ===== */
+
+/* Base body style for dashboard */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F8F9FB;
+}
+
+/* Alpine.js cloak */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ===== Sidebar Container ===== */
+.sidebar {
+    background-color: #174E93;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 0;
+}
+
+/* ===== Sidebar Navigation Links ===== */
+.sidebar-link {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* CMS chevron smooth rotation */
+.cms-chevron {
+    transition: transform 0.2s ease;
+}
+
+.sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-link:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ===== CMS Dropdown Menu ===== */
+.cms-dropdown {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.cms-dropdown a {
+    transition: all 0.15s ease;
+}
+
+.cms-dropdown a:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.cms-dropdown a.active-item {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ===== No Scrollbar Utility ===== */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

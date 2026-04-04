@@ -1,0 +1,169 @@
+/* ============================================
+   CMS Virtual 3D Room Management Styles
+   ============================================ */
+
+/* Wall 2D Editor Map */
+.wall-editor-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.wall-panel {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+    aspect-ratio: 16/9;
+    cursor: crosshair;
+}
+
+.wall-panel-title {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255,255,255,0.92);
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    color: #334155;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Draggable media item on wall */
+.media-item {
+    position: absolute;
+    border: 2px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    cursor: move;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.15s, background-color 0.15s;
+    z-index: 5;
+}
+
+.media-item:hover,
+.media-item.active {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    z-index: 20;
+}
+
+.media-item img,
+.media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.media-item-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #3b82f6;
+    border: 2px solid white;
+    bottom: -6px;
+    right: -6px;
+    cursor: se-resize;
+    border-radius: 50%;
+    z-index: 25;
+}
+
+.media-item.active .resize-handle {
+    background: #ef4444;
+}
+
+/* Door visual on back wall */
+.door-rendered {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15%;
+    height: 55%;
+    border: 2px solid #475569;
+    background: rgba(148, 163, 184, 0.3);
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 5;
+    font-size: 11px;
+    border-radius: 4px 4px 0 0;
+}
+
+/* Tab Buttons (wall toggle) */
+.wall-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.wall-tab-btn:hover {
+    border-color: #94a3b8;
+    color: #334155;
+}
+
+.wall-tab-btn.active {
+    background: #1e40af;
+    color: #fff;
+    border-color: #1e40af;
+}
+
+/* Upload Status Toast */
+.upload-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #065f46;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: toastIn 0.3s ease forwards;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

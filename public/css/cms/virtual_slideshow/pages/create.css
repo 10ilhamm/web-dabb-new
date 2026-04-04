@@ -1,0 +1,219 @@
+        .slide-type-card {
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .slide-type-card:hover {
+            border-color: #174E93;
+            background: #f0f5ff;
+        }
+
+        .slide-type-card.active {
+            border-color: #174E93;
+            background: #eef3ff;
+        }
+
+        .slide-type-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-type-card .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slide-type-card .desc {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .section-panel {
+            display: none;
+        }
+
+        .section-panel.active {
+            display: block;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus {
+            border-color: #174E93;
+            box-shadow: 0 0 0 3px rgba(23, 78, 147, 0.1);
+        }
+
+        .info-popup-row {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .caption-widget-mode {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .caption-widget-mode select {
+            padding: 4px 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: #fff;
+        }
+
+        .caption-qa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .caption-qa-pair {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .caption-qa-pair input,
+        .caption-qa-pair textarea {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.825rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .caption-qa-pair input:focus,
+        .caption-qa-pair textarea:focus {
+            border-color: #174E93;
+            box-shadow: 0 0 0 2px rgba(23, 78, 147, 0.1);
+        }
+
+        .caption-qa-pair textarea {
+            min-height: 50px;
+            resize: vertical;
+        }
+
+        .caption-qa-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .caption-qa-remove:hover {
+            background: #fecaca;
+        }
+
+        .caption-qa-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            background: #eff6ff;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .caption-qa-add:hover {
+            background: #dbeafe;
+        }
+
+        .img-preview-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .img-preview-wrap img {
+            height: 60px;
+            width: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .img-preview-wrap .remove-img {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #imagePreviewArea {
+            display: none;
+        }
+
+        #newImagePreviewArea {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #carouselVideoPreviewArea {
+            display: none;
+        }
+
+        #urlImagePreviewArea {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #carouselVideoUrlPreviewArea {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }

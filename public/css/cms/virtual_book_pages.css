@@ -1,0 +1,17 @@
+/* Virtual Book Pages CMS - Custom Styles */
+/* Most styles are handled via Tailwind CSS classes in the blade files */
+
+/* Table styles */
+#tableVirtualBookPages {
+    width: 100%;
+}
+
+#tableVirtualBookPages th {
+    background-color: #f9fafb;
+}
+
+#tableVirtualBookPages td {
+    vertical-align: middle;
+}
+
+/* If you need custom styles, add them here */

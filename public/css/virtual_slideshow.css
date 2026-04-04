@@ -1,0 +1,671 @@
+/* ============================================================
+   virtual_slideshow.css — Pameran Arsip Virtual SlideShow
+   SimHive-inspired scroll-animated interactive exhibition page
+   ============================================================ */
+
+/* ---- Root Variables ---- */
+:root {
+    --vsshow-primary: #174E93;
+    --vsshow-primary-light: #2563EB;
+    --vsshow-accent: #F59E0B;
+    --vsshow-dark: #0F172A;
+    --vsshow-text: #1E293B;
+    --vsshow-muted: #64748B;
+    --vsshow-border: #E2E8F0;
+    --vsshow-radius: 16px;
+}
+
+/* ---- Hero Section ---- */
+.vsshow-hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0F172A 0%, #174E93 50%, #2563EB 100%);
+}
+
+.vsshow-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(37,99,235,0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(245,158,11,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.vsshow-hero-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.vsshow-hero-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    animation: vsshow-float linear infinite;
+}
+
+@keyframes vsshow-float {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+    50%  { opacity: 0.3; }
+    100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+}
+
+.vsshow-hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.vsshow-hero-badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.2);
+    border: 1px solid rgba(245,158,11,0.4);
+    color: #FCD34D;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(4px);
+}
+
+.vsshow-hero-title {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    margin: 0 0 1rem;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+
+.vsshow-hero-subtitle {
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    color: rgba(255,255,255,0.75);
+    margin: 0 0 2rem;
+    line-height: 1.6;
+}
+
+.vsshow-hero-scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: vsshow-pulse 2s ease-in-out infinite;
+}
+
+.vsshow-hero-scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+}
+
+@keyframes vsshow-pulse {
+    0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
+    50%       { opacity: 1;   transform: translateX(-50%) translateY(6px); }
+}
+
+/* ---- Breadcrumb ---- */
+.vsshow-breadcrumb {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--vsshow-border);
+    padding: 0.75rem 0;
+    font-size: 0.8rem;
+    color: var(--vsshow-muted);
+}
+
+.vsshow-breadcrumb a { color: var(--vsshow-primary); text-decoration: none; }
+.vsshow-breadcrumb a:hover { text-decoration: underline; }
+.vsshow-breadcrumb .sep { margin: 0 0.5rem; }
+
+/* ---- Section General ---- */
+.vsshow-section {
+    padding: 6rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.vsshow-section + .vsshow-section {
+    border-top: 1px solid var(--vsshow-border);
+}
+
+.vsshow-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* =============================================================
+   UNIFIED ENTER ANIMATION SYSTEM
+   Uses CSS animation (not transition) for reliable playback.
+   Class .vsshow-enter sets initial hidden state.
+   Class .vsshow-visible triggers the animation.
+   data-swipe="left|right" selects direction.
+   data-enter-delay="0-6" staggers multiple elements.
+   ============================================================= */
+
+/* Initial hidden state */
+.vsshow-enter {
+    opacity: 0;
+    transform: translateY(32px);
+}
+
+/* Base animation on visible */
+.vsshow-enter.vsshow-visible {
+    animation-name: vsshow-fade-up;
+    animation-duration: 0.75s;
+    animation-timing-function: cubic-bezier(0.22,1,0.36,1);
+    animation-fill-mode: both;
+}
+
+/* Direction modifiers — swipe left */
+.vsshow-enter[data-swipe="left"].vsshow-visible {
+    animation-name: vsshow-slide-left;
+}
+/* Direction modifiers — swipe right */
+.vsshow-enter[data-swipe="right"].vsshow-visible {
+    animation-name: vsshow-slide-right;
+}
+
+/* Keyframes */
+@keyframes vsshow-fade-up {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vsshow-slide-left {
+    from { opacity: 0; transform: translateX(-80px) translateY(32px); }
+    to   { opacity: 1; transform: translateX(0) translateY(0); }
+}
+@keyframes vsshow-slide-right {
+    from { opacity: 0; transform: translateX(80px) translateY(32px); }
+    to   { opacity: 1; transform: translateX(0) translateY(0); }
+}
+
+/* Stagger delays — applied to .vsshow-visible so animation plays after class is added */
+[data-enter-delay="0"].vsshow-visible { animation-delay: 0ms; }
+[data-enter-delay="1"].vsshow-visible { animation-delay: 140ms; }
+[data-enter-delay="2"].vsshow-visible { animation-delay: 280ms; }
+[data-enter-delay="3"].vsshow-visible { animation-delay: 440ms; }
+[data-enter-delay="4"].vsshow-visible { animation-delay: 620ms; }
+[data-enter-delay="5"].vsshow-visible { animation-delay: 820ms; }
+[data-enter-delay="6"].vsshow-visible { animation-delay: 1020ms; }
+
+/* Hero: slow dramatic push-up (separate class, transition-based) */
+.vsshow-hero-anim {
+    opacity: 0;
+    transform: translateY(80px);
+    transition:
+        opacity 1.2s cubic-bezier(0.16,1,0.3,1),
+        transform 1.2s cubic-bezier(0.16,1,0.3,1);
+    transition-delay: 200ms;
+}
+.vsshow-hero-anim.vsshow-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---- Text Section ---- */
+.vsshow-text-section {
+    text-align: center;
+}
+
+.vsshow-section-tag {
+    display: inline-block;
+    background: rgba(23,78,147,0.08);
+    color: var(--vsshow-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(23,78,147,0.15);
+}
+
+.vsshow-section-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-weight: 800;
+    color: var(--vsshow-text);
+    margin: 0 0 1rem;
+    line-height: 1.2;
+}
+
+.vsshow-section-subtitle {
+    font-size: 1.05rem;
+    color: var(--vsshow-muted);
+    margin: 0 0 1rem;
+}
+
+.vsshow-section-desc {
+    font-size: 0.97rem;
+    color: var(--vsshow-muted);
+    line-height: 1.9;
+    max-width: 680px;
+    margin: 0 auto;
+    white-space: pre-line;
+}
+
+/* ---- Split Layout (text_carousel) ---- */
+.vsshow-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.vsshow-split.vsshow-split-right {
+    direction: rtl;
+}
+
+.vsshow-split.vsshow-split-right > * {
+    direction: ltr;
+}
+
+/* Center layout: stacked (text above, image below) */
+.vsshow-split.vsshow-split-center {
+    grid-template-columns: 1fr;
+    direction: ltr;
+    text-align: center;
+}
+
+.vsshow-split.vsshow-split-center > * {
+    direction: ltr;
+}
+
+.vsshow-split.vsshow-split-center .vsshow-split-text {
+    order: -1;
+}
+
+@media (max-width: 768px) {
+    .vsshow-split {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        direction: ltr !important;
+    }
+}
+
+.vsshow-split-text .vsshow-section-title,
+.vsshow-split-text .vsshow-section-desc {
+    text-align: left;
+    margin-left: 0;
+}
+
+/* ---- Carousel ---- */
+.vsshow-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--vsshow-radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+
+.vsshow-carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+
+.vsshow-carousel-slide {
+    min-width: 100%;
+    position: relative;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+}
+
+.vsshow-carousel-slide .vsshow-video-iframe-wrap {
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
+    position: relative;
+}
+
+.vsshow-carousel-slide img {
+    max-width: 100%;
+    max-height: 420px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.vsshow-carousel-slide video {
+    width: 100%;
+    max-height: 420px;
+    display: block;
+    background: #000;
+}
+
+.vsshow-carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+
+.vsshow-carousel-btn:hover {
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.vsshow-carousel-btn.prev { left: 1rem; }
+.vsshow-carousel-btn.next { right: 1rem; }
+.vsshow-carousel-btn.pause-play {
+    top: auto;
+    bottom: 3.5rem;
+    right: 1rem;
+    left: auto;
+    transform: none;
+    width: 36px;
+    height: 36px;
+}
+.vsshow-carousel-btn.pause-play:hover {
+    transform: scale(1.08);
+}
+.vsshow-carousel-btn.pause-play svg {
+    width: 16px;
+    height: 16px;
+}
+
+.vsshow-carousel-btn svg {
+    width: 18px;
+    height: 18px;
+    color: var(--vsshow-primary);
+}
+
+.vsshow-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 0 0.5rem;
+}
+
+.vsshow-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.vsshow-dot.active {
+    background: var(--vsshow-primary);
+    width: 24px;
+    border-radius: 4px;
+}
+
+/* ---- Info Popup Button ---- */
+.vsshow-info-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 20;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(23,78,147,0.9);
+    border: 2px solid rgba(255,255,255,0.6);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.vsshow-info-btn:hover {
+    background: var(--vsshow-primary);
+    transform: scale(1.1);
+}
+
+/* ---- Info Popup Card ---- */
+.vsshow-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    z-index: 9998;
+    display: none;
+    backdrop-filter: blur(3px);
+}
+
+.vsshow-popup-overlay.active { display: block; }
+
+.vsshow-popup-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    z-index: 9999;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    width: 90%;
+    max-width: 480px;
+    padding: 2rem;
+    display: none;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s;
+    opacity: 0;
+}
+
+.vsshow-popup-card.active {
+    display: block;
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.vsshow-popup-card .vsshow-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.vsshow-popup-card .vsshow-popup-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(23,78,147,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vsshow-primary);
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.vsshow-popup-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: background 0.2s;
+    font-size: 1rem;
+}
+
+.vsshow-popup-close:hover { background: #e2e8f0; color: #1e293b; }
+
+.vsshow-popup-body {
+    font-size: 0.97rem;
+    color: var(--vsshow-text);
+    line-height: 1.75;
+}
+
+.vsshow-popup-img {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    max-height: 200px;
+    object-fit: cover;
+}
+
+/* ---- Video Section ---- */
+.vsshow-video-wrap {
+    position: relative;
+    border-radius: var(--vsshow-radius);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    background: #000;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.vsshow-video-iframe-wrap {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+
+.vsshow-video-iframe-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.vsshow-video-info-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+}
+
+/* ---- Progress Bar ---- */
+.vsshow-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--vsshow-primary), var(--vsshow-accent));
+    z-index: 9997;
+    transition: width 0.1s;
+    border-radius: 0 2px 2px 0;
+}
+
+/* ---- Divider pattern ---- */
+.vsshow-divider {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--vsshow-primary), var(--vsshow-accent));
+    border-radius: 2px;
+    margin: 1rem auto 1.5rem;
+}
+
+.vsshow-split-text .vsshow-divider {
+    margin-left: 0;
+}
+
+/* ---- Q&A Accordion (Multi Caption) ---- */
+.vsshow-qa-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.vsshow-qa-item {
+    border-bottom: 1px solid var(--vsshow-border);
+}
+
+.vsshow-qa-item:last-child {
+    border-bottom: none;
+}
+
+.vsshow-qa-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.85rem 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--vsshow-text);
+    text-align: left;
+    line-height: 1.4;
+    transition: color 0.2s;
+}
+
+.vsshow-qa-question:hover {
+    color: var(--vsshow-primary);
+}
+
+.vsshow-qa-chevron {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+    color: var(--vsshow-muted);
+}
+
+.vsshow-qa-item.open .vsshow-qa-chevron {
+    transform: rotate(180deg);
+}
+
+.vsshow-qa-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    font-size: 0.93rem;
+    color: var(--vsshow-muted);
+    line-height: 1.75;
+    padding: 0 0;
+}
+
+.vsshow-qa-item.open .vsshow-qa-answer {
+    max-height: 600px;
+    padding: 0 0 0.85rem;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+    .vsshow-section { padding: 3.5rem 0; }
+    .vsshow-carousel-slide { min-height: 240px; }
+    .vsshow-carousel-slide img { max-height: 240px; }
+    .vsshow-popup-card { padding: 1.5rem; }
+}

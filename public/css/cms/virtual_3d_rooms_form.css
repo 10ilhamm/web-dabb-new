@@ -1,0 +1,97 @@
+/* ============================================================
+   virtual_3d_rooms_form.css
+   Shared styles for create.blade.php & edit.blade.php
+   ============================================================ */
+
+/* 3D Preview wrapper */
+.room3d-preview-wrap {
+    perspective: 800px;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    background: #1e293b;
+    border-radius: 12px;
+    position: relative;
+}
+
+/* 3D Scene container */
+.room3d-scene {
+    width: 260px;
+    height: 200px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    transform: translate(-50%, -50%) rotateX(-10deg) rotateY(-25deg);
+    transition: transform 0.6s ease;
+}
+
+/* Face base */
+.room3d-face {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    backface-visibility: visible;
+}
+
+/* Individual face transforms — NOTE: front uses +Z so it faces the viewer */
+.room3d-face.front   { width: 260px; height: 200px; transform: translate(-50%, -50%) translateZ(130px); }
+.room3d-face.back    { width: 260px; height: 200px; transform: translate(-50%, -50%) translateZ(-130px) rotateY(180deg); }
+.room3d-face.left    { width: 260px; height: 200px; transform: translate(-50%, -50%) translateX(-130px) rotateY(90deg); }
+.room3d-face.right   { width: 260px; height: 200px; transform: translate(-50%, -50%) translateX(130px) rotateY(-90deg); }
+.room3d-face.floor   { width: 260px; height: 260px; transform: translate(-50%, -50%) translateY(100px) rotateX(90deg); }
+.room3d-face.ceiling { width: 260px; height: 260px; transform: translate(-50%, -50%) translateY(-100px) rotateX(-90deg); }
+
+/* Ceiling text: Y axis is inverted when viewed from top (scene+face each -90deg on X = -180deg total) */
+.room3d-face.ceiling > span { transform: scaleY(-1); }
+
+/* Door on back wall */
+.room3d-door {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 80px;
+    background: rgba(100, 116, 139, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.room3d-door-knob {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    position: absolute;
+    right: 6px;
+    top: 50%;
+}
+
+/* Preview rotation buttons */
+.preview-rot-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.preview-rot-btn:hover  { background: rgba(255, 255, 255, 0.2); }
+.preview-rot-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }

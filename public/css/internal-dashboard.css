@@ -1,0 +1,23 @@
+body { margin: 0; font-family: 'Montserrat', Arial, sans-serif; background: #ececf2; color: #2a2d3e; }
+.app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+.sidebar { background: #08489E; color: #fff; padding: 26px 20px; display: flex; flex-direction: column; }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+.brand img { width: 52px; }
+.brand strong { font-size: 22px; }
+.side-menu a { display: block; color: #fff; text-decoration: none; padding: 12px 10px; border-radius: 8px; margin-bottom: 4px; }
+.side-menu a.active, .side-menu a:hover { background: rgba(255,255,255,.15); }
+.side-bottom { margin-top: auto; }
+.topbar { background: #fff; min-height: 68px; display: flex; align-items: center; justify-content: end; padding: 0 24px; gap: 16px; }
+.content { padding: 24px; }
+.card { background: #fff; border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+.profile { display: flex; align-items: center; gap: 14px; }
+.avatar { width: 64px; height: 64px; border-radius: 50%; background: #d2d8e6; }
+.data-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.field label { font-size: 12px; color: #7f8798; display: block; margin-bottom: 4px; }
+.field div { font-weight: 500; }
+.btn { margin-top: 24px; background: #4C7BFF; color: #fff; border: 0; border-radius: 8px; padding: 10px 22px; }
+@media (max-width: 980px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .data-grid { grid-template-columns: 1fr; }
+}

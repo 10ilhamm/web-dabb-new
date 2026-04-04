@@ -1,0 +1,258 @@
+/* RTE content styles — SCOPED for guest/public pages
+   Loaded via layouts/guest.blade.php
+   Mirrors global CMS RTE styles with !important to resist host page CSS overrides.
+*/
+
+/* ===== Typography ===== */
+.profile-section-desc,
+.vsshow-hero-subtitle,
+.rte-content,
+.rte-editable {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #414141 !important;
+}
+
+.profile-section-desc p,
+.vsshow-hero-subtitle p,
+.rte-content p,
+.rte-editable p,
+.profile-section-desc div,
+.vsshow-hero-subtitle div,
+.rte-content div,
+.rte-editable div {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #414141 !important;
+    text-align: left !important;
+}
+
+.profile-section-desc strong,
+.vsshow-hero-subtitle strong,
+.rte-content strong,
+.rte-editable strong,
+.profile-section-desc b,
+.vsshow-hero-subtitle b,
+.rte-content b,
+.rte-editable b {
+    font-weight: bold !important;
+}
+.profile-section-desc em,
+.vsshow-hero-subtitle em,
+.rte-content em,
+.rte-editable em,
+.profile-section-desc i,
+.vsshow-hero-subtitle i,
+.rte-content i,
+.rte-editable i {
+    font-style: italic !important;
+}
+.profile-section-desc u,
+.vsshow-hero-subtitle u,
+.rte-content u,
+.rte-editable u {
+    text-decoration: underline !important;
+}
+.profile-section-desc s,
+.vsshow-hero-subtitle s,
+.rte-content s,
+.rte-editable s {
+    text-decoration: line-through !important;
+}
+.profile-section-desc code,
+.vsshow-hero-subtitle code,
+.rte-content code,
+.rte-editable code {
+    font-family: Consolas, "Courier New", Courier, monospace !important;
+    background-color: #f5f5f5 !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    font-size: 0.9em !important;
+}
+.profile-section-desc ::selection,
+.vsshow-hero-subtitle ::selection,
+.rte-content ::selection,
+.rte-editable ::selection {
+    background-color: #b5d6fd !important;
+}
+
+/* ===== Inline classes from RTE toolbar ===== */
+.profile-section-desc .my-cls-mark,
+.vsshow-hero-subtitle .my-cls-mark,
+.rte-content .my-cls-mark,
+.rte-editable .my-cls-mark {
+    background-color: yellow !important;
+    font-weight: bold !important;
+}
+.profile-section-desc .my-cls-warning,
+.vsshow-hero-subtitle .my-cls-warning,
+.rte-content .my-cls-warning,
+.rte-editable .my-cls-warning {
+    background-color: orange !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+.profile-section-desc .my-cls-quote,
+.vsshow-hero-subtitle .my-cls-quote,
+.rte-content .my-cls-quote,
+.rte-editable .my-cls-quote {
+    margin: 10px !important;
+    padding-left: 10px !important;
+    border-left: dashed 1px red !important;
+    font-style: italic !important;
+}
+.profile-section-desc .my-cls-largecenter,
+.vsshow-hero-subtitle .my-cls-largecenter,
+.rte-content .my-cls-largecenter,
+.rte-editable .my-cls-largecenter {
+    font-size: 1.5em !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    margin: 10px !important;
+}
+
+/* ===== Tables — mirrors CMS global styles ===== */
+.profile-section-desc table,
+.vsshow-hero-subtitle table,
+.rte-content table,
+.rte-editable table {
+    border-spacing: 0 !important;
+    border-collapse: collapse !important;
+}
+
+.profile-section-desc table:not([width]),
+.vsshow-hero-subtitle table:not([width]),
+.rte-content table:not([width]),
+.rte-editable table:not([width]) {
+    width: 100% !important;
+}
+
+.profile-section-desc table td,
+.vsshow-hero-subtitle table td,
+.rte-content table td,
+.rte-editable table td,
+.profile-section-desc table th,
+.vsshow-hero-subtitle table th,
+.rte-content table th,
+.rte-editable table th {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+    text-align: left !important;
+    background-color: #ffffff !important;
+}
+
+.profile-section-desc thead,
+.vsshow-hero-subtitle thead,
+.rte-content thead,
+.rte-editable thead {
+    background-color: #eee !important;
+}
+
+/* ===== Blockquote ===== */
+.profile-section-desc blockquote,
+.vsshow-hero-subtitle blockquote,
+.rte-content blockquote,
+.rte-editable blockquote {
+    border-left: 3px solid #ddd !important;
+    padding: 5px 0 5px 10px !important;
+    margin: 15px 0 15px 15px !important;
+}
+
+/* ===== Links ===== */
+.profile-section-desc a,
+.vsshow-hero-subtitle a,
+.rte-content a,
+.rte-editable a {
+    color: #377dff !important;
+    text-decoration: none !important;
+}
+
+/* ===== Headings ===== */
+.profile-section-desc h1,
+.vsshow-hero-subtitle h1,
+.rte-content h1,
+.rte-editable h1 {
+    font-size: 2em !important;
+    font-weight: bold !important;
+    margin: 0.67em 0 !important;
+    text-align: left !important;
+}
+.profile-section-desc h2,
+.vsshow-hero-subtitle h2,
+.rte-content h2,
+.rte-editable h2 {
+    font-size: 1.5em !important;
+    font-weight: bold !important;
+    margin: 0.83em 0 !important;
+    text-align: left !important;
+}
+.profile-section-desc h3,
+.vsshow-hero-subtitle h3,
+.rte-content h3,
+.rte-editable h3 {
+    font-size: 1.17em !important;
+    font-weight: bold !important;
+    margin: 1em 0 !important;
+    text-align: left !important;
+}
+.profile-section-desc h4,
+.vsshow-hero-subtitle h4,
+.rte-content h4,
+.rte-editable h4 {
+    font-size: 1em !important;
+    font-weight: bold !important;
+    margin: 1.33em 0 !important;
+    text-align: left !important;
+}
+.profile-section-desc h5,
+.vsshow-hero-subtitle h5,
+.rte-content h5,
+.rte-editable h5 {
+    font-size: 0.83em !important;
+    font-weight: bold !important;
+    margin: 1.67em 0 !important;
+    text-align: left !important;
+}
+.profile-section-desc h6,
+.vsshow-hero-subtitle h6,
+.rte-content h6,
+.rte-editable h6 {
+    font-size: 0.67em !important;
+    font-weight: bold !important;
+    margin: 2.33em 0 !important;
+    text-align: left !important;
+}
+
+/* ===== Paragraphs ===== */
+.profile-section-desc p,
+.vsshow-hero-subtitle p,
+.rte-content p,
+.rte-editable p {
+    margin-bottom: 1rem !important;
+}
+
+/* ===== Lists ===== */
+.profile-section-desc ul,
+.vsshow-hero-subtitle ul,
+.rte-content ul,
+.rte-editable ul {
+    margin: 1em 0 !important;
+    padding-left: 2em !important;
+    list-style-type: disc !important;
+}
+.profile-section-desc ol,
+.vsshow-hero-subtitle ol,
+.rte-content ol,
+.rte-editable ol {
+    margin: 1em 0 !important;
+    padding-left: 2em !important;
+    list-style-type: decimal !important;
+}
+.profile-section-desc li,
+.vsshow-hero-subtitle li,
+.rte-content li,
+.rte-editable li {
+    margin: 0.25em 0 !important;
+}

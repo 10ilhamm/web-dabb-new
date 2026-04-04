@@ -1,0 +1,20 @@
+# Mengabaikan folder dependency/library (Sangat besar, ini biang kerok error-nya)
+vendor/
+node_modules/
+
+# Mengabaikan folder sistem, cache, dan file upload sementara
+bootstrap/cache/
+storage/
+storage/framework/
+storage/logs/
+
+# Mengabaikan folder hasil kompilasi frontend (Vite/Tailwind)
+public/build/
+public/hot
+
+# Mengabaikan riwayat Git dan file catatan log
+.git/
+*.log
+
+# Mengabaikan file database lokal (jika Anda pakai SQLite)
+database/database.sqlite
