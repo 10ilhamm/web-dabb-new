@@ -154,6 +154,10 @@ class ProfileController extends Controller
             'existing_images' => 'nullable|array',
             'existing_images.*' => 'string',
             'image_positions' => 'nullable|array',
+            'image_widths' => 'nullable|array',
+            'image_heights' => 'nullable|array',
+            'image_offset_x' => 'nullable|array',
+            'image_offset_y' => 'nullable|array',
             'order' => 'required|integer|min:0',
         ]);
 
@@ -163,6 +167,24 @@ class ProfileController extends Controller
             foreach ($request->file('images') as $image) {
                 $imagePaths[] = $image->store('features/profile', 'public');
             }
+        }
+
+        // Combine image positions with dimensions and offsets
+        $imagePositions = [];
+        $positions = $validated['image_positions'] ?? [];
+        $widths = $validated['image_widths'] ?? [];
+        $heights = $validated['image_heights'] ?? [];
+        $offsetsX = $validated['image_offset_x'] ?? [];
+        $offsetsY = $validated['image_offset_y'] ?? [];
+
+        for ($i = 0; $i < count($positions); $i++) {
+            $imagePositions[$i] = [
+                'position' => $positions[$i] ?? '50% 50%',
+                'width' => $widths[$i] ?? 200,
+                'height' => $heights[$i] ?? 150,
+                'offsetX' => $offsetsX[$i] ?? 0,
+                'offsetY' => $offsetsY[$i] ?? 0,
+            ];
         }
 
         $data = [
@@ -182,7 +204,7 @@ class ProfileController extends Controller
             'link_url' => $validated['link_url'] ?? null,
             'chart_data' => $validated['chart_data'] ?? null,
             'images' => $imagePaths ?: null,
-            'image_positions' => $validated['image_positions'] ?? null,
+            'image_positions' => $imagePositions ?: null,
             'order' => $validated['order'],
         ];
 
@@ -217,6 +239,10 @@ class ProfileController extends Controller
             'existing_images' => 'nullable|array',
             'existing_images.*' => 'string',
             'image_positions' => 'nullable|array',
+            'image_widths' => 'nullable|array',
+            'image_heights' => 'nullable|array',
+            'image_offset_x' => 'nullable|array',
+            'image_offset_y' => 'nullable|array',
             'order' => 'required|integer|min:0',
         ]);
 
@@ -234,6 +260,24 @@ class ProfileController extends Controller
             }
         }
 
+        // Combine image positions with dimensions and offsets
+        $imagePositions = [];
+        $positions = $validated['image_positions'] ?? [];
+        $widths = $validated['image_widths'] ?? [];
+        $heights = $validated['image_heights'] ?? [];
+        $offsetsX = $validated['image_offset_x'] ?? [];
+        $offsetsY = $validated['image_offset_y'] ?? [];
+
+        for ($i = 0; $i < count($positions); $i++) {
+            $imagePositions[$i] = [
+                'position' => $positions[$i] ?? '50% 50%',
+                'width' => $widths[$i] ?? 200,
+                'height' => $heights[$i] ?? 150,
+                'offsetX' => $offsetsX[$i] ?? 0,
+                'offsetY' => $offsetsY[$i] ?? 0,
+            ];
+        }
+
         $data = [
             'title' => $validated['title'] ?? '',
             'title_en' => ! empty($validated['title']) ? $this->translationService->translate($validated['title']) : null,
@@ -248,7 +292,7 @@ class ProfileController extends Controller
             'link_url' => $validated['link_url'] ?? null,
             'chart_data' => $validated['chart_data'] ?? null,
             'images' => $imagePaths ?: null,
-            'image_positions' => $validated['image_positions'] ?? null,
+            'image_positions' => $imagePositions ?: null,
         ];
 
         if ($request->hasFile('logo')) {

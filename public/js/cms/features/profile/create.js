@@ -37,6 +37,10 @@
                     ctx.fillStyle = "#FFFFFF";
                     ctx.fillRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Get preview from canvas ASAP (before blob conversion)
+                    const previewDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+                    
                     const quality = file.type === "image/png" ? undefined : 0.9;
                     const ext = file.type === "image/png" ? "png" : "jpg";
                     const newName =
@@ -48,7 +52,7 @@
                                     type: file.type,
                                     lastModified: Date.now(),
                                 }),
-                                preview: e.target.result,
+                                preview: previewDataUrl,
                             });
                         },
                         file.type,
@@ -80,14 +84,40 @@
 
             const dragBox = document.createElement("div");
             dragBox.className =
-                "relative overflow-hidden rounded-lg bg-gray-900 cursor-crosshair";
+                "relative overflow-hidden rounded-lg bg-gray-200 cursor-crosshair";
             dragBox.style.aspectRatio = "4/3";
+            dragBox.style.minHeight = "200px";
+
+            // Add loading indicator
+            const loader = document.createElement("div");
+            loader.className = "absolute inset-0 flex items-center justify-center bg-gray-100";
+            loader.innerHTML = '<div class="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>';
+            dragBox.appendChild(loader);
 
             const imgEl = document.createElement("img");
-            imgEl.src = img.preview;
             imgEl.className =
                 "absolute w-full h-full object-cover transition-transform duration-300";
             imgEl.style.objectPosition = img.x + "% " + img.y + "%";
+            imgEl.style.display = "none"; // Hide until loaded
+            
+            // Track successful load
+            let imageLoaded = false;
+            
+            imgEl.onload = function() {
+                console.log('[IMG LOAD] Successfully loaded:', img.preview.substring(0, 80));
+                imageLoaded = true;
+                imgEl.style.display = "block";
+                loader.style.display = "none";
+            };
+            
+            imgEl.onerror = function() {
+                console.error('[IMG ERROR] Failed to load image');
+                loader.innerHTML = '<div class="text-red-500 text-xs text-center">Failed to load<br>image</div>';
+                imgEl.style.display = "none";
+            };
+            
+            // Set src last to trigger loading
+            imgEl.src = img.preview;
             dragBox.appendChild(imgEl);
 
             const focal = document.createElement("div");
@@ -98,14 +128,14 @@
                 img.x +
                 "%;top:" +
                 img.y +
-                "%;";
+                "%;z-index:10;";
             const dot = document.createElement("div");
             dot.className = "w-1 h-1 bg-white rounded-full";
             focal.appendChild(dot);
             dragBox.appendChild(focal);
 
             dragBox.addEventListener("mousedown", function (e) {
-                if (e.target.closest("button")) return;
+                if (e.target.closest("button") || !imageLoaded) return;
                 e.preventDefault();
                 const update = (ev) => {
                     const rect = dragBox.getBoundingClientRect();
@@ -619,6 +649,7 @@
                     .filter((i) => !i.isExisting)
                     .map((i) => _files[i.id])
                     .filter(Boolean);
+                
                 if (gambarFiles.length) {
                     const dt = new DataTransfer();
                     gambarFiles.forEach((f) => dt.items.add(f));
@@ -631,7 +662,7 @@
                     form.appendChild(fileInput);
                 }
 
-                // Image positions
+                // Image positions as array
                 _gambarStore.forEach((img) => {
                     const posInput = document.createElement("input");
                     posInput.type = "hidden";
@@ -640,10 +671,10 @@
                     form.appendChild(posInput);
                 });
 
-                // Disable file input default
-                form.querySelectorAll('input[type="file"]').forEach(
-                    (i) => (i.disabled = true),
-                );
+                // Only disable the original gambar_files input, NOT the dynamically created images[]
+                form.querySelectorAll(
+                    'input[type="file"][name="gambar_files"]',
+                ).forEach((i) => (i.disabled = true));
 
                 const btn = document.getElementById("submitBtn");
                 if (btn) {

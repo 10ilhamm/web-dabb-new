@@ -37,6 +37,10 @@
                     ctx.fillStyle = "#FFFFFF";
                     ctx.fillRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
+
+                    // Get preview from canvas ASAP (before blob conversion)
+                    const previewDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+
                     const quality = file.type === "image/png" ? undefined : 0.9;
                     const ext = file.type === "image/png" ? "png" : "jpg";
                     const newName =
@@ -48,7 +52,7 @@
                                     type: file.type,
                                     lastModified: Date.now(),
                                 }),
-                                preview: e.target.result,
+                                preview: previewDataUrl,
                             });
                         },
                         file.type,
@@ -68,10 +72,10 @@
 
         if (!_gambarStore.length) return;
 
-        const cols = Math.min(Math.max(_gambarStore.length, 1), 4);
+        // Use fixed 2 columns for smaller thumbnails
         const grid = document.createElement("div");
-        grid.className = "grid gap-3 mb-3";
-        grid.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+        grid.className = "grid gap-2 mb-3";
+        grid.style.gridTemplateColumns = "repeat(2, 1fr)";
 
         _gambarStore.forEach((img) => {
             const wrapper = document.createElement("div");
@@ -80,33 +84,69 @@
 
             const dragBox = document.createElement("div");
             dragBox.className =
-                "relative overflow-hidden rounded-lg bg-gray-900 cursor-crosshair";
-            dragBox.style.aspectRatio = "4/3";
+                "relative overflow-hidden rounded-lg bg-gray-200 cursor-move border-2 border-gray-300 hover:border-blue-400 transition-colors";
+            dragBox.style.aspectRatio = "1/1";
+            dragBox.style.minHeight = "120px";
+            dragBox.data = { isResizing: false, isMoving: false };
+
+            // Add loading indicator
+            const loader = document.createElement("div");
+            loader.className =
+                "absolute inset-0 flex items-center justify-center bg-gray-100";
+            loader.innerHTML =
+                '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>';
+            dragBox.appendChild(loader);
 
             const imgEl = document.createElement("img");
-            imgEl.src = img.preview;
             imgEl.className =
                 "absolute w-full h-full object-cover transition-transform duration-300";
             imgEl.style.objectPosition = img.x + "% " + img.y + "%";
+            imgEl.style.display = "none";
+            imgEl.style.cursor = "grab";
+
+            let imageLoaded = false;
+
+            imgEl.onload = function () {
+                console.log("[IMG] ✓ Loaded:", img.path || img.preview);
+                imageLoaded = true;
+                imgEl.style.display = "block";
+                loader.style.display = "none";
+            };
+
+            imgEl.onerror = function () {
+                console.error(
+                    "[IMG] ✗ Error loading:",
+                    img.path || img.preview,
+                );
+                loader.innerHTML =
+                    '<div class="text-gray-400 text-xs text-center">Image error</div>';
+            };
+
+            imgEl.src = img.preview;
             dragBox.appendChild(imgEl);
 
             const focal = document.createElement("div");
             focal.className =
-                "absolute w-5 h-5 border-2 border-white rounded-full shadow-lg pointer-events-none flex items-center justify-center";
+                "absolute w-4 h-4 border-2 border-white rounded-full shadow-lg pointer-events-none flex items-center justify-center";
             focal.style.cssText =
-                "background-color:rgba(59,130,246,0.6);transform:translate(-50%,-50%);left:" +
+                "background-color:rgba(59,130,246,0.7);transform:translate(-50%,-50%);left:" +
                 img.x +
                 "%;top:" +
                 img.y +
-                "%;";
+                "%;z-index:10;";
             const dot = document.createElement("div");
             dot.className = "w-1 h-1 bg-white rounded-full";
             focal.appendChild(dot);
             dragBox.appendChild(focal);
 
+            // Drag to adjust focal point
             dragBox.addEventListener("mousedown", function (e) {
-                if (e.target.closest("button")) return;
+                if (e.target.closest("button") || !imageLoaded) return;
+                if (e.button !== 0) return; // Left click only
+
                 e.preventDefault();
+                dragBox.style.cursor = "grabbing";
+
                 const update = (ev) => {
                     const rect = dragBox.getBoundingClientRect();
                     if (rect.width === 0) return;
@@ -133,8 +173,10 @@
                     focal.style.top = py + "%";
                     img.x = px;
                     img.y = py;
+                    renderPagePreview();
                 };
                 const stop = () => {
+                    dragBox.style.cursor = "move";
                     window.removeEventListener("mousemove", update);
                     window.removeEventListener("mouseup", stop);
                 };
@@ -145,14 +187,29 @@
 
             wrapper.appendChild(dragBox);
 
+            // Add positioning controls button
+            const controlsBtn = document.createElement("button");
+            controlsBtn.type = "button";
+            controlsBtn.className =
+                "absolute bg-blue-500 text-white rounded text-xs px-1.5 py-0.5 font-medium cursor-pointer z-40 opacity-0 group-hover:opacity-100 transition-opacity";
+            controlsBtn.style.cssText = "bottom:4px;left:4px;line-height:1;";
+            controlsBtn.innerHTML = "Posisi";
+
+            controlsBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showPositionMenu(img.id, controlsBtn, dragBox);
+            });
+            wrapper.appendChild(controlsBtn);
+
             const delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className =
-                "absolute bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors cursor-pointer z-50";
+                "absolute bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors cursor-pointer z-50 opacity-0 group-hover:opacity-100";
             delBtn.style.cssText =
-                "width:22px;height:22px;top:-6px;right:-6px;line-height:1";
+                "width:20px;height:20px;top:-6px;right:-6px;line-height:1";
             delBtn.innerHTML =
-                '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+                '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
             delBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 const idx = _gambarStore.findIndex((i) => i.id === img.id);
@@ -175,6 +232,7 @@
                     }
                 }
                 renderGambarPreviews();
+                renderPagePreview();
             });
             wrapper.appendChild(delBtn);
             grid.appendChild(wrapper);
@@ -433,6 +491,581 @@
         container.innerHTML = html;
     }
 
+    /**
+     * Serialize image positions untuk disimpan
+     */
+    function serializeImagePositions() {
+        const positions = {};
+        _gambarStore.forEach((img, idx) => {
+            positions[idx] = {
+                x: img.x || 50,
+                y: img.y || 50,
+                width: img.width || 200,
+                height: img.height || 150,
+                offsetX: img.offsetX || 0,
+                offsetY: img.offsetY || 0,
+            };
+        });
+        return positions;
+    }
+
+    /**
+     * Save image positions to hidden input sebelum form submit
+     */
+    function saveImagePositionsBeforeSubmit() {
+        const positions = serializeImagePositions();
+        const input = document.getElementById("image_positions_input");
+        if (input) {
+            input.value = JSON.stringify(positions);
+        }
+    }
+
+    /**
+     * Setup form submit listener
+     */
+    function setupFormSubmitListener() {
+        const form = document.getElementById("pageForm");
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                saveImagePositionsBeforeSubmit();
+            });
+        }
+    }
+
+    /**
+     * Show position preset menu for image
+     */
+    function showPositionMenu(imgId, button, dragBox) {
+        // Create simple preset positions
+        const presets = [
+            { label: "Kiri", x: 20, y: 50 },
+            { label: "Tengah", x: 50, y: 50 },
+            { label: "Kanan", x: 80, y: 50 },
+            { label: "Atas", x: 50, y: 30 },
+            { label: "Bawah", x: 50, y: 70 },
+        ];
+
+        // Remove existing menu if any
+        const existingMenu = document.getElementById("position-menu-" + imgId);
+        if (existingMenu) existingMenu.remove();
+
+        // Create menu
+        const menu = document.createElement("div");
+        menu.id = "position-menu-" + imgId;
+        menu.className =
+            "absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-2";
+        menu.style.cssText =
+            "bottom: 100%; left: 0; white-space: nowrap; min-width: 120px; margin-bottom: 4px;";
+
+        presets.forEach((preset) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className =
+                "block w-full text-left px-3 py-2 text-xs hover:bg-blue-100 rounded transition-colors";
+            btn.textContent =
+                preset.label + " (" + preset.x + "%, " + preset.y + "%)";
+
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const img = _gambarStore.find((i) => i.id === imgId);
+                if (img) {
+                    img.x = preset.x;
+                    img.y = preset.y;
+                    renderGambarPreviews();
+                    renderPagePreview();
+                    menu.remove();
+                }
+            });
+
+            menu.appendChild(btn);
+        });
+
+        // Position menu relative to button
+        button.parentElement.insertBefore(menu, button.nextSibling);
+
+        // Close menu when clicking outside
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && e.target !== button) {
+                menu.remove();
+                document.removeEventListener("click", closeMenu);
+            }
+        };
+
+        setTimeout(() => document.addEventListener("click", closeMenu), 0);
+    }
+
+    /**
+     * Render live preview halaman - 100% Match guest page layout
+     * HANYA tampilkan: Description dari RTE + Gambar yang di-upload
+     */
+    function renderPagePreview() {
+        console.log(
+            "[PREVIEW RENDER] Called. Current _gambarStore:",
+            JSON.stringify(_gambarStore, null, 2),
+        );
+
+        const container = document.getElementById("preview-container");
+        if (!container) return;
+
+        // Get HTML content from RTE editor
+        let descriptionHTML = "";
+        if (editor1 && typeof editor1.getHTMLCode === "function") {
+            try {
+                descriptionHTML = editor1.getHTMLCode() || "";
+            } catch (e) {
+                console.log("Could not get editor HTML");
+            }
+        }
+
+        // Build preview HTML - EXACT match guest page structure with container wrapper
+        let previewHTML =
+            "<div style=\"width: 100%; font-family: 'Segoe UI', system-ui, sans-serif; color: #333;\">";
+
+        const hasDesc = descriptionHTML && descriptionHTML.trim() !== "";
+        const hasImages = _gambarStore.length > 0;
+
+        if (hasDesc && hasImages) {
+            previewHTML +=
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; word-break: break-word; overflow-wrap: break-word;">';
+
+            previewHTML +=
+                '<div style="color: #475569; line-height: 1.75; font-size: 1rem; width: 100%; margin-bottom: 1.5rem; word-break: break-word; overflow-wrap: break-word; min-width: 0;">';
+            previewHTML += descriptionHTML;
+            previewHTML += "</div>";
+
+            previewHTML +=
+                '<div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">';
+            _gambarStore.forEach((img, idx) => {
+                const w = img.width || 200;
+                const h = img.height || 150;
+                const offsetX = Number(img.offsetX) || 0;
+                const offsetY = Number(img.offsetY) || 0;
+                const transformStr =
+                    offsetX !== 0 || offsetY !== 0
+                        ? `transform: translate(${offsetX}px, ${offsetY}px);`
+                        : "";
+                previewHTML +=
+                    '<div class="preview-img-item" data-img-id="' +
+                    img.id +
+                    '" data-img-index="' +
+                    idx +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: #f8fafc; user-select: none; width: ' +
+                    w +
+                    "px; height: " +
+                    h +
+                    "px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s; " +
+                    transformStr +
+                    '">';
+
+                previewHTML +=
+                    '<div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: white; padding: 3px 6px; font-size: 11px; border-radius: 3px; z-index: 20; cursor: grab; font-weight: 600; display: flex; align-items: center; gap: 3px; white-space: nowrap;">☰</div>';
+
+                previewHTML +=
+                    '<img src="' +
+                    img.preview +
+                    '" alt="Image ' +
+                    (idx + 1) +
+                    '" style="width: 100%; height: 100%; object-fit: cover; object-position: ' +
+                    img.x +
+                    "% " +
+                    img.y +
+                    '%; display: block; border-radius: 0.75rem;">';
+
+                previewHTML += "</div>";
+            });
+            previewHTML += "</div>";
+            previewHTML += "</div>";
+        } else if (hasDesc) {
+            previewHTML +=
+                '<div style="color: #475569; line-height: 1.75; font-size: 1rem; width: 100%; margin-bottom: 1.5rem; word-break: break-word; overflow-wrap: break-word; min-width: 0;">';
+            previewHTML += descriptionHTML;
+            previewHTML += "</div>";
+        } else if (hasImages) {
+            previewHTML +=
+                '<div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">';
+            _gambarStore.forEach((img, idx) => {
+                const w = img.width || 200;
+                const h = img.height || 150;
+                const offsetX = Number(img.offsetX) || 0;
+                const offsetY = Number(img.offsetY) || 0;
+                const transformStr =
+                    offsetX !== 0 || offsetY !== 0
+                        ? `transform: translate(${offsetX}px, ${offsetY}px);`
+                        : "";
+                previewHTML +=
+                    '<div class="preview-img-item" data-img-id="' +
+                    img.id +
+                    '" data-img-index="' +
+                    idx +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: #f8fafc; user-select: none; width: ' +
+                    w +
+                    "px; height: " +
+                    h +
+                    "px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s; " +
+                    transformStr +
+                    '">';
+
+                previewHTML +=
+                    '<div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: white; padding: 3px 6px; font-size: 11px; border-radius: 3px; z-index: 20; cursor: grab; font-weight: 600; display: flex; align-items: center; gap: 3px; white-space: nowrap;">☰</div>';
+
+                previewHTML +=
+                    '<img src="' +
+                    img.preview +
+                    '" alt="Image ' +
+                    (idx + 1) +
+                    '" style="width: 100%; height: 100%; object-fit: cover; object-position: ' +
+                    img.x +
+                    "% " +
+                    img.y +
+                    '%; display: block; border-radius: 0.75rem;">';
+
+                previewHTML += "</div>";
+            });
+            previewHTML += "</div>";
+        } else {
+            previewHTML +=
+                '<div style="color: #999; text-align: center; padding: 2rem; font-style: italic; border: 2px dashed #e5e7eb; border-radius: 8px;">';
+            previewHTML +=
+                '<p style="margin: 0; font-size: 13px;">Tambahkan konten dan/atau gambar untuk melihat preview</p>';
+            previewHTML += "</div>";
+        }
+
+        previewHTML += "</div>";
+
+        container.innerHTML = previewHTML;
+
+        // Apply saved offsets via transform
+        const items = document.querySelectorAll(".preview-img-item");
+        items.forEach((item) => {
+            const imgId = item.dataset.imgId;
+            const img = _gambarStore.find((i) => i.id === imgId);
+            if (img && (img.offsetX || img.offsetY)) {
+                const offsetX = Number(img.offsetX) || 0;
+                const offsetY = Number(img.offsetY) || 0;
+                console.log(
+                    `[PREVIEW APPLY TRANSFORM] ${imgId}: translate(${offsetX}px, ${offsetY}px)`,
+                );
+                item.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            }
+        });
+
+        // Attach handlers
+        attachPreviewDragHandlers();
+        attachPreviewResizeHandlers();
+    }
+
+    /**
+     * Attach resize handlers to preview images - Figma/Canva style corner handles
+     */
+    function attachPreviewResizeHandlers() {
+        const items = document.querySelectorAll(".preview-img-item");
+        items.forEach((item) => {
+            const imgId = item.dataset.imgId;
+            const img = _gambarStore.find((i) => i.id === imgId);
+            if (!img) return;
+
+            // Create 4 corner handles that are ALWAYS visible
+            const handles = [
+                { pos: "tl", cursor: "nwse-resize", top: "-5px", left: "-5px" },
+                {
+                    pos: "tr",
+                    cursor: "nesw-resize",
+                    top: "-5px",
+                    right: "-5px",
+                },
+                {
+                    pos: "bl",
+                    cursor: "nesw-resize",
+                    bottom: "-5px",
+                    left: "-5px",
+                },
+                {
+                    pos: "br",
+                    cursor: "nwse-resize",
+                    bottom: "-5px",
+                    right: "-5px",
+                },
+            ];
+
+            handles.forEach((handle) => {
+                const el = document.createElement("div");
+                el.dataset.handle = handle.pos;
+                el.style.cssText = `
+                    position: absolute;
+                    width: 10px;
+                    height: 10px;
+                    background: #3B82F6;
+                    border: 2px solid white;
+                    border-radius: 1px;
+                    cursor: ${handle.cursor};
+                    z-index: 40;
+                    box-shadow: 0 0 4px rgba(59,130,246,0.8);
+                    pointer-events: auto;
+                    ${handle.top ? "top: " + handle.top + ";" : ""}
+                    ${handle.bottom ? "bottom: " + handle.bottom + ";" : ""}
+                    ${handle.left ? "left: " + handle.left + ";" : ""}
+                    ${handle.right ? "right: " + handle.right + ";" : ""}
+                `;
+
+                el.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startWidth = item.offsetWidth;
+                    const startHeight = item.offsetHeight;
+
+                    const handleMouseMove = (moveEvent) => {
+                        const deltaX = moveEvent.clientX - startX;
+                        const deltaY = moveEvent.clientY - startY;
+
+                        let newWidth = startWidth;
+                        let newHeight = startHeight;
+
+                        if (handle.pos.includes("r")) {
+                            newWidth = Math.max(80, startWidth + deltaX);
+                        } else if (handle.pos.includes("l")) {
+                            newWidth = Math.max(80, startWidth - deltaX);
+                        }
+
+                        if (handle.pos.includes("b")) {
+                            newHeight = Math.max(60, startHeight + deltaY);
+                        } else if (handle.pos.includes("t")) {
+                            newHeight = Math.max(60, startHeight - deltaY);
+                        }
+
+                        item.style.width = newWidth + "px";
+                        item.style.height = newHeight + "px";
+
+                        img.width = Math.round(newWidth);
+                        img.height = Math.round(newHeight);
+                    };
+
+                    const handleMouseUp = () => {
+                        document.removeEventListener(
+                            "mousemove",
+                            handleMouseMove,
+                        );
+                        document.removeEventListener("mouseup", handleMouseUp);
+                        saveImagePositionsBeforeSubmit();
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                });
+
+                item.appendChild(el);
+            });
+
+            // Add focal point picker overlay (hidden by default, show on dblclick)
+            const focalOverlay = document.createElement("div");
+            focalOverlay.dataset.focal = "overlay";
+            focalOverlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                cursor: crosshair;
+                display: none;
+                z-index: 15;
+                border: 2px dashed rgba(59,130,246,0.5);
+                border-radius: 0.75rem;
+            `;
+
+            focalOverlay.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const rect = focalOverlay.getBoundingClientRect();
+                const x = Math.round(
+                    ((e.clientX - rect.left) / rect.width) * 100,
+                );
+                const y = Math.round(
+                    ((e.clientY - rect.top) / rect.height) * 100,
+                );
+                img.x = Math.max(0, Math.min(100, x));
+                img.y = Math.max(0, Math.min(100, y));
+                renderPagePreview();
+            });
+
+            // Double click to toggle focal point picker
+            item.addEventListener("dblclick", (e) => {
+                e.stopPropagation();
+                focalOverlay.style.display =
+                    focalOverlay.style.display === "none" ? "block" : "none";
+            });
+
+            item.appendChild(focalOverlay);
+
+            // Set initial size
+            if (img.width && img.height) {
+                item.style.width = img.width + "px";
+                item.style.height = img.height + "px";
+            }
+        });
+    }
+
+    /**
+     * Attach drag & drop handlers to preview images for repositioning
+     */
+    function attachPreviewDragHandlers() {
+        const items = document.querySelectorAll(".preview-img-item");
+        let draggedItem = null;
+        let draggedIndex = null;
+        let isDragging = false;
+        let startMouseX = 0;
+        let startMouseY = 0;
+        let startItemX = 0;
+        let startItemY = 0;
+
+        items.forEach((item, idx) => {
+            // Find the drag handle (☰ icon)
+            const dragHandle = item.querySelector(
+                'div[style*="position: absolute"][style*="top: 2px"]',
+            );
+
+            if (dragHandle) {
+                dragHandle.addEventListener("mousedown", (e) => {
+                    if (e.button !== 0) return; // Only left mouse button
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    isDragging = true;
+                    draggedItem = item;
+
+                    // Find image by ID, not index
+                    const imgId = item.dataset.imgId;
+                    const foundImg = _gambarStore.find(
+                        (img) => img.id === imgId,
+                    );
+                    draggedIndex = _gambarStore.indexOf(foundImg);
+
+                    console.log("[DRAG START]", {
+                        imgId,
+                        draggedIndex,
+                        foundImg,
+                        gambarStoreLength: _gambarStore.length,
+                    });
+
+                    // Get current transform values
+                    const img = _gambarStore[draggedIndex];
+                    startItemX = img ? img.offsetX || 0 : 0;
+                    startItemY = img ? img.offsetY || 0 : 0;
+
+                    startMouseX = e.clientX;
+                    startMouseY = e.clientY;
+
+                    item.style.cursor = "grabbing";
+                    item.style.opacity = "0.7";
+                    item.style.zIndex = "1000";
+
+                    const handleMouseMove = (moveEvent) => {
+                        if (!isDragging || !draggedItem) return;
+
+                        const deltaX = moveEvent.clientX - startMouseX;
+                        const deltaY = moveEvent.clientY - startMouseY;
+
+                        const newX = startItemX + deltaX;
+                        const newY = startItemY + deltaY;
+
+                        draggedItem.style.transform = `translate(${newX}px, ${newY}px)`;
+                    };
+
+                    const handleMouseUp = (upEvent) => {
+                        if (!isDragging || !draggedItem) return;
+
+                        isDragging = false;
+
+                        // Calculate final offset
+                        const deltaX = upEvent.clientX - startMouseX;
+                        const deltaY = upEvent.clientY - startMouseY;
+
+                        const finalOffsetX = startItemX + deltaX;
+                        const finalOffsetY = startItemY + deltaY;
+
+                        // Save to _gambarStore
+                        const img = _gambarStore[draggedIndex];
+                        if (img) {
+                            img.offsetX = Math.round(finalOffsetX);
+                            img.offsetY = Math.round(finalOffsetY);
+                            console.log("[DRAG SAVED]", {
+                                draggedIndex,
+                                imgId: img.id,
+                                offsetX: img.offsetX,
+                                offsetY: img.offsetY,
+                            });
+                        } else {
+                            console.error(
+                                "[DRAG ERROR] Image not found at index",
+                                draggedIndex,
+                            );
+                        }
+
+                        draggedItem.style.cursor = "grab";
+                        draggedItem.style.opacity = "1";
+                        draggedItem.style.zIndex = "auto";
+                        draggedItem.style.transform = `translate(${finalOffsetX}px, ${finalOffsetY}px)`;
+
+                        document.removeEventListener(
+                            "mousemove",
+                            handleMouseMove,
+                        );
+                        document.removeEventListener("mouseup", handleMouseUp);
+
+                        draggedItem = null;
+                        draggedIndex = null;
+
+                        saveImagePositionsBeforeSubmit();
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                });
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+        };
+        return (text || "").replace(/[&<>"']/g, (m) => map[m]);
+    }
+
+    /**
+     * Setup preview update triggers
+     */
+    function setupPreviewTriggers() {
+        // Update on title change
+        const titleInput = document.querySelector('[name="title"]');
+        if (titleInput) {
+            titleInput.addEventListener("input", renderPagePreview);
+            titleInput.addEventListener("change", renderPagePreview);
+        }
+
+        // Initial render
+        setTimeout(renderPagePreview, 500);
+    }
+
+    /**
+     * Update image position in preview
+     */
+    function updateImagePosition(imgId, x, y) {
+        const img = _gambarStore.find((i) => i.id === imgId);
+        if (img) {
+            img.x = x;
+            img.y = y;
+            renderPagePreview();
+        }
+    }
+
     // Profile Page Form Alpine Component
     function profilePageForm() {
         return {
@@ -464,18 +1097,40 @@
             async init() {
                 // Initialize existing images from window.existingImages
                 if (window.existingImages && window.existingImages.length) {
+                    console.group("[IMG INIT] Loading existing images");
+                    console.log("Total images:", window.existingImages.length);
                     window.existingImages.forEach(function (img, idx) {
+                        console.log(
+                            `[IMG ${idx}] Path: ${img.path}, URL: ${img.url}`,
+                        );
+                        const offsetXValue = Number(img.offsetX) || 0;
+                        const offsetYValue = Number(img.offsetY) || 0;
+                        console.log(
+                            `  → Offset loaded: X=${offsetXValue} (type: ${typeof offsetXValue}), Y=${offsetYValue} (type: ${typeof offsetYValue})`,
+                        );
                         _gambarStore.push({
                             id: "existing-" + idx,
                             preview: img.url,
                             path: img.path,
                             x: img.x || 50,
                             y: img.y || 50,
+                            width: img.width || 200,
+                            height: img.height || 150,
+                            offsetX: offsetXValue,
+                            offsetY: offsetYValue,
                             isExisting: true,
                         });
                     });
+                    console.groupEnd();
+                    // Render after all images pushed
+                    setTimeout(function () {
+                        console.log(
+                            "[IMG RENDER] Rendering gambar previews...",
+                        );
+                        renderGambarPreviews();
+                        renderPagePreview();
+                    }, 100);
                 }
-                renderGambarPreviews();
 
                 // Fetch available data fields
                 try {
@@ -517,6 +1172,10 @@
                         console.error("Error parsing chart data:", e);
                     }
                 }
+
+                // Setup preview triggers
+                setupPreviewTriggers();
+                setupFormSubmitListener();
             },
 
             onTypeChange() {},
@@ -556,12 +1215,15 @@
                         preview: compressed.preview,
                         x: 50,
                         y: 50,
+                        width: 200,
+                        height: 150,
                         isExisting: false,
                     });
                 });
                 // Wait for all images to be compressed before rendering
                 await Promise.all(compressionPromises);
                 renderGambarPreviews();
+                renderPagePreview();
                 event.target.value = "";
             },
 
@@ -816,6 +1478,21 @@
                 }, 1500);
 
                 console.log("[RTE] RichTextEditor created successfully");
+
+                // Listen for editor content changes to update preview
+                const editorContainer = document.querySelector("#div_editor1");
+                if (editorContainer) {
+                    // Try to attach observer to RTE iframe or content area
+                    const observer = new MutationObserver(() => {
+                        renderPagePreview();
+                    });
+                    observer.observe(editorContainer, {
+                        subtree: true,
+                        childList: true,
+                        characterData: true,
+                        attributes: false,
+                    });
+                }
             } catch (e) {
                 console.error("[RTE] Error creating RichTextEditor:", e);
             }
@@ -866,6 +1543,7 @@
                         return _files[i.id];
                     })
                     .filter(Boolean);
+
                 if (gambarFiles.length) {
                     const dt = new DataTransfer();
                     gambarFiles.forEach(function (f) {
@@ -899,16 +1577,62 @@
                         });
                 }
 
-                // Image positions
-                _gambarStore.forEach(function (img) {
+                // Image positions and dimensions as array
+                console.group("[FORM SUBMIT] Image Position Data");
+                _gambarStore.forEach(function (img, idx) {
+                    console.log(`[IMG ${idx}]`, {
+                        id: img.id,
+                        x: img.x,
+                        y: img.y,
+                        width: img.width,
+                        height: img.height,
+                        offsetX: img.offsetX,
+                        offsetY: img.offsetY,
+                    });
+                    console.log(
+                        `  └─ OFFSET VALUES:`,
+                        `offsetX=${img.offsetX}, offsetY=${img.offsetY}`,
+                    );
+
                     const posInput = document.createElement("input");
                     posInput.type = "hidden";
                     posInput.name = "image_positions[]";
                     posInput.value = img.x + "% " + img.y + "%";
                     form.appendChild(posInput);
-                });
 
-                // Disable file input default
+                    const widthInput = document.createElement("input");
+                    widthInput.type = "hidden";
+                    widthInput.name = "image_widths[]";
+                    widthInput.value = img.width || 200;
+                    form.appendChild(widthInput);
+
+                    const heightInput = document.createElement("input");
+                    heightInput.type = "hidden";
+                    heightInput.name = "image_heights[]";
+                    heightInput.value = img.height || 150;
+                    form.appendChild(heightInput);
+
+                    const offsetXInput = document.createElement("input");
+                    offsetXInput.type = "hidden";
+                    offsetXInput.name = "image_offset_x[]";
+                    offsetXInput.value = img.offsetX || 0;
+                    console.log(
+                        `  └─ HIDDEN INPUT created: image_offset_x[] = ${offsetXInput.value}`,
+                    );
+                    form.appendChild(offsetXInput);
+
+                    const offsetYInput = document.createElement("input");
+                    offsetYInput.type = "hidden";
+                    offsetYInput.name = "image_offset_y[]";
+                    offsetYInput.value = img.offsetY || 0;
+                    console.log(
+                        `  └─ HIDDEN INPUT created: image_offset_y[] = ${offsetYInput.value}`,
+                    );
+                    form.appendChild(offsetYInput);
+                });
+                console.groupEnd();
+
+                // Only disable the original gambar_files input, NOT the dynamically created images[]
                 form.querySelectorAll(
                     'input[type="file"][name="gambar_files"]',
                 ).forEach(function (i) {

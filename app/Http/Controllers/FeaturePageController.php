@@ -379,6 +379,12 @@ class FeaturePageController extends Controller
             $allProfilePages = $feature->profiles()->with('sections')->orderBy('order')->get();
             $locale = app()->getLocale();
 
+            // Ensure image_positions is loaded (it's auto-casted in Profile model)
+            $allProfilePages->each(function ($page) {
+                // Force access to trigger cast if needed
+                $page->image_positions;
+            });
+
             // Handle pagination with ?page=N parameter
             $totalPages = $allProfilePages->count();
             $pageNum = $request->input('page', 1);

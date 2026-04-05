@@ -53,6 +53,52 @@
             color: #475569;
             line-height: 1.75;
             font-size: 1rem;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            padding: 0;
+        }
+
+        @media (min-width: 640px) {
+            .profile-section-desc {
+                padding: 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .profile-section-desc {
+                padding: 0;
+            }
+        }
+
+        .profile-section-desc p,
+        .profile-section-desc h1,
+        .profile-section-desc h2,
+        .profile-section-desc h3,
+        .profile-section-desc h4,
+        .profile-section-desc h5,
+        .profile-section-desc h6,
+        .profile-section-desc ul,
+        .profile-section-desc ol,
+        .profile-section-desc table,
+        .profile-section-desc blockquote {
+            width: 100%;
+        }
+
+        .profile-section-desc table {
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .profile-section-desc table td,
+        .profile-section-desc table th {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .profile-section-desc img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
         }
 
         .page-layout-single {
@@ -241,16 +287,22 @@
 
         /* Layout fixes for tugas_fungsi and struktur_image */
         .page-layout-dual {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 2rem !important;
+            align-items: start !important;
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 768px) {
             .page-layout-dual {
-                grid-template-columns: 1fr 1fr;
-                align-items: start;
+                grid-template-columns: 1fr !important;
             }
+        }
+
+        .page-image-container {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.75rem !important;
         }
 
         .struktur-layout {
@@ -344,13 +396,14 @@
             <section class="profile-section{{ !$isEven ? ' profile-section-bg' : '' }}">
                 <div class="container">
                     @if ($page->type === 'tugas_fungsi')
-                        {{-- Two-column layout for tugas_fungsi --}}
-                        <div class="page-layout-dual">
+                        {{-- Two-column layout for tugas_fungsi with proper image styling --}}
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+                            {{-- LEFT: Description + Content --}}
                             <div>
-                                <h2 class="profile-section-title">{{ $pageTitle }}</h2>
                                 @if ($pageDesc)
                                     <div class="profile-section-desc">{!! $pageDesc !!}</div>
                                 @endif
+                                <h2 class="profile-section-title">{{ $pageTitle }}</h2>
                                 @if ($page->sections && $page->sections->count())
                                     @foreach ($page->sections as $section)
                                         <div class="section-block">
@@ -360,13 +413,6 @@
                                             @endif
                                             @if ($section->description)
                                                 <p>{!! $locale === 'en' ? $section->description_en ?? $section->description : $section->description !!}</p>
-                                            @endif
-                                            @if ($section->images && count($section->images))
-                                                <div class="section-images">
-                                                    @foreach ($section->images as $img)
-                                                        <img src="{{ asset('storage/' . $img) }}" alt="">
-                                                    @endforeach
-                                                </div>
                                             @endif
                                         </div>
                                     @endforeach
@@ -381,28 +427,46 @@
                                     </a>
                                 @endif
                             </div>
-                            @if (
-                                $page->sections &&
-                                    $page->sections->count() &&
-                                    $page->sections->first()->images &&
-                                    count($page->sections->first()->images))
-                                @php $firstSection = $page->sections->first(); @endphp
-                                <div>
-                                    @if ($firstSection->images && count($firstSection->images))
-                                        @foreach ($firstSection->images as $img)
+                            {{-- RIGHT: Images with proper styling --}}
+                            @if ($page->images && count($page->images))
+                                <div class="page-image-container">
+                                    @foreach ($page->images as $idx => $img)
+                                        @php
+                                            $posData = $page->image_positions[$idx] ?? null;
+                                            $width = 200;
+                                            $height = 150;
+                                            $offsetX = 0;
+                                            $offsetY = 0;
+                                            $focalPointX = 50;
+                                            $focalPointY = 50;
+
+                                            if (is_array($posData)) {
+                                                $width = intval($posData['width'] ?? 200);
+                                                $height = intval($posData['height'] ?? 150);
+                                                $offsetX = intval($posData['offsetX'] ?? 0);
+                                                $offsetY = intval($posData['offsetY'] ?? 0);
+                                                if (isset($posData['position'])) {
+                                                    $parts = explode(' ', $posData['position']);
+                                                    $focalPointX = floatval($parts[0] ?? 50);
+                                                    $focalPointY = floatval($parts[1] ?? 50);
+                                                }
+                                            }
+                                        @endphp
+                                        <div
+                                            style="position: relative; border-radius: 0.75rem; overflow: hidden; background: #f8fafc; user-select: none; width: {{ $width }}px; height: {{ $height }}px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translate({{ $offsetX }}px, {{ $offsetY }}px);">
                                             <img src="{{ asset('storage/' . $img) }}" alt="{{ $pageTitle }}"
-                                                class="page-image">
-                                        @endforeach
-                                    @endif
+                                                style="width: 100%; height: 100%; object-fit: cover; object-position: {{ $focalPointX }}% {{ $focalPointY }}%; display: block; border-radius: 0.75rem;">
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
                         </div>
                     @else
                         {{-- Single column for default --}}
-                        <h2 class="profile-section-title">{{ $pageTitle }}</h2>
                         @if ($pageDesc)
                             <div class="profile-section-desc">{!! $pageDesc !!}</div>
                         @endif
+                        <h2 class="profile-section-title">{{ $pageTitle }}</h2>
                         @if ($page->link_text && $page->link_url)
                             <a href="{{ $page->link_url }}" class="page-link-btn" target="_blank">
                                 {{ $page->link_text }}
@@ -431,6 +495,12 @@
                                     @endif
                                 </div>
                             @endforeach
+                        @elseif ($page->images && count($page->images))
+                            <div class="section-images" style="margin-top: 1.5rem;">
+                                @foreach ($page->images as $img)
+                                    <img src="{{ asset('storage/' . $img) }}" alt="">
+                                @endforeach
+                            </div>
                         @endif
                     @endif
                 </div>
@@ -441,13 +511,13 @@
         {{-- ===== STRUKTUR IMAGE ===== --}}
         @if ($page->type === 'struktur_image')
             <section class="profile-section{{ !$isEven ? ' profile-section-bg' : '' }}">
+                @if ($pageDesc)
+                    <div class="profile-section-desc">{!! $pageDesc !!}</div>
+                @endif
                 <div class="container">
                     <div class="struktur-layout">
                         <div>
                             <h2 class="profile-section-title">{{ $pageTitle }}</h2>
-                            @if ($pageDesc)
-                                <div class="profile-section-desc">{!! $pageDesc !!}</div>
-                            @endif
                             @if ($page->sections && $page->sections->count())
                                 @foreach ($page->sections as $section)
                                     <div class="section-block" style="margin-top: 1rem;">
@@ -467,6 +537,12 @@
                                         @endif
                                     </div>
                                 @endforeach
+                            @elseif ($page->images && count($page->images))
+                                <div class="section-images">
+                                    @foreach ($page->images as $img)
+                                        <img src="{{ asset('storage/' . $img) }}" alt="">
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                         <div class="struktur-right">
