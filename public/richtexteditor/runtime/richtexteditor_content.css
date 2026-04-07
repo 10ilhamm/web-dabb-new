@@ -3,10 +3,12 @@
 .rte-wrapper {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    width: 100%;
     overflow: visible;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 #div_editor1 {

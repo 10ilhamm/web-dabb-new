@@ -258,3 +258,15 @@
 #preview-container ul {
     list-style-type: disc;
 }
+
+/* RTE content area — match guest page text column width (569px + 17px chrome = 586px) */
+.rte-wrapper rte-content {
+    display: block;
+    overflow-x: auto !important;
+    width: 100% !important;
+}
+
+.rte-wrapper rte-content iframe {
+    width: 586px !important;
+    min-width: 586px !important;
+}
