@@ -41,17 +41,6 @@
             </div>
         </div>
 
-        {{-- Flash --}}
-        @if (session('success'))
-            <div
-                class="mb-4 bg-green-50 border border-green-200 text-green-700 px-5 py-3 rounded-xl text-sm flex items-center gap-2">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- Main Grid: Form (Left) + Preview (Right) --}}
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {{-- Left Column: Form (2 columns) --}}
@@ -326,10 +315,10 @@
 
 
                         <div class="border border-gray-300 rounded-lg bg-white overflow-y-auto overflow-x-auto"
-                            style="min-height: 380px; max-height: 380px;">
+                            style="min-height: 380px; max-height: 400px;">
                             <div id="preview-wrapper" style="display: block; width: 1350px; padding: 0;">
                                 <div id="preview-container"
-                                    style="background: transparent; width: 88%; margin: 0 1.5rem;">
+                                    style="background: transparent; width: 90%; margin: 0 1.5rem; margin-top: 1rem;">
                                     {{-- Preview content akan diisi oleh JavaScript --}}
                                 </div>
                             </div>

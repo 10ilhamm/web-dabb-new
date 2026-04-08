@@ -651,7 +651,7 @@
                     img.id +
                     '" data-img-index="' +
                     idx +
-                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: hidden; background: transparent !important; user-select: none; width: ' +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: transparent !important; user-select: none; width: ' +
                     w +
                     "px; height: " +
                     h +
@@ -699,7 +699,7 @@
                     img.id +
                     '" data-img-index="' +
                     idx +
-                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: hidden; background: transparent !important; user-select: none; width: ' +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: transparent !important; user-select: none; width: ' +
                     w +
                     "px; height: " +
                     h +
@@ -983,6 +983,13 @@
      */
     function attachPreviewDragHandlers() {
         const items = document.querySelectorAll(".preview-img-item");
+        let draggedItem = null;
+        let draggedIndex = null;
+        let isDragging = false;
+        let startMouseX = 0;
+        let startMouseY = 0;
+        let startItemX = 0;
+        let startItemY = 0;
 
         items.forEach((item, idx) => {
             // Find the drag handle (☰ icon)
@@ -996,16 +1003,10 @@
                     e.preventDefault();
                     e.stopPropagation();
 
-                    // Create a closure scope for each image's drag state
-                    let isDragging = true;
-                    let draggedItem = item;
-                    let draggedIndex = null;
-                    let startMouseX = e.clientX;
-                    let startMouseY = e.clientY;
-                    let startItemX = 0;
-                    let startItemY = 0;
+                    isDragging = true;
+                    draggedItem = item;
 
-                    // Find image by ID
+                    // Find image by ID, not index
                     const imgId = item.dataset.imgId;
                     const foundImg = _gambarStore.find(
                         (img) => img.id === imgId,
@@ -1020,18 +1021,19 @@
                     });
 
                     // Get current transform values
-                    const imgData = _gambarStore[draggedIndex];
-                    if (imgData) {
-                        startItemX = imgData.offsetX || 0;
-                        startItemY = imgData.offsetY || 0;
-                    }
+                    const img = _gambarStore[draggedIndex];
+                    startItemX = img ? img.offsetX || 0 : 0;
+                    startItemY = img ? img.offsetY || 0 : 0;
+
+                    startMouseX = e.clientX;
+                    startMouseY = e.clientY;
 
                     item.style.cursor = "grabbing";
                     item.style.opacity = "0.7";
                     item.style.zIndex = "1000";
 
                     const handleMouseMove = (moveEvent) => {
-                        if (!isDragging) return;
+                        if (!isDragging || !draggedItem) return;
 
                         const deltaX = moveEvent.clientX - startMouseX;
                         const deltaY = moveEvent.clientY - startMouseY;
@@ -1039,20 +1041,20 @@
                         const newX = startItemX + deltaX;
                         const newY = startItemY + deltaY;
 
-                        // Update only the image being dragged
+                        // Live-update gambarStore so adjustPreviewGrid reads current state
                         const imgLive = _gambarStore[draggedIndex];
                         if (imgLive) {
                             imgLive.offsetX = Math.round(newX);
                             imgLive.offsetY = Math.round(newY);
                         }
 
-                        // Move image with transform
-                        item.style.transform = `translate(${newX}px, ${newY}px)`;
+                        // Move image freely with transform, and adjust grid for text reflow
+                        draggedItem.style.transform = `translate(${newX}px, ${newY}px)`;
                         adjustPreviewGrid();
                     };
 
                     const handleMouseUp = (upEvent) => {
-                        if (!isDragging) return;
+                        if (!isDragging || !draggedItem) return;
 
                         isDragging = false;
 
@@ -1063,7 +1065,7 @@
                         const finalOffsetX = startItemX + deltaX;
                         const finalOffsetY = startItemY + deltaY;
 
-                        // Save to _gambarStore for this specific image
+                        // Save to _gambarStore
                         const img = _gambarStore[draggedIndex];
                         if (img) {
                             img.offsetX = Math.round(finalOffsetX);
@@ -1081,16 +1083,18 @@
                             );
                         }
 
-                        item.style.cursor = "grab";
-                        item.style.opacity = "1";
-                        item.style.zIndex = "auto";
+                        draggedItem.style.cursor = "grab";
+                        draggedItem.style.opacity = "1";
+                        draggedItem.style.zIndex = "auto";
 
-                        // Remove listeners
                         document.removeEventListener(
                             "mousemove",
                             handleMouseMove,
                         );
                         document.removeEventListener("mouseup", handleMouseUp);
+
+                        draggedItem = null;
+                        draggedIndex = null;
 
                         saveImagePositionsBeforeSubmit();
                         adjustPreviewGrid();
