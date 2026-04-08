@@ -651,7 +651,7 @@
                     img.id +
                     '" data-img-index="' +
                     idx +
-                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: transparent !important; user-select: none; width: ' +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: hidden; background: transparent !important; user-select: none; width: ' +
                     w +
                     "px; height: " +
                     h +
@@ -699,7 +699,7 @@
                     img.id +
                     '" data-img-index="' +
                     idx +
-                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: visible !important; background: transparent !important; user-select: none; width: ' +
+                    '" style="position: relative; cursor: grab; border-radius: 0.75rem; overflow: hidden; background: transparent !important; user-select: none; width: ' +
                     w +
                     "px; height: " +
                     h +
@@ -736,24 +736,12 @@
 
         container.innerHTML = previewHTML;
 
-        // Apply saved offsets via transform
-        const items = document.querySelectorAll(".preview-img-item");
-        items.forEach((item) => {
-            const imgId = item.dataset.imgId;
-            const img = _gambarStore.find((i) => i.id === imgId);
-            if (img && (img.offsetX || img.offsetY)) {
-                const offsetX = Number(img.offsetX) || 0;
-                const offsetY = Number(img.offsetY) || 0;
-                console.log(
-                    `[PREVIEW APPLY TRANSFORM] ${imgId}: translate(${offsetX}px, ${offsetY}px)`,
-                );
-                item.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            }
-        });
-
-        // Attach handlers
+        // Attach handlers first, then adjust grid for saved offsets
         attachPreviewDragHandlers();
         attachPreviewResizeHandlers();
+
+        // Adjust grid columns based on saved offsets (horizontal handled by grid, vertical by transform)
+        adjustPreviewGrid();
     }
 
     /**
@@ -817,6 +805,8 @@
                     const startY = e.clientY;
                     const startWidth = item.offsetWidth;
                     const startHeight = item.offsetHeight;
+                    const startOffsetX = Number(img.offsetX) || 0;
+                    const startOffsetY = Number(img.offsetY) || 0;
 
                     const handleMouseMove = (moveEvent) => {
                         const deltaX = moveEvent.clientX - startX;
@@ -824,24 +814,36 @@
 
                         let newWidth = startWidth;
                         let newHeight = startHeight;
+                        let shiftX = 0;
+                        let shiftY = 0;
 
                         if (handle.pos.includes("r")) {
                             newWidth = Math.max(80, startWidth + deltaX);
                         } else if (handle.pos.includes("l")) {
                             newWidth = Math.max(80, startWidth - deltaX);
+                            // Shift image left so right edge stays anchored
+                            shiftX = -(newWidth - startWidth);
                         }
 
                         if (handle.pos.includes("b")) {
                             newHeight = Math.max(60, startHeight + deltaY);
                         } else if (handle.pos.includes("t")) {
                             newHeight = Math.max(60, startHeight - deltaY);
+                            // Shift image up so bottom edge stays anchored
+                            shiftY = -(newHeight - startHeight);
                         }
 
                         item.style.width = newWidth + "px";
                         item.style.height = newHeight + "px";
+                        item.style.transform = 'translate(' + (startOffsetX + shiftX) + 'px, ' + (startOffsetY + shiftY) + 'px)';
 
                         img.width = Math.round(newWidth);
                         img.height = Math.round(newHeight);
+                        img.offsetX = Math.round(startOffsetX + shiftX);
+                        img.offsetY = Math.round(startOffsetY + shiftY);
+
+                        // Live-adjust grid when resizing from any handle
+                        adjustPreviewGrid();
                     };
 
                     const handleMouseUp = () => {
@@ -851,6 +853,7 @@
                         );
                         document.removeEventListener("mouseup", handleMouseUp);
                         saveImagePositionsBeforeSubmit();
+                        renderPagePreview();
                     };
 
                     document.addEventListener("mousemove", handleMouseMove);
@@ -909,17 +912,77 @@
     }
 
     /**
+     * Unified function: adjust grid columns so that the image column is wide enough
+     * to contain all images (considering their width + leftward drag offset).
+     * Horizontal drag = change grid columns (causes text reflow).
+     * Vertical drag = transform translateY only (no text reflow needed).
+     */
+    function adjustPreviewGrid() {
+        var gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
+        if (!gridContainer) return;
+
+        var gridWidth = gridContainer.getBoundingClientRect().width;
+        var gap = 32; // 2rem
+        var defaultHalf = (gridWidth - gap) / 2;
+
+        // Calculate the extra space the image column needs beyond the default half.
+        // Sources: leftward drag (negative offsetX) and image width exceeding half.
+        var extraNeeded = 0;
+        _gambarStore.forEach(function(img) {
+            var w = Number(img.width) || 200;
+            var offsetX = Number(img.offsetX) || 0;
+
+            // Leftward drag: image visually moves into text area by |offsetX| pixels
+            if (offsetX < 0) {
+                var leftExtra = Math.abs(offsetX);
+                if (leftExtra > extraNeeded) extraNeeded = leftExtra;
+            }
+
+            // Image wider than default half
+            if (w > defaultHalf) {
+                var widthExtra = w - defaultHalf;
+                if (widthExtra > extraNeeded) extraNeeded = widthExtra;
+            }
+        });
+
+        if (extraNeeded > 0) {
+            var imgColWidth = defaultHalf + extraNeeded + 16;
+            var maxImgCol = gridWidth - gap - 80;
+            if (imgColWidth > maxImgCol) imgColWidth = maxImgCol;
+            var textColWidth = gridWidth - gap - imgColWidth;
+            gridContainer.style.gridTemplateColumns = textColWidth + 'px ' + imgColWidth + 'px';
+
+            // Since grid column now absorbed the horizontal offset,
+            // remove translateX from images so they don't overlap text.
+            // Keep translateY for vertical positioning.
+            document.querySelectorAll('.preview-img-item').forEach(function(item) {
+                var imgId = item.dataset.imgId;
+                var imgData = _gambarStore.find(function(i) { return i.id === imgId; });
+                if (imgData) {
+                    var oY = Number(imgData.offsetY) || 0;
+                    item.style.transform = oY !== 0 ? 'translateY(' + oY + 'px)' : 'none';
+                }
+            });
+        } else {
+            gridContainer.style.gridTemplateColumns = '1fr 1fr';
+            // No extra needed — apply full transforms for rightward/other drags
+            document.querySelectorAll('.preview-img-item').forEach(function(item) {
+                var imgId = item.dataset.imgId;
+                var imgData = _gambarStore.find(function(i) { return i.id === imgId; });
+                if (imgData) {
+                    var oX = Number(imgData.offsetX) || 0;
+                    var oY = Number(imgData.offsetY) || 0;
+                    item.style.transform = (oX !== 0 || oY !== 0) ? 'translate(' + oX + 'px, ' + oY + 'px)' : 'none';
+                }
+            });
+        }
+    }
+
+    /**
      * Attach drag & drop handlers to preview images for repositioning
      */
     function attachPreviewDragHandlers() {
         const items = document.querySelectorAll(".preview-img-item");
-        let draggedItem = null;
-        let draggedIndex = null;
-        let isDragging = false;
-        let startMouseX = 0;
-        let startMouseY = 0;
-        let startItemX = 0;
-        let startItemY = 0;
 
         items.forEach((item, idx) => {
             // Find the drag handle (☰ icon)
@@ -933,10 +996,16 @@
                     e.preventDefault();
                     e.stopPropagation();
 
-                    isDragging = true;
-                    draggedItem = item;
+                    // Create a closure scope for each image's drag state
+                    let isDragging = true;
+                    let draggedItem = item;
+                    let draggedIndex = null;
+                    let startMouseX = e.clientX;
+                    let startMouseY = e.clientY;
+                    let startItemX = 0;
+                    let startItemY = 0;
 
-                    // Find image by ID, not index
+                    // Find image by ID
                     const imgId = item.dataset.imgId;
                     const foundImg = _gambarStore.find(
                         (img) => img.id === imgId,
@@ -951,19 +1020,18 @@
                     });
 
                     // Get current transform values
-                    const img = _gambarStore[draggedIndex];
-                    startItemX = img ? img.offsetX || 0 : 0;
-                    startItemY = img ? img.offsetY || 0 : 0;
-
-                    startMouseX = e.clientX;
-                    startMouseY = e.clientY;
+                    const imgData = _gambarStore[draggedIndex];
+                    if (imgData) {
+                        startItemX = imgData.offsetX || 0;
+                        startItemY = imgData.offsetY || 0;
+                    }
 
                     item.style.cursor = "grabbing";
                     item.style.opacity = "0.7";
                     item.style.zIndex = "1000";
 
                     const handleMouseMove = (moveEvent) => {
-                        if (!isDragging || !draggedItem) return;
+                        if (!isDragging) return;
 
                         const deltaX = moveEvent.clientX - startMouseX;
                         const deltaY = moveEvent.clientY - startMouseY;
@@ -971,11 +1039,20 @@
                         const newX = startItemX + deltaX;
                         const newY = startItemY + deltaY;
 
-                        draggedItem.style.transform = `translate(${newX}px, ${newY}px)`;
+                        // Update only the image being dragged
+                        const imgLive = _gambarStore[draggedIndex];
+                        if (imgLive) {
+                            imgLive.offsetX = Math.round(newX);
+                            imgLive.offsetY = Math.round(newY);
+                        }
+
+                        // Move image with transform
+                        item.style.transform = `translate(${newX}px, ${newY}px)`;
+                        adjustPreviewGrid();
                     };
 
                     const handleMouseUp = (upEvent) => {
-                        if (!isDragging || !draggedItem) return;
+                        if (!isDragging) return;
 
                         isDragging = false;
 
@@ -986,7 +1063,7 @@
                         const finalOffsetX = startItemX + deltaX;
                         const finalOffsetY = startItemY + deltaY;
 
-                        // Save to _gambarStore
+                        // Save to _gambarStore for this specific image
                         const img = _gambarStore[draggedIndex];
                         if (img) {
                             img.offsetX = Math.round(finalOffsetX);
@@ -1004,21 +1081,19 @@
                             );
                         }
 
-                        draggedItem.style.cursor = "grab";
-                        draggedItem.style.opacity = "1";
-                        draggedItem.style.zIndex = "auto";
-                        draggedItem.style.transform = `translate(${finalOffsetX}px, ${finalOffsetY}px)`;
+                        item.style.cursor = "grab";
+                        item.style.opacity = "1";
+                        item.style.zIndex = "auto";
 
+                        // Remove listeners
                         document.removeEventListener(
                             "mousemove",
                             handleMouseMove,
                         );
                         document.removeEventListener("mouseup", handleMouseUp);
 
-                        draggedItem = null;
-                        draggedIndex = null;
-
                         saveImagePositionsBeforeSubmit();
+                        adjustPreviewGrid();
                     };
 
                     document.addEventListener("mousemove", handleMouseMove);
