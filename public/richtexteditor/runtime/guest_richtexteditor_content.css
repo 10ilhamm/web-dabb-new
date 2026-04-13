@@ -145,14 +145,14 @@
 .profile-section-desc ul,
 .vsshow-hero-subtitle ul {
     margin: 1em 0;
-    padding-left: 2em;
+    padding-left: 1.5rem;
     list-style-type: disc;
 }
 
 .profile-section-desc ol,
 .vsshow-hero-subtitle ol {
     margin: 1em 0;
-    padding-left: 2em;
+    padding-left: 1.5rem;
     list-style-type: decimal;
 }
 
@@ -205,3 +205,4 @@
     text-align: center;
     margin: 10px;
 }
+

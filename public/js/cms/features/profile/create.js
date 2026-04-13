@@ -163,6 +163,7 @@
                     focal.style.top = py + "%";
                     img.x = px;
                     img.y = py;
+                    if (typeof renderPagePreview === "function") renderPagePreview();
                 };
                 const stop = () => {
                     window.removeEventListener("mousemove", update);
@@ -191,6 +192,7 @@
                     delete _files[img.id];
                 }
                 renderGambarPreviews();
+                if (typeof renderPagePreview === "function") renderPagePreview();
             });
             wrapper.appendChild(delBtn);
             grid.appendChild(wrapper);
@@ -435,6 +437,582 @@
         container.innerHTML = html;
     }
 
+    function saveImagePositionsBeforeSubmit() {
+        const form = document.getElementById("pageForm");
+        if (!form) return;
+
+        // Remove previous dynamically generated inputs
+        document.querySelectorAll('.dynamic-img-pos').forEach(el => el.remove());
+
+        // Create individual array inputs for each image
+        _gambarStore.forEach((img, idx) => {
+            const posX = img.x !== undefined ? img.x : 50;
+            const posY = img.y !== undefined ? img.y : 50;
+            const posStr = posX + "% " + posY + "%";
+            
+            const inputs = [
+                { name: 'image_positions[]', value: posStr },
+                { name: 'image_widths[]', value: img.width || 200 },
+                { name: 'image_heights[]', value: img.height || 150 },
+                { name: 'image_offset_x[]', value: img.offsetX || 0 },
+                { name: 'image_offset_y[]', value: img.offsetY || 0 }
+            ];
+
+            inputs.forEach(inputData => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = inputData.name;
+                hiddenInput.value = inputData.value;
+                hiddenInput.className = 'dynamic-img-pos';
+                form.appendChild(hiddenInput);
+            });
+        });
+
+        // Disable old stringified JSON input if it exists
+        const oldInput = document.getElementById("image_positions_input");
+        if (oldInput) {
+            oldInput.disabled = true;
+        }
+    }
+
+    
+
+    function renderPagePreview() {
+        console.log(
+            "[PREVIEW RENDER] Called. Current _gambarStore:",
+            JSON.stringify(_gambarStore, null, 2),
+        );
+
+        const container = document.getElementById("preview-container");
+        if (!container) return;
+
+        // Get HTML content from RTE editor
+        let descriptionHTML = "";
+        if (editor1 && typeof editor1.getHTMLCode === "function") {
+            try {
+                descriptionHTML = editor1.getHTMLCode() || "";
+            } catch (e) {
+                console.log("Could not get editor HTML");
+            }
+        }
+
+        // Get Title/Link content
+        const titleVal = document.querySelector('[name="title"]')?.value || "";
+        const linkTextVal = document.querySelector('[name="link_text"]')?.value || "";
+        const linkUrlVal = document.querySelector('[name="link_url"]')?.value || "";
+
+        // Build preview HTML - EXACT match guest page structure with container wrapper
+        let previewHTML =
+            "<div style=\"width: 100%; font-family: 'Montserrat', Arial, Helvetica, sans-serif; color: #475569; line-height: 1.75; font-size: 1rem; padding: 2rem 0;\">";
+
+        const hasDesc = descriptionHTML && descriptionHTML.trim() !== "";
+        const hasImages = _gambarStore.length > 0;
+        const hasTitle = titleVal && titleVal.trim() !== "";
+        const hasLink = linkTextVal && linkUrlVal;
+
+        // Build left column content (Same logic for both grid and single column)
+        let leftCol = '<div style="width: 100%; word-break: break-word; overflow-wrap: break-word; min-width: 0;">';
+        if (hasDesc) {
+            leftCol += '<div class="profile-section-desc" style="margin-bottom: 1.5rem;">' + descriptionHTML + '</div>';
+        }
+        if (hasTitle) {
+            leftCol += '<h2 class="profile-section-title">' + titleVal + '</h2>';
+        }
+        if (hasLink) {
+            leftCol += '<a href="' + linkUrlVal + '" class="page-link-btn" target="_blank">' + linkTextVal + ' <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>';
+        }
+        leftCol += '</div>';
+
+        if (hasImages) {
+            previewHTML += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">';
+            
+            // Left Column
+            previewHTML += leftCol;
+
+            // Right Column: Images
+            previewHTML += '<div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">';
+            _gambarStore.forEach((img, idx) => {
+                const w = img.width || 200;
+                const h = img.height || 150;
+                const offsetX = Number(img.offsetX) || 0;
+                const offsetY = Number(img.offsetY) || 0;
+                const transformStr = (offsetX !== 0 || offsetY !== 0) ? `transform: translate(${offsetX}px, ${offsetY}px);` : "";
+                
+                previewHTML += '<div class="preview-img-item" data-img-id="' + img.id + '" style="position: relative; border-radius: 0.75rem; overflow: visible !important; width: ' + w + 'px; height: ' + h + 'px; ' + transformStr + '">';
+                previewHTML += '<div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: white; padding: 2px 4px; font-size: 10px; border-radius: 3px; z-index: 20; cursor: grab;">☰</div>';
+                previewHTML += '<img src="' + img.preview + '" style="width: 100%; height: 100%; object-fit: cover; object-position: ' + img.x + '% ' + img.y + '%; display: block; border-radius: 0.75rem;">';
+                previewHTML += "</div>";
+            });
+            previewHTML += "</div>";
+            previewHTML += "</div>";
+        } else if (hasDesc || hasTitle || hasLink) {
+            previewHTML += leftCol;
+        } else {
+            previewHTML +=
+                '<div style="color: #999; text-align: center; padding: 2rem; font-style: italic; border: 2px dashed #e5e7eb; border-radius: 8px;">';
+            previewHTML +=
+                '<p style="margin: 0; font-size: 13px;">Tambahkan konten dan/atau gambar untuk melihat preview</p>';
+            previewHTML += "</div>";
+        }
+
+        previewHTML += "</div>";
+
+        container.innerHTML = previewHTML;
+
+        // Attach handlers first, then adjust grid for saved offsets
+        attachPreviewDragHandlers();
+        attachPreviewResizeHandlers();
+
+        // Adjust grid columns and apply transforms
+        adjustPreviewGrid();
+        applyImageTransforms();
+    }
+
+    /**
+     * Attach resize handlers to preview images - Figma/Canva style corner handles
+     */
+    function attachPreviewResizeHandlers() {
+        const items = document.querySelectorAll(".preview-img-item");
+        items.forEach((item) => {
+            const imgId = item.dataset.imgId;
+            const img = _gambarStore.find((i) => i.id === imgId);
+            if (!img) return;
+
+            // Create 4 corner handles that are ALWAYS visible
+            const handles = [
+                { pos: "tl", cursor: "nwse-resize", top: "-5px", left: "-5px" },
+                {
+                    pos: "tr",
+                    cursor: "nesw-resize",
+                    top: "-5px",
+                    right: "-5px",
+                },
+                {
+                    pos: "bl",
+                    cursor: "nesw-resize",
+                    bottom: "-5px",
+                    left: "-5px",
+                },
+                {
+                    pos: "br",
+                    cursor: "nwse-resize",
+                    bottom: "-5px",
+                    right: "-5px",
+                },
+            ];
+
+            handles.forEach((handle) => {
+                const el = document.createElement("div");
+                el.dataset.handle = handle.pos;
+                el.style.cssText = `
+                    position: absolute;
+                    width: 10px;
+                    height: 10px;
+                    background: #3B82F6;
+                    border: 2px solid white;
+                    border-radius: 1px;
+                    cursor: ${handle.cursor};
+                    z-index: 40;
+                    box-shadow: 0 0 4px rgba(59,130,246,0.8);
+                    pointer-events: auto;
+                    ${handle.top ? "top: " + handle.top + ";" : ""}
+                    ${handle.bottom ? "bottom: " + handle.bottom + ";" : ""}
+                    ${handle.left ? "left: " + handle.left + ";" : ""}
+                    ${handle.right ? "right: " + handle.right + ";" : ""}
+                `;
+
+                el.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startWidth = item.offsetWidth;
+                    const startHeight = item.offsetHeight;
+                    const startOffsetX = Number(img.offsetX) || 0;
+                    const startOffsetY = Number(img.offsetY) || 0;
+
+                    const handleMouseMove = (moveEvent) => {
+                        const deltaX = moveEvent.clientX - startX;
+                        const deltaY = moveEvent.clientY - startY;
+
+                        let newWidth = startWidth;
+                        let newHeight = startHeight;
+                        let shiftX = 0;
+                        let shiftY = 0;
+
+                        if (handle.pos.includes("r")) {
+                            newWidth = Math.max(80, startWidth + deltaX);
+                        } else if (handle.pos.includes("l")) {
+                            newWidth = Math.max(80, startWidth - deltaX);
+                            // Shift image left so right edge stays anchored
+                            shiftX = -(newWidth - startWidth);
+                        }
+
+                        if (handle.pos.includes("b")) {
+                            newHeight = Math.max(60, startHeight + deltaY);
+                        } else if (handle.pos.includes("t")) {
+                            newHeight = Math.max(60, startHeight - deltaY);
+                            // Shift image up so bottom edge stays anchored
+                            shiftY = -(newHeight - startHeight);
+                        }
+
+                        item.style.width = newWidth + "px";
+                        item.style.height = newHeight + "px";
+                        item.style.transform = 'translate(' + (startOffsetX + shiftX) + 'px, ' + (startOffsetY + shiftY) + 'px)';
+
+                        img.width = Math.round(newWidth);
+                        img.height = Math.round(newHeight);
+                        img.offsetX = Math.round(startOffsetX + shiftX);
+                        img.offsetY = Math.round(startOffsetY + shiftY);
+
+                        adjustPreviewGrid();
+                    };
+
+                    const handleMouseUp = () => {
+                        document.removeEventListener(
+                            "mousemove",
+                            handleMouseMove,
+                        );
+                        document.removeEventListener("mouseup", handleMouseUp);
+                        saveImagePositionsBeforeSubmit();
+                        adjustPreviewGrid();
+                        applyImageTransforms();
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                });
+
+                item.appendChild(el);
+            });
+
+            // Add focal point picker overlay (hidden by default, show on dblclick)
+            const focalOverlay = document.createElement("div");
+            focalOverlay.dataset.focal = "overlay";
+            focalOverlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                cursor: crosshair;
+                display: none;
+                z-index: 15;
+                border: 2px dashed rgba(59,130,246,0.5);
+                border-radius: 0.75rem;
+            `;
+
+            focalOverlay.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const rect = focalOverlay.getBoundingClientRect();
+                const x = Math.round(
+                    ((e.clientX - rect.left) / rect.width) * 100,
+                );
+                const y = Math.round(
+                    ((e.clientY - rect.top) / rect.height) * 100,
+                );
+                img.x = Math.max(0, Math.min(100, x));
+                img.y = Math.max(0, Math.min(100, y));
+                renderPagePreview();
+            });
+
+            // Double click to toggle focal point picker
+            item.addEventListener("dblclick", (e) => {
+                e.stopPropagation();
+                focalOverlay.style.display =
+                    focalOverlay.style.display === "none" ? "block" : "none";
+            });
+
+            item.appendChild(focalOverlay);
+
+            // Set initial size
+            if (img.width && img.height) {
+                item.style.width = img.width + "px";
+                item.style.height = img.height + "px";
+            }
+        });
+    }
+
+    /**
+     * Unified function: adjust grid columns so that the image column is wide enough
+     * to contain all images (considering their width + leftward drag offset).
+     * Horizontal drag = change grid columns (causes text reflow).
+     * Vertical drag = transform translateY only (no text reflow needed).
+     */
+    function adjustPreviewGrid() {
+        var gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
+        if (!gridContainer) return;
+
+        var gridWidth = gridContainer.getBoundingClientRect().width;
+        var gap = 32;
+        var defaultHalf = (gridWidth - gap) / 2;
+        var MIN_TEXT_WIDTH = 180;
+
+        var extraNeeded = 0;
+        _gambarStore.forEach(function(img) {
+            var w = Number(img.width) || 200;
+            var offsetX = Number(img.offsetX) || 0;
+
+            if (offsetX < 0) {
+                var leftExtra = Math.abs(offsetX);
+                if (leftExtra > extraNeeded) extraNeeded = leftExtra;
+            }
+
+            if (w > defaultHalf) {
+                var widthExtra = w - defaultHalf;
+                if (widthExtra > extraNeeded) extraNeeded = widthExtra;
+            }
+        });
+
+        if (extraNeeded > 0) {
+            var imgColWidth = defaultHalf + extraNeeded + 16;
+            var maxImgCol = gridWidth - gap - MIN_TEXT_WIDTH;
+            if (imgColWidth > maxImgCol) imgColWidth = maxImgCol;
+            var textColWidth = gridWidth - gap - imgColWidth;
+
+            if (textColWidth < MIN_TEXT_WIDTH) {
+                textColWidth = MIN_TEXT_WIDTH;
+                imgColWidth = gridWidth - gap - textColWidth;
+            }
+
+            gridContainer.style.gridTemplateColumns = textColWidth + 'px ' + imgColWidth + 'px';
+        } else {
+            gridContainer.style.gridTemplateColumns = '1fr 1fr';
+        }
+    }
+
+    /**
+     * Apply transforms to all preview images from store data
+     */
+    function applyImageTransforms() {
+        document.querySelectorAll('.preview-img-item').forEach(function(item) {
+            var imgId = item.dataset.imgId;
+            var imgData = _gambarStore.find(function(i) { return i.id === imgId; });
+            if (imgData) {
+                var oX = Number(imgData.offsetX) || 0;
+                var oY = Number(imgData.offsetY) || 0;
+                if (oX !== 0 || oY !== 0) {
+                    item.style.transform = 'translate(' + oX + 'px, ' + oY + 'px)';
+                } else {
+                    item.style.transform = 'none';
+                }
+            }
+        });
+    }
+
+    /**
+     * Attach drag & drop handlers to preview images for repositioning
+     */
+    function attachPreviewDragHandlers() {
+        const items = document.querySelectorAll(".preview-img-item");
+        let draggedItem = null;
+        let draggedIndex = null;
+        let isDragging = false;
+        let startMouseX = 0;
+        let startMouseY = 0;
+        let startItemX = 0;
+        let startItemY = 0;
+
+        items.forEach((item, idx) => {
+            // Find the drag handle (☰ icon)
+            const dragHandle = item.querySelector(
+                'div[style*="position: absolute"][style*="top: 2px"]',
+            );
+
+            if (dragHandle) {
+                dragHandle.addEventListener("mousedown", (e) => {
+                    if (e.button !== 0) return; // Only left mouse button
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    isDragging = true;
+                    draggedItem = item;
+
+                    // Find image by ID, not index
+                    const imgId = item.dataset.imgId;
+                    const foundImg = _gambarStore.find(
+                        (img) => img.id === imgId,
+                    );
+                    draggedIndex = _gambarStore.indexOf(foundImg);
+
+                    console.log("[DRAG START]", {
+                        imgId,
+                        draggedIndex,
+                        foundImg,
+                        gambarStoreLength: _gambarStore.length,
+                    });
+
+                    // Get current transform values
+                    const img = _gambarStore[draggedIndex];
+                    startItemX = img ? img.offsetX || 0 : 0;
+                    startItemY = img ? img.offsetY || 0 : 0;
+
+                    startMouseX = e.clientX;
+                    startMouseY = e.clientY;
+
+                    item.style.cursor = "grabbing";
+                    item.style.opacity = "0.7";
+                    item.style.zIndex = "1000";
+
+                    const handleMouseMove = (moveEvent) => {
+                        if (!isDragging || !draggedItem) return;
+
+                        const deltaX = moveEvent.clientX - startMouseX;
+                        const deltaY = moveEvent.clientY - startMouseY;
+
+                        let newX = startItemX + deltaX;
+                        const newY = startItemY + deltaY;
+
+                        const imgLive = _gambarStore[draggedIndex];
+                        if (imgLive) {
+                            const imgWidth = Number(imgLive.width) || 200;
+                            const MIN_TEXT_WIDTH = 180;
+                            const gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
+
+                            if (gridContainer) {
+                                const gridRect = gridContainer.getBoundingClientRect();
+                                const gap = 32;
+                                const halfWidth = (gridRect.width - gap) / 2;
+
+                                if (newX < 0) {
+                                    const textColumnWidth = halfWidth + newX;
+                                    if (textColumnWidth < MIN_TEXT_WIDTH) {
+                                        newX = MIN_TEXT_WIDTH - halfWidth;
+                                    }
+                                }
+                            }
+
+                            newX = Math.round(newX);
+                            imgLive.offsetX = newX;
+                            imgLive.offsetY = Math.round(newY);
+                        }
+
+                        draggedItem.style.transform = `translate(${newX}px, ${newY}px)`;
+                        adjustPreviewGrid();
+                    };
+
+                    const handleMouseUp = (upEvent) => {
+                        if (!isDragging || !draggedItem) return;
+
+                        isDragging = false;
+
+                        const deltaX = upEvent.clientX - startMouseX;
+                        const deltaY = upEvent.clientY - startMouseY;
+
+                        let finalOffsetX = startItemX + deltaX;
+                        const finalOffsetY = startItemY + deltaY;
+
+                        const img = _gambarStore[draggedIndex];
+                        if (img) {
+                            const MIN_TEXT_WIDTH = 180;
+                            const gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
+
+                            if (gridContainer) {
+                                const gridRect = gridContainer.getBoundingClientRect();
+                                const gap = 32;
+                                const halfWidth = (gridRect.width - gap) / 2;
+
+                                if (finalOffsetX < 0) {
+                                    const textColumnWidth = halfWidth + finalOffsetX;
+                                    if (textColumnWidth < MIN_TEXT_WIDTH) {
+                                        finalOffsetX = MIN_TEXT_WIDTH - halfWidth;
+                                    }
+                                }
+                            }
+
+                            img.offsetX = Math.round(finalOffsetX);
+                            img.offsetY = Math.round(finalOffsetY);
+                            console.log("[DRAG SAVED]", {
+                                draggedIndex,
+                                imgId: img.id,
+                                offsetX: img.offsetX,
+                                offsetY: img.offsetY,
+                            });
+                        } else {
+                            console.error(
+                                "[DRAG ERROR] Image not found at index",
+                                draggedIndex,
+                            );
+                        }
+
+                        draggedItem.style.cursor = "grab";
+                        draggedItem.style.opacity = "1";
+                        draggedItem.style.zIndex = "auto";
+
+                        document.removeEventListener(
+                            "mousemove",
+                            handleMouseMove,
+                        );
+                        document.removeEventListener("mouseup", handleMouseUp);
+
+                        draggedItem = null;
+                        draggedIndex = null;
+
+                        saveImagePositionsBeforeSubmit();
+                        adjustPreviewGrid();
+                        applyImageTransforms();
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                });
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+        };
+        return (text || "").replace(/[&<>"']/g, (m) => map[m]);
+    }
+
+    /**
+     * Setup preview update triggers
+     */
+    function setupPreviewTriggers() {
+        // Update on title change
+        const titleInput = document.querySelector('[name="title"]');
+        if (titleInput) {
+            titleInput.addEventListener("input", renderPagePreview);
+            titleInput.addEventListener("change", renderPagePreview);
+        }
+
+        // Update on link changes
+        const linkTextInput = document.querySelector('[name="link_text"]');
+        if (linkTextInput) {
+            linkTextInput.addEventListener("input", renderPagePreview);
+        }
+        const linkUrlInput = document.querySelector('[name="link_url"]');
+        if (linkUrlInput) {
+            linkUrlInput.addEventListener("input", renderPagePreview);
+        }
+
+        // Initial render
+        setTimeout(renderPagePreview, 500);
+    }
+
+    /**
+     * Update image position in preview
+     */
+    function updateImagePosition(imgId, x, y) {
+        const img = _gambarStore.find((i) => i.id === imgId);
+        if (img) {
+            img.x = x;
+            img.y = y;
+            renderPagePreview();
+        }
+    }
+
+    // Profile Page Form Alpine Component
+    
+
     // Profile Page Form Alpine Component
     function profilePageForm() {
         return {
@@ -477,12 +1055,17 @@
                         preview: compressed.preview,
                         x: 50,
                         y: 50,
+                        width: 200,
+                        height: 150,
+                        offsetX: 0,
+                        offsetY: 0,
                         isExisting: false,
                     });
                 });
                 // Wait for all images to be compressed before rendering
                 await Promise.all(compressionPromises);
                 renderGambarPreviews();
+                renderPagePreview();
                 event.target.value = "";
             },
 
@@ -627,12 +1210,29 @@
             } catch (e) {
                 console.error("[RTE] Error creating RichTextEditor:", e);
             }
+            
+            // Listen for editor content changes to update preview
+            const editorContainer = document.querySelector("#div_editor1");
+            if (editorContainer) {
+                const observer = new MutationObserver(() => {
+                    renderPagePreview();
+                });
+                observer.observe(editorContainer, {
+                    subtree: true,
+                    childList: true,
+                    characterData: true,
+                    attributes: false,
+                });
+            }
         }
         // Wait for scripts to fully load, then init
         setTimeout(initRTE, 500);
 
         // Initialize chart config list
         renderChartConfigList();
+        
+        // Setup preview triggers
+        setupPreviewTriggers();
 
         // Form submit
         document
@@ -662,14 +1262,8 @@
                     form.appendChild(fileInput);
                 }
 
-                // Image positions as array
-                _gambarStore.forEach((img) => {
-                    const posInput = document.createElement("input");
-                    posInput.type = "hidden";
-                    posInput.name = "image_positions[]";
-                    posInput.value = img.x + "% " + img.y + "%";
-                    form.appendChild(posInput);
-                });
+                // Save image positions, widths, heights, offsets
+                saveImagePositionsBeforeSubmit();
 
                 // Only disable the original gambar_files input, NOT the dynamically created images[]
                 form.querySelectorAll(
@@ -687,3 +1281,5 @@
     // Export for Alpine
     window.profilePageForm = profilePageForm;
 })();
+
+

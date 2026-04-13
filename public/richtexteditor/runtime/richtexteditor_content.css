@@ -37,7 +37,19 @@ div {
     color: #414141;
     font-size: 14px;
     line-height: 1.6;
+    text-align: left;
 }
+
+p, div { margin-bottom: 1rem; }
+ul { margin: 1em 0; padding-left: 1.5rem; list-style-type: disc; }
+ol { margin: 1em 0; padding-left: 1.5rem; list-style-type: decimal; }
+li { margin: 0.25em 0; }
+h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; text-align: left; }
+h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; text-align: left; }
+h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; text-align: left; }
+h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; text-align: left; }
+h5 { font-size: 0.83em; font-weight: bold; margin: 1.67em 0; text-align: left; }
+h6 { font-size: 0.67em; font-weight: bold; margin: 2.33em 0; text-align: left; }
 
 a {
     color: #377dff;
@@ -377,3 +389,6 @@ img {
     color: gray;
     background-color: inherit;
 }
+
+
+
