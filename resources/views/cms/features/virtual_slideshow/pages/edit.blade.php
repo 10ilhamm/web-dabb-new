@@ -402,7 +402,7 @@
                                             placeholder="{{ __('cms.virtual_slideshow.image_url_placeholder') }}"
                                             value="{{ $imgUrl }}" data-index="{{ $idx }}"
                                             oninput="updateUrlLink(this)">
-                                        <button type="button" onclick="removeImageUrlEntry(this)"
+                                        <button type="button" onclick="removeExistingUrl({{ $idx }})"
                                             class="px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0"
                                             title="{{ __('cms.virtual_slideshow.delete') }}">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -1543,8 +1543,47 @@
                         return false;
                     };
                 }
+
+                // If editing an existing URL image, sync the "existing images" preview in real-time.
+                syncExistingUrlPreview(input);
                 updateUrlImagePreviews();
             };
+
+            function syncExistingUrlPreview(input) {
+                if (!input || !input.name || input.name.indexOf('existing_image_urls[') !== 0) return;
+
+                var idx = parseInt(input.getAttribute('data-index'), 10);
+                if (isNaN(idx)) {
+                    var m = input.name.match(/existing_image_urls\[(\d+)\]/);
+                    if (m) idx = parseInt(m[1], 10);
+                }
+                if (isNaN(idx)) return;
+
+                var wrap = document.getElementById('existing-url-wrap-' + idx);
+                if (!wrap) return;
+
+                var url = input.value.trim();
+                var previewImg = wrap.querySelector('img');
+                var fallbackBox = previewImg ? previewImg.nextElementSibling : null;
+                var viewLink = wrap.querySelector('a[target="_blank"]');
+
+                if (viewLink) {
+                    viewLink.href = url || '#';
+                }
+
+                if (!previewImg) return;
+
+                if (!url) {
+                    previewImg.removeAttribute('src');
+                    previewImg.style.display = 'none';
+                    if (fallbackBox) fallbackBox.style.display = 'flex';
+                    return;
+                }
+
+                previewImg.src = convertImageUrl(url);
+                previewImg.style.display = '';
+                if (fallbackBox) fallbackBox.style.display = 'none';
+            }
 
             // Caption tracker for new uploaded images to persist values across re-renders
             var newUploadImageCaptionTracker = {};
@@ -2769,7 +2808,8 @@
                 }
                 try {
                     editor1 = new RichTextEditor("#div_editor1", {
-                        base_url: '/richtexteditor'
+                        base_url: '/richtexteditor',
+                        editorBodyCssClass: 'rte-content-body'
                     });
                     // Restore saved description content with multiple attempts
                     // The RTE iframe may not be ready immediately after construction

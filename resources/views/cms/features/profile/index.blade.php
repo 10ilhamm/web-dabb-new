@@ -29,16 +29,6 @@
         </div>
     </div>
 
-    {{-- Flash message --}}
-    @if (session('success'))
-        <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-3 rounded-xl text-sm flex items-center gap-2">
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- Page Navigation Preview --}}
     @if($pages->count() > 0)
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -81,7 +71,7 @@
         </div>
 
         <div>
-            <table class="w-full text-sm text-left">
+            <table id="tableProfilePages" class="w-full text-sm text-left">
                 <thead class="bg-gray-50 border-b border-gray-100">
                     <tr>
                         <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide w-12">No</th>
@@ -207,5 +197,12 @@ function profilePagesManager() {
         }
     }
 }
+
+$(document).ready(function() {
+    $('#tableProfilePages').DataTable({
+        columnDefs: [{ orderable: false, targets: [5] }],
+        order: [[0, 'asc']],
+    });
+});
 </script>
 @endpush

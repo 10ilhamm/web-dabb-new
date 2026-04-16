@@ -19,7 +19,6 @@
         #preview-container.profile-section-desc ul { list-style-type: disc !important; margin: 1em 0 !important; padding-left: 1.5rem !important; }
         #preview-container.profile-section-desc ol { list-style-type: decimal !important; margin: 1em 0 !important; padding-left: 1.5rem !important; }
         #preview-container.profile-section-desc li { margin: 0.25em 0 !important; display: list-item !important; }
-        #preview-container.profile-section-desc a { color: #00bcd4 !important; text-decoration: none !important; }
         #preview-container.profile-section-desc a:hover { text-decoration: underline !important; color: #009ac9 !important; }
         #preview-container.profile-section-desc h1 { font-size: 2em !important; font-weight: bold !important; margin: 0.67em 0 !important; color: #1e293b !important; }
         #preview-container.profile-section-desc h2 { font-size: 1.5em !important; font-weight: bold !important; margin: 0.83em 0 !important; color: #1e293b !important; }
@@ -74,6 +73,21 @@
             text-decoration: none !important;
             font-size: 0.9rem !important;
             font-family: 'Montserrat', sans-serif !important;
+        }
+
+        /* Prevent text column from stretching - CRITICAL FIX */
+        #preview-container .preview-text-col {
+            overflow: hidden;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            min-width: 0;
+            flex-shrink: 1;
+        }
+
+        /* Ensure grid layout preserves column structure */
+        #preview-container [style*="grid-template-columns"] {
+            align-items: start;
         }
     </style>
 @endpush

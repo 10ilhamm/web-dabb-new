@@ -4,6 +4,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
+<link rel="stylesheet" href="{{ asset('css/feature-page.css') }}">
 <link rel="stylesheet" href="{{ asset('css/virtual_slideshow.css') }}">
 <style>
     /* Back button for slideshow view */
@@ -136,21 +137,17 @@
 <div class="vsshow-progress-bar" id="vss-progress"></div>
 
 {{-- Breadcrumb with back button --}}
-<div class="vsshow-breadcrumb" style="background: #f8fafc; padding: 0.75rem 0;">
-    <div class="vsshow-container" style="display: flex; align-items: center; justify-content: space-between;">
-        <div>
-            <a href="{{ url('/') }}">Beranda</a>
-            @if($feature->parent)
-                <span class="sep">/</span>
-                <a href="{{ url($feature->parent->path ?? '#') }}">
-                    {{ app()->getLocale() === 'en' && $feature->parent->name_en ? $feature->parent->name_en : $feature->parent->name }}
-                </a>
-            @endif
+<div class="feature-breadcrumb">
+    <div class="container">
+        @if($feature->parent)
+            <a href="{{ url($feature->parent->path ?? '#') }}">
+                {{ app()->getLocale() === 'en' && $feature->parent->name_en ? $feature->parent->name_en : $feature->parent->name }}
+            </a>
             <span class="sep">/</span>
-            <a href="{{ url($feature->path) }}">{{ app()->getLocale() === 'en' && $feature->name_en ? $feature->name_en : $feature->name }}</a>
-            <span class="sep">/</span>
-            <span>{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</span>
-        </div>
+        @endif
+        <a href="{{ url($feature->path) }}">{{ app()->getLocale() === 'en' && $feature->name_en ? $feature->name_en : $feature->name }}</a>
+        <span class="sep">/</span>
+        <span class="current">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</span>
     </div>
 </div>
 
@@ -289,7 +286,7 @@
                                 $itemType = $orderItem['type'] ?? null;
                                 $imgSrc = null;
                                 $itemCaption = '';
-                                
+
                                 if ($itemType === 'upload') {
                                     $idx = $orderItem['uploadIndex'] ?? 0;
                                     $imgPath = $images[$idx] ?? null;
@@ -478,7 +475,7 @@
                                     $itemType = $orderItem['type'] ?? null;
                                     $imgSrc = null;
                                     $itemCaption = '';
-                                    
+
                                     if ($itemType === 'upload') {
                                         $idx = $orderItem['uploadIndex'] ?? 0;
                                         $imgPath = $images[$idx] ?? null;

@@ -37,10 +37,10 @@
                     ctx.fillStyle = "#FFFFFF";
                     ctx.fillRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
-                    
+
                     // Get preview from canvas ASAP (before blob conversion)
                     const previewDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-                    
+
                     const quality = file.type === "image/png" ? undefined : 0.9;
                     const ext = file.type === "image/png" ? "png" : "jpg";
                     const newName =
@@ -90,8 +90,10 @@
 
             // Add loading indicator
             const loader = document.createElement("div");
-            loader.className = "absolute inset-0 flex items-center justify-center bg-gray-100";
-            loader.innerHTML = '<div class="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>';
+            loader.className =
+                "absolute inset-0 flex items-center justify-center bg-gray-100";
+            loader.innerHTML =
+                '<div class="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>';
             dragBox.appendChild(loader);
 
             const imgEl = document.createElement("img");
@@ -99,23 +101,27 @@
                 "absolute w-full h-full object-cover transition-transform duration-300";
             imgEl.style.objectPosition = img.x + "% " + img.y + "%";
             imgEl.style.display = "none"; // Hide until loaded
-            
+
             // Track successful load
             let imageLoaded = false;
-            
-            imgEl.onload = function() {
-                console.log('[IMG LOAD] Successfully loaded:', img.preview.substring(0, 80));
+
+            imgEl.onload = function () {
+                console.log(
+                    "[IMG LOAD] Successfully loaded:",
+                    img.preview.substring(0, 80),
+                );
                 imageLoaded = true;
                 imgEl.style.display = "block";
                 loader.style.display = "none";
             };
-            
-            imgEl.onerror = function() {
-                console.error('[IMG ERROR] Failed to load image');
-                loader.innerHTML = '<div class="text-red-500 text-xs text-center">Failed to load<br>image</div>';
+
+            imgEl.onerror = function () {
+                console.error("[IMG ERROR] Failed to load image");
+                loader.innerHTML =
+                    '<div class="text-red-500 text-xs text-center">Failed to load<br>image</div>';
                 imgEl.style.display = "none";
             };
-            
+
             // Set src last to trigger loading
             imgEl.src = img.preview;
             dragBox.appendChild(imgEl);
@@ -163,7 +169,8 @@
                     focal.style.top = py + "%";
                     img.x = px;
                     img.y = py;
-                    if (typeof renderPagePreview === "function") renderPagePreview();
+                    if (typeof renderPagePreview === "function")
+                        renderPagePreview();
                 };
                 const stop = () => {
                     window.removeEventListener("mousemove", update);
@@ -192,7 +199,8 @@
                     delete _files[img.id];
                 }
                 renderGambarPreviews();
-                if (typeof renderPagePreview === "function") renderPagePreview();
+                if (typeof renderPagePreview === "function")
+                    renderPagePreview();
             });
             wrapper.appendChild(delBtn);
             grid.appendChild(wrapper);
@@ -442,28 +450,30 @@
         if (!form) return;
 
         // Remove previous dynamically generated inputs
-        document.querySelectorAll('.dynamic-img-pos').forEach(el => el.remove());
+        document
+            .querySelectorAll(".dynamic-img-pos")
+            .forEach((el) => el.remove());
 
         // Create individual array inputs for each image
         _gambarStore.forEach((img, idx) => {
             const posX = img.x !== undefined ? img.x : 50;
             const posY = img.y !== undefined ? img.y : 50;
             const posStr = posX + "% " + posY + "%";
-            
+
             const inputs = [
-                { name: 'image_positions[]', value: posStr },
-                { name: 'image_widths[]', value: img.width || 200 },
-                { name: 'image_heights[]', value: img.height || 150 },
-                { name: 'image_offset_x[]', value: img.offsetX || 0 },
-                { name: 'image_offset_y[]', value: img.offsetY || 0 }
+                { name: "image_positions[]", value: posStr },
+                { name: "image_widths[]", value: img.width || 200 },
+                { name: "image_heights[]", value: img.height || 150 },
+                { name: "image_offset_x[]", value: img.offsetX || 0 },
+                { name: "image_offset_y[]", value: img.offsetY || 0 },
             ];
 
-            inputs.forEach(inputData => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
+            inputs.forEach((inputData) => {
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
                 hiddenInput.name = inputData.name;
                 hiddenInput.value = inputData.value;
-                hiddenInput.className = 'dynamic-img-pos';
+                hiddenInput.className = "dynamic-img-pos";
                 form.appendChild(hiddenInput);
             });
         });
@@ -474,8 +484,6 @@
             oldInput.disabled = true;
         }
     }
-
-    
 
     function renderPagePreview() {
         console.log(
@@ -498,8 +506,10 @@
 
         // Get Title/Link content
         const titleVal = document.querySelector('[name="title"]')?.value || "";
-        const linkTextVal = document.querySelector('[name="link_text"]')?.value || "";
-        const linkUrlVal = document.querySelector('[name="link_url"]')?.value || "";
+        const linkTextVal =
+            document.querySelector('[name="link_text"]')?.value || "";
+        const linkUrlVal =
+            document.querySelector('[name="link_url"]')?.value || "";
 
         // Build preview HTML - EXACT match guest page structure with container wrapper
         let previewHTML =
@@ -511,39 +521,76 @@
         const hasLink = linkTextVal && linkUrlVal;
 
         // Build left column content (Same logic for both grid and single column)
-        let leftCol = '<div style="width: 100%; word-break: break-word; overflow-wrap: break-word; min-width: 0;">';
+        let leftCol =
+            '<div style="width: 100%; word-break: break-word; overflow-wrap: break-word; min-width: 0;">';
         if (hasDesc) {
-            leftCol += '<div class="profile-section-desc" style="margin-bottom: 1.5rem;">' + descriptionHTML + '</div>';
+            leftCol +=
+                '<div class="profile-section-desc" style="margin-bottom: 1.5rem;">' +
+                descriptionHTML +
+                "</div>";
         }
         if (hasTitle) {
-            leftCol += '<h2 class="profile-section-title">' + titleVal + '</h2>';
+            leftCol +=
+                '<h2 class="profile-section-title">' + titleVal + "</h2>";
         }
         if (hasLink) {
-            leftCol += '<a href="' + linkUrlVal + '" class="page-link-btn" target="_blank">' + linkTextVal + ' <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>';
+            leftCol +=
+                '<a href="' +
+                linkUrlVal +
+                '" class="page-link-btn" target="_blank">' +
+                linkTextVal +
+                ' <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>';
         }
-        leftCol += '</div>';
+        leftCol += "</div>";
 
         if (hasImages) {
-            previewHTML += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">';
-            
-            // Left Column
-            previewHTML += leftCol;
+            previewHTML +=
+                '<div style="width: 100%; overflow: visible; display: block;">';
 
-            // Right Column: Images
-            previewHTML += '<div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">';
-            _gambarStore.forEach((img, idx) => {
+            _gambarStore.forEach((img) => {
                 const w = img.width || 200;
                 const h = img.height || 150;
-                const offsetX = Number(img.offsetX) || 0;
-                const offsetY = Number(img.offsetY) || 0;
-                const transformStr = (offsetX !== 0 || offsetY !== 0) ? `transform: translate(${offsetX}px, ${offsetY}px);` : "";
-                
-                previewHTML += '<div class="preview-img-item" data-img-id="' + img.id + '" style="position: relative; border-radius: 0.75rem; overflow: visible !important; width: ' + w + 'px; height: ' + h + 'px; ' + transformStr + '">';
-                previewHTML += '<div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: white; padding: 2px 4px; font-size: 10px; border-radius: 3px; z-index: 20; cursor: grab;">☰</div>';
-                previewHTML += '<img src="' + img.preview + '" style="width: 100%; height: 100%; object-fit: cover; object-position: ' + img.x + '% ' + img.y + '%; display: block; border-radius: 0.75rem;">';
+                let oX = typeof img.offsetX === "number" ? img.offsetX : null;
+                let oY = typeof img.offsetY === "number" ? img.offsetY : null;
+                let drTop = 0,
+                    drRight = 0;
+                if (oX !== null) drRight = -oX;
+                if (oY !== null) drTop = oY;
+                let marginStr = "";
+                if (oX === null && oY === null) {
+                    // First upload: float right, no offset, normal margin
+                    marginStr = "margin: 0 0 32px 32px; float: right;";
+                } else {
+                    marginStr =
+                        "margin: " +
+                        drTop +
+                        "px " +
+                        drRight +
+                        "px 32px 32px; float: right;";
+                }
+                const styleStr = `position: relative; border-radius: 0.75rem; overflow: visible !important; width: ${w}px; height: ${h}px; ${marginStr} z-index: 10;`;
+                previewHTML +=
+                    '<div class="preview-img-item" data-img-id="' +
+                    img.id +
+                    '" style="' +
+                    styleStr +
+                    '">';
+                previewHTML +=
+                    '<div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: white; padding: 2px 4px; font-size: 10px; border-radius: 3px; z-index: 20; cursor: grab;">☰</div>';
+                previewHTML +=
+                    '<img src="' +
+                    img.preview +
+                    '" style="width: 100%; height: 100%; object-fit: cover; object-position: ' +
+                    (img.x || 50) +
+                    "% " +
+                    (img.y || 50) +
+                    '%; display: block; border-radius: 0.75rem;">';
                 previewHTML += "</div>";
             });
-            previewHTML += "</div>";
+
+            // The text comes AFTER floating elements in HTML!
+            previewHTML += leftCol;
+            previewHTML += '<div style="clear: both;"></div>';
             previewHTML += "</div>";
         } else if (hasDesc || hasTitle || hasLink) {
             previewHTML += leftCol;
@@ -659,7 +706,12 @@
 
                         item.style.width = newWidth + "px";
                         item.style.height = newHeight + "px";
-                        item.style.transform = 'translate(' + (startOffsetX + shiftX) + 'px, ' + (startOffsetY + shiftY) + 'px)';
+                        item.style.transform =
+                            "translate(" +
+                            (startOffsetX + shiftX) +
+                            "px, " +
+                            (startOffsetY + shiftY) +
+                            "px)";
 
                         img.width = Math.round(newWidth);
                         img.height = Math.round(newHeight);
@@ -742,7 +794,9 @@
      * Vertical drag = transform translateY only (no text reflow needed).
      */
     function adjustPreviewGrid() {
-        var gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
+        var gridContainer = document.querySelector(
+            '#preview-container [style*="grid-template-columns"]',
+        );
         if (!gridContainer) return;
 
         var gridWidth = gridContainer.getBoundingClientRect().width;
@@ -751,7 +805,7 @@
         var MIN_TEXT_WIDTH = 180;
 
         var extraNeeded = 0;
-        _gambarStore.forEach(function(img) {
+        _gambarStore.forEach(function (img) {
             var w = Number(img.width) || 200;
             var offsetX = Number(img.offsetX) || 0;
 
@@ -777,9 +831,10 @@
                 imgColWidth = gridWidth - gap - textColWidth;
             }
 
-            gridContainer.style.gridTemplateColumns = textColWidth + 'px ' + imgColWidth + 'px';
+            gridContainer.style.gridTemplateColumns =
+                textColWidth + "px " + imgColWidth + "px";
         } else {
-            gridContainer.style.gridTemplateColumns = '1fr 1fr';
+            gridContainer.style.gridTemplateColumns = "1fr 1fr";
         }
     }
 
@@ -787,17 +842,18 @@
      * Apply transforms to all preview images from store data
      */
     function applyImageTransforms() {
-        document.querySelectorAll('.preview-img-item').forEach(function(item) {
+        document.querySelectorAll(".preview-img-item").forEach(function (item) {
             var imgId = item.dataset.imgId;
-            var imgData = _gambarStore.find(function(i) { return i.id === imgId; });
+            var imgData = _gambarStore.find(function (i) {
+                return i.id === imgId;
+            });
             if (imgData) {
                 var oX = Number(imgData.offsetX) || 0;
                 var oY = Number(imgData.offsetY) || 0;
-                if (oX !== 0 || oY !== 0) {
-                    item.style.transform = 'translate(' + oX + 'px, ' + oY + 'px)';
-                } else {
-                    item.style.transform = 'none';
-                }
+                var drTop = oY;
+                var drRight = -oX;
+                item.style.margin = drTop + "px " + drRight + "px 32px 32px";
+                item.style.transform = "none";
             }
         });
     }
@@ -867,29 +923,16 @@
 
                         const imgLive = _gambarStore[draggedIndex];
                         if (imgLive) {
-                            const imgWidth = Number(imgLive.width) || 200;
-                            const MIN_TEXT_WIDTH = 180;
-                            const gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
-
-                            if (gridContainer) {
-                                const gridRect = gridContainer.getBoundingClientRect();
-                                const gap = 32;
-                                const halfWidth = (gridRect.width - gap) / 2;
-
-                                if (newX < 0) {
-                                    const textColumnWidth = halfWidth + newX;
-                                    if (textColumnWidth < MIN_TEXT_WIDTH) {
-                                        newX = MIN_TEXT_WIDTH - halfWidth;
-                                    }
-                                }
-                            }
-
                             newX = Math.round(newX);
                             imgLive.offsetX = newX;
                             imgLive.offsetY = Math.round(newY);
                         }
 
-                        draggedItem.style.transform = `translate(${newX}px, ${newY}px)`;
+                        let drTop = newY;
+                        let drRight = -newX;
+                        draggedItem.style.margin =
+                            drTop + "px " + drRight + "px 32px 32px";
+                        draggedItem.style.transform = "none";
                         adjustPreviewGrid();
                     };
 
@@ -906,22 +949,6 @@
 
                         const img = _gambarStore[draggedIndex];
                         if (img) {
-                            const MIN_TEXT_WIDTH = 180;
-                            const gridContainer = document.querySelector('#preview-container [style*="grid-template-columns"]');
-
-                            if (gridContainer) {
-                                const gridRect = gridContainer.getBoundingClientRect();
-                                const gap = 32;
-                                const halfWidth = (gridRect.width - gap) / 2;
-
-                                if (finalOffsetX < 0) {
-                                    const textColumnWidth = halfWidth + finalOffsetX;
-                                    if (textColumnWidth < MIN_TEXT_WIDTH) {
-                                        finalOffsetX = MIN_TEXT_WIDTH - halfWidth;
-                                    }
-                                }
-                            }
-
                             img.offsetX = Math.round(finalOffsetX);
                             img.offsetY = Math.round(finalOffsetY);
                             console.log("[DRAG SAVED]", {
@@ -1011,7 +1038,6 @@
     }
 
     // Profile Page Form Alpine Component
-    
 
     // Profile Page Form Alpine Component
     function profilePageForm() {
@@ -1057,8 +1083,8 @@
                         y: 50,
                         width: 200,
                         height: 150,
-                        offsetX: 0,
-                        offsetY: 0,
+                        offsetX: null, // <--- changed from 0 to null
+                        offsetY: null, // <--- changed from 0 to null
                         isExisting: false,
                     });
                 });
@@ -1186,6 +1212,7 @@
 
                 editor1 = new RichTextEditor("#div_editor1", {
                     base_url: rteBaseUrl,
+                    editorBodyCssClass: "rte-content-body",
                     file_upload_handler: function (file, callback) {
                         var formData = new FormData();
                         formData.append("file", file);
@@ -1210,7 +1237,7 @@
             } catch (e) {
                 console.error("[RTE] Error creating RichTextEditor:", e);
             }
-            
+
             // Listen for editor content changes to update preview
             const editorContainer = document.querySelector("#div_editor1");
             if (editorContainer) {
@@ -1230,7 +1257,7 @@
 
         // Initialize chart config list
         renderChartConfigList();
-        
+
         // Setup preview triggers
         setupPreviewTriggers();
 
@@ -1249,7 +1276,7 @@
                     .filter((i) => !i.isExisting)
                     .map((i) => _files[i.id])
                     .filter(Boolean);
-                
+
                 if (gambarFiles.length) {
                     const dt = new DataTransfer();
                     gambarFiles.forEach((f) => dt.items.add(f));
@@ -1281,5 +1308,3 @@
     // Export for Alpine
     window.profilePageForm = profilePageForm;
 })();
-
-

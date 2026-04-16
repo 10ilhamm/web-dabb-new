@@ -59,6 +59,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         var editor1 = new RichTextEditor("#div_editor1", {
             base_url: '/richtexteditor',
+            editorBodyCssClass: 'rte-content-body',
             file_upload_handler: function(file, callback, optionalIndex, optionalFiles) {
                 var formData = new FormData();
                 formData.append('file', file);

@@ -1916,7 +1916,8 @@
                 }
                 try {
                     editor1 = new RichTextEditor("#div_editor1", {
-                        base_url: '/richtexteditor'
+                        base_url: '/richtexteditor',
+                        editorBodyCssClass: 'rte-content-body'
                     });
                 } catch (e) {
                     console.error('RTE init error:', e);

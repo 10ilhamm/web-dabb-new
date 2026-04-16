@@ -4,6 +4,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
+<link rel="stylesheet" href="{{ asset('css/feature-page.css') }}">
 <link rel="stylesheet" href="{{ asset('css/virtual_slideshow.css') }}">
 <style>
     /* Landing Page Grid Styles */
@@ -166,17 +167,15 @@
 @endphp
 
 {{-- Breadcrumb --}}
-<div class="vsshow-breadcrumb">
-    <div class="vsshow-container">
-        <a href="{{ url('/') }}">Beranda</a>
+<div class="feature-breadcrumb">
+    <div class="container">
         @if($feature->parent)
-            <span class="sep">/</span>
             <a href="{{ url($feature->parent->path ?? '#') }}">
                 {{ app()->getLocale() === 'en' && $feature->parent->name_en ? $feature->parent->name_en : $feature->parent->name }}
             </a>
+            <span class="sep">/</span>
         @endif
-        <span class="sep">/</span>
-        <span>{{ app()->getLocale() === 'en' && $feature->name_en ? $feature->name_en : $feature->name }}</span>
+        <span class="current">{{ app()->getLocale() === 'en' && $feature->name_en ? $feature->name_en : $feature->name }}</span>
     </div>
 </div>
 
@@ -209,7 +208,7 @@
                     @php
                         $pageSlides = $page->slideshowSlides ?? collect();
                         $firstSlide = $pageSlides->sortBy('order')->first();
-                        
+
                         $thumbUrl = null;
                         if ($page->thumbnail_path) {
                             $thumbUrl = asset('storage/'.$page->thumbnail_path);
