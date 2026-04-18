@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.3-fpm-bookworm
 
 WORKDIR /var/www
 
@@ -21,13 +21,6 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql gd zip
 
-RUN docker-php-ext-install mbstring xml
-
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
-
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
-
 # 3. Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- \
     --install-dir=/usr/local/bin --filename=composer
@@ -35,11 +28,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 # 4. Copy seluruh source code SEBELUM composer install
 COPY . .
 
-# 5. Jalankan composer install (bypass memory limit)
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist --optimize-autoloader -vvv
+# 5. Jalankan composer install (bypass memory limit, verbose untuk debug)
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
+    --no-interaction --prefer-dist --optimize-autoloader -vvv
 
-# 6. Set user permissions (opsional, untuk Laravel storage/logs)
-RUN chown -R www-data:www-data /var/www \
+# 6. Set user permissions (Laravel storage/logs)
+RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 CMD ["php-fpm"]
