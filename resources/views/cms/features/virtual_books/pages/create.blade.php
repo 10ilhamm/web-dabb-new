@@ -107,6 +107,29 @@
 
                         <div>
                             <label
+                                class="block text-sm font-medium text-gray-700 mb-2">{{ __('cms.virtual_book_pages.form.image_fit_mode') }}</label>
+                            <div class="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1" role="group">
+                                <button type="button" id="fitModeContainedBtn"
+                                    class="fit-mode-btn px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                                    data-mode="contained"
+                                    onclick="setImageFitMode('contained')">
+                                    {{ __('cms.virtual_book_pages.form.image_fit_contained') }}
+                                </button>
+                                <button type="button" id="fitModeFullbleedBtn"
+                                    class="fit-mode-btn px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                                    data-mode="fullbleed"
+                                    onclick="setImageFitMode('fullbleed')">
+                                    {{ __('cms.virtual_book_pages.form.image_fit_fullbleed') }}
+                                </button>
+                            </div>
+                            <input type="hidden" name="image_fit_mode" id="imageFitModeInput"
+                                value="{{ old('image_fit_mode', 'contained') }}">
+                            <p class="text-xs text-gray-500 mt-1.5">
+                                {{ __('cms.virtual_book_pages.form.image_fit_mode_help') }}</p>
+                        </div>
+
+                        <div>
+                            <label
                                 class="block text-sm font-medium text-gray-700 mb-2">{{ __('cms.virtual_book_pages.form.image_size') }}</label>
                             <div class="flex items-center gap-3">
                                 <input type="range" name="image_height" id="imageHeightSlider" min="10"

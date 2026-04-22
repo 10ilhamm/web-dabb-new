@@ -16,6 +16,7 @@ class VirtualBookPage extends Model
         'image',
         'images',
         'image_height',
+        'image_fit_mode',
         'image_positions',
         'text_position',
         'thumbnail',

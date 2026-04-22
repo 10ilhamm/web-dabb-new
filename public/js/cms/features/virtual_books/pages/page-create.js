@@ -1,6 +1,23 @@
 let newImages = [];
 let imagePositions = [];
 let textPosition = { x: 0, y: 0, width: 45, height: 30 };
+let imageFitMode = 'contained';
+
+function setImageFitMode(mode) {
+    imageFitMode = mode;
+    const hidden = document.getElementById('imageFitModeInput');
+    if (hidden) hidden.value = mode;
+
+    document.querySelectorAll('.fit-mode-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    updatePreview();
+}
 
 function handleImageUpload(input) {
     const files = input.files;
@@ -52,7 +69,7 @@ function updatePreview() {
     const pageFooterOrder = document.getElementById('bookPreview').dataset.pageOrder || '';
 
     const preview = document.getElementById('bookPreview');
-    preview.className = 'book-preview content-page';
+    preview.className = 'book-preview content-page' + (imageFitMode === 'fullbleed' ? ' fullbleed-mode' : '');
     preview.innerHTML = '';
 
     let innerContent = '<div class="content-page-inner">';
@@ -67,11 +84,12 @@ function updatePreview() {
         newImages.forEach((src, index) => {
             const pos = imagePositions[index] || { x: 0, y: 0 };
             const size = Math.max(20, parseInt(imageHeight));
+            const heightPct = imageFitMode === 'fullbleed' ? size : size * 0.75;
             innerContent += `
                 <div class="draggable-element draggable-image"
                      data-type="image"
                      data-index="${index}"
-                     style="background-image: url('${src}'); width: ${size}%; height: ${size * 0.75}%; left: ${pos.x}%; top: ${pos.y}%;"
+                     style="background-image: url('${src}'); width: ${size}%; height: ${heightPct}%; left: ${pos.x}%; top: ${pos.y}%;"
                      onmousedown="startDrag(event, this)">
                 </div>`;
         });
@@ -217,7 +235,12 @@ function updatePositionInputs() {
 
 // Thumbnail generation
 document.addEventListener('DOMContentLoaded', function() {
-    updatePreview();
+    const fitInput = document.getElementById('imageFitModeInput');
+    if (fitInput) {
+        setImageFitMode(fitInput.value || 'contained');
+    } else {
+        updatePreview();
+    }
 
     const generateBtn = document.getElementById('generateThumbnailBtn');
     const generatedInput = document.getElementById('generatedThumbnail');

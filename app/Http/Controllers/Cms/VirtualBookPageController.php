@@ -44,6 +44,7 @@ class VirtualBookPageController extends Controller
             'content' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'image_height' => 'nullable|integer|min:10|max:100',
+            'image_fit_mode' => 'nullable|in:contained,fullbleed',
             'image_positions' => 'nullable|array',
             'text_position' => 'nullable|array',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp',
@@ -54,6 +55,7 @@ class VirtualBookPageController extends Controller
         $validated['feature_id'] = $feature->id;
         $validated['book_id'] = $book->id;
         $validated['image_height'] = $validated['image_height'] ?? 50;
+        $validated['image_fit_mode'] = $validated['image_fit_mode'] ?? 'contained';
 
         // Always content page (covers are managed in book settings)
         $validated['is_cover'] = false;
@@ -110,6 +112,7 @@ class VirtualBookPageController extends Controller
             'content' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'image_height' => 'nullable|integer|min:10|max:100',
+            'image_fit_mode' => 'nullable|in:contained,fullbleed',
             'image_positions' => 'nullable|array',
             'text_position' => 'nullable|array',
             'remove_images' => 'nullable|array',
@@ -123,6 +126,9 @@ class VirtualBookPageController extends Controller
         if (!isset($validated['image_height'])) {
             $validated['image_height'] = $virtualBookPage->image_height ?? 50;
         }
+
+        // Set image fit mode default
+        $validated['image_fit_mode'] = $validated['image_fit_mode'] ?? ($virtualBookPage->image_fit_mode ?? 'contained');
 
         // Always content page (covers are managed in book settings)
         $validated['is_cover'] = false;
@@ -138,24 +144,41 @@ class VirtualBookPageController extends Controller
 
         // Handle multiple image uploads
         $images = $virtualBookPage->page_images ?? [];
-        $imagePositions = $virtualBookPage->image_positions ?? [];
+        $existingPositions = $virtualBookPage->image_positions ?? [];
 
-        // Handle removing images
+        // Handle removing images (and align existing positions to survivors)
         if ($request->has('remove_images')) {
-            foreach ($request->remove_images as $index => $value) {
+            $removeIndexes = array_map('intval', array_keys($request->remove_images));
+            foreach ($removeIndexes as $index) {
                 if (isset($images[$index])) {
                     Storage::disk('public')->delete($images[$index]);
-                    unset($images[$index]);
+                    unset($images[$index], $existingPositions[$index]);
                 }
             }
             $images = array_values($images);
-            $imagePositions = array_values($imagePositions);
+            $existingPositions = array_values($existingPositions);
         }
 
         // Handle new image uploads
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $images[] = $image->store('features/virtual-books', 'public');
+            }
+        }
+
+        // Rebuild positions: prefer values submitted from form (covers both existing & new),
+        // fall back to previously stored positions, then to {0,0}. Trim to images count.
+        $submittedPositions = $validated['image_positions'] ?? [];
+        $imagePositions = [];
+        foreach ($images as $i => $_imgPath) {
+            if (isset($submittedPositions[$i]['x']) && isset($submittedPositions[$i]['y'])) {
+                $imagePositions[] = [
+                    'x' => (float) $submittedPositions[$i]['x'],
+                    'y' => (float) $submittedPositions[$i]['y'],
+                ];
+            } elseif (isset($existingPositions[$i])) {
+                $imagePositions[] = $existingPositions[$i];
+            } else {
                 $imagePositions[] = ['x' => 0, 'y' => 0];
             }
         }

@@ -100,11 +100,18 @@
         }
 
         .page .page-content { width: 100%; height: 100%; position: relative; }
-        .page .page-content .page-header { position: absolute; top: 0; left: 0; right: 0; height: 30px; font-size: 100%; text-transform: uppercase; text-align: center; z-index: 2; }
+        .page .page-content .page-header { position: absolute; top: 0; left: 0; right: 0; height: 30px; font-size: 100%; text-transform: uppercase; text-align: center; z-index: 1; }
+        /* Contained mode (default): inner is bounded by header & footer */
         .page .page-content .page-inner { position: absolute; left: 15px; right: 0; top: 30px; bottom: 30px; }
+        /* Fullbleed mode: inner spans the entire page; header/footer still rendered but image overlaps when 100% */
+        .page.fullbleed-page { padding: 0; }
+        .page .page-content.fullbleed .page-inner { left: 0; right: 0; top: 0; bottom: 0; z-index: 2; }
+        .page .page-content.fullbleed .page-header { left: 20px; right: 20px; top: 8px; background: transparent; border: 0; }
+        .page .page-content.fullbleed .page-footer { left: 20px; right: 20px; bottom: 8px; background: transparent; border: 0; }
         .page .page-content .page-image { position: absolute; background-size: contain; background-position: center center; background-repeat: no-repeat; }
-        .page .page-content .page-text { position: absolute; font-size: 80%; text-align: justify; padding: 8px; box-sizing: border-box; overflow: auto; }
-        .page .page-content .page-footer { position: absolute; bottom: 0; left: 0; right: 0; height: 30px; border-top: solid 1px hsl(35, 55%, 90%); font-size: 80%; color: hsl(35, 20%, 50%); z-index: 2; }
+        .page .page-content.fullbleed .page-image { background-size: 100% 100%; }
+        .page .page-content .page-text { position: absolute; font-size: 80%; text-align: justify; padding: 8px; box-sizing: border-box; overflow: auto; z-index: 3; }
+        .page .page-content .page-footer { position: absolute; bottom: 0; left: 0; right: 0; height: 30px; border-top: solid 1px hsl(35, 55%, 90%); font-size: 80%; color: hsl(35, 20%, 50%); z-index: 1; }
         .page.--left { border-right: 0; box-shadow: inset -7px 0 30px -7px rgba(0, 0, 0, 0.4); }
         .page.--right { border-left: 0; box-shadow: inset 7px 0 30px -7px rgba(0, 0, 0, 0.4); text-align: right; }
         .page.hard { background-color: hsl(35, 50%, 90%); border: solid 1px hsl(35, 20%, 50%); }
@@ -190,10 +197,12 @@
                         $imagePositions = $page->image_positions ?? [];
                         $imageHeight = $page->image_height ?? 40;
                         $imgSize = max(20, (int) $imageHeight);
+                        $fitMode = $page->image_fit_mode ?? 'contained';
+                        $imgHeightPct = $fitMode === 'fullbleed' ? $imgSize : $imgSize * 0.75;
                         $textPos = $page->text_position ?? ['x' => 0, 'y' => 0, 'width' => 45, 'height' => 30];
                     @endphp
-                    <div class="page">
-                        <div class="page-content">
+                    <div class="page {{ $fitMode === 'fullbleed' ? 'fullbleed-page' : '' }}">
+                        <div class="page-content {{ $fitMode === 'fullbleed' ? 'fullbleed' : '' }}">
                             @if($page->title)
                             <h2 class="page-header">{{ app()->getLocale() === 'en' && $page->title_en ? $page->title_en : $page->title }}</h2>
                             @endif
@@ -201,7 +210,7 @@
                                 @if(count($images) > 0)
                                     @foreach($images as $imgIndex => $image)
                                     @php $pos = $imagePositions[$imgIndex] ?? ['x' => 0, 'y' => 0]; @endphp
-                                    <div class="page-image" style="background-image: url('{{ asset('storage/' . $image) }}'); left: {{ $pos['x'] ?? 0 }}%; top: {{ $pos['y'] ?? 0 }}%; width: {{ $imgSize }}%; height: {{ $imgSize * 0.75 }}%;"></div>
+                                    <div class="page-image" style="background-image: url('{{ asset('storage/' . $image) }}'); left: {{ $pos['x'] ?? 0 }}%; top: {{ $pos['y'] ?? 0 }}%; width: {{ $imgSize }}%; height: {{ $imgHeightPct }}%;"></div>
                                     @endforeach
                                 @endif
                                 @if($page->content)
