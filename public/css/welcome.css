@@ -397,15 +397,20 @@ section { padding: 48px 0; }
     display: block;
     text-decoration: none;
     flex-shrink: 0;
+    /* Stable card width so the marquee measurement is deterministic
+       regardless of image load state. */
+    width: 160px;
 }
 .related-link-image {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px;
+    height: 96px;
 }
 .related-link-image img {
     max-height: 80px;
+    max-width: 100%;
     width: auto;
     height: auto;
     object-fit: contain;

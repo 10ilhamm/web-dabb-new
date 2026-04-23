@@ -175,7 +175,7 @@
             </div>
             @if(count($validLinks) > 1)
             <script>
-                document.addEventListener('DOMContentLoaded', function() {
+                (function() {
                     var marquee = document.getElementById('related-links-marquee');
                     var track = document.getElementById('related-links-track');
                     if (!marquee || !track) return;
@@ -183,18 +183,48 @@
                     var firstSlide = track.querySelector('.related-links-slide');
                     if (!firstSlide) return;
 
-                    // Measure real content: sum of each card width + gaps
-                    var cards = firstSlide.querySelectorAll('.related-link-card');
-                    var gap = 32;
-                    var contentW = 0;
-                    cards.forEach(function(card) { contentW += card.offsetWidth; });
-                    contentW += gap * Math.max(cards.length - 1, 0);
+                    function measure() {
+                        var cards = firstSlide.querySelectorAll('.related-link-card');
+                        var gap = 32;
+                        var contentW = 0;
+                        cards.forEach(function(card) { contentW += card.offsetWidth; });
+                        contentW += gap * Math.max(cards.length - 1, 0);
 
-                    track.style.setProperty('--slide-width', contentW + 'px');
-                    marquee.style.maxWidth = contentW + 'px';
-                    marquee.style.margin = '24px auto 0';
-                    track.style.animationDuration = Math.max(contentW / 50, 6) + 's';
-                    track.classList.add('scrolling');
+                        if (contentW <= 0) return false;
+
+                        track.style.setProperty('--slide-width', contentW + 'px');
+                        marquee.style.maxWidth = contentW + 'px';
+                        marquee.style.margin = '24px auto 0';
+                        track.style.animationDuration = Math.max(contentW / 50, 6) + 's';
+                        track.classList.add('scrolling');
+                        return true;
+                    }
+
+                    function start() {
+                        // Wait until every image in the track reports a real size.
+                        var imgs = track.querySelectorAll('img');
+                        var pending = 0;
+                        imgs.forEach(function(img) {
+                            if (!img.complete || !img.naturalWidth) {
+                                pending++;
+                                var done = function() {
+                                    img.removeEventListener('load', done);
+                                    img.removeEventListener('error', done);
+                                    if (--pending === 0) measure();
+                                };
+                                img.addEventListener('load', done);
+                                img.addEventListener('error', done);
+                            }
+                        });
+                        if (pending === 0) measure();
+                    }
+
+                    // Recompute on resize so widths stay correct when the viewport changes.
+                    var resizeTimer;
+                    window.addEventListener('resize', function() {
+                        clearTimeout(resizeTimer);
+                        resizeTimer = setTimeout(measure, 150);
+                    });
 
                     marquee.addEventListener('mouseenter', function() {
                         track.style.animationPlayState = 'paused';
@@ -202,7 +232,13 @@
                     marquee.addEventListener('mouseleave', function() {
                         track.style.animationPlayState = 'running';
                     });
-                });
+
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', start);
+                    } else {
+                        start();
+                    }
+                })();
             </script>
             @endif
             @endif
