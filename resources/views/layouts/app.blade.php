@@ -7,6 +7,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', $title ?? __('home.dashboard.title')) - {{ __('home.site_name') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('image/logo_anri.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo_anri.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('image/logo_anri.png') }}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

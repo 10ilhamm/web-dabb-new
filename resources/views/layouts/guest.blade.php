@@ -6,7 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'Laravel'))</title>
+    <title>@yield('title', config('app.name', 'web-dabb'))</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('image/logo_anri.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo_anri.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('image/logo_anri.png') }}">
 
     <!-- RTE Content CSS — SCOPED, avoids global rules that break guest page layout -->
     <link rel="stylesheet" href="{{ asset('richtexteditor/runtime/guest_richtexteditor_content.css') }}">
