@@ -205,7 +205,7 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            $('#tableVirtualBooks').DataTable({
+            $('#tableBooks').DataTable({
                 columnDefs: [{
                     orderable: false,
                     targets: [1, 5]

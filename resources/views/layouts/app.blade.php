@@ -608,8 +608,34 @@
                 },
             @endif
             pageLength: 10,
+            stripeClasses: ['odd', 'even'],
             // dom: top controls row, table, bottom controls row
             dom: '<"dt-top-row"<"dataTables_length"l><"dataTables_filter"f>>t<"dt-bottom-row"<"dataTables_info"i><"dataTables_paginate"p>>',
+        });
+
+        // Auto-clone <thead> into <tfoot> (AdminLTE-style column titles at bottom)
+        // Runs before DataTables init so the footer is registered by DT.
+        $(function () {
+            $('table').each(function () {
+                var $t = $(this);
+                // Only apply to tables that will be DataTables (have id starting with "table"
+                // or explicit .dataTable class). Skip if a <tfoot> already exists.
+                var willBeDT = $t.is('.dataTable') || /^table/i.test($t.attr('id') || '');
+                if (!willBeDT) return;
+                if ($t.find('tfoot').length) return;
+                var $head = $t.find('thead tr').first();
+                if (!$head.length) return;
+                var $footRow = $('<tr/>');
+                $head.children().each(function () {
+                    var $cell = $(this);
+                    // Keep alignment class + plain text/HTML content of the header
+                    var align = '';
+                    if ($cell.hasClass('text-center')) align = ' text-center';
+                    else if ($cell.hasClass('text-right')) align = ' text-right';
+                    $footRow.append('<th class="' + align.trim() + '">' + $cell.html() + '</th>');
+                });
+                $t.append($('<tfoot/>').append($footRow));
+            });
         });
     </script>
 
