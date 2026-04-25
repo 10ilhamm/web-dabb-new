@@ -40,17 +40,19 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get UI labels for each role.
+     * Get the role model for this user.
+     */
+    public function roleModel()
+    {
+        return $this->belongsTo(Role::class, 'role', 'name');
+    }
+
+    /**
+     * Get UI labels for each role (dynamic from roles table).
      */
     public static function roleLabels(): array
     {
-        return [
-            'admin' => __('dashboard.roles.admin'),
-            'pegawai' => __('dashboard.roles.pegawai'),
-            'umum' => __('dashboard.roles.umum'),
-            'pelajar_mahasiswa' => __('dashboard.roles.pelajar_mahasiswa'),
-            'instansi_swasta' => __('dashboard.roles.instansi_swasta'),
-        ];
+        return Role::roleLabels();
     }
 
     /**
@@ -79,14 +81,19 @@ class User extends Authenticatable
     /* Relationships */
     public function getProfileAttribute()
     {
-        return match ($this->role) {
-            'umum' => $this->userUmum,
-            'pelajar_mahasiswa' => $this->userPelajar,
-            'instansi_swasta' => $this->userInstansi,
-            'admin' => $this->userAdmin,
-            'pegawai' => $this->userPegawai,
-            default => null,
-        };
+        $role = Role::where('name', $this->role)->first();
+
+        if (! $role || ! $role->relation_name) {
+            return null;
+        }
+
+        $relation = $role->relation_name;
+
+        if (! method_exists($this, $relation)) {
+            return null;
+        }
+
+        return $this->{$relation};
     }
 
     public function userUmum()

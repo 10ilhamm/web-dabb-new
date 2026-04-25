@@ -1080,4 +1080,81 @@ return [
         'filter_section_title' => 'Filter',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | CMS — Role Management (roles/index)
+    |--------------------------------------------------------------------------
+    */
+    'roles' => [
+        'title' => 'Role Management',
+        'subtitle' => 'User Roles List',
+        'breadcrumb' => 'Roles',
+
+        // Stats
+        'stats_total' => 'Total Roles',
+        'stats_system' => 'System',
+        'stats_custom' => 'Custom',
+
+        // Table
+        'col_name' => 'Role Name',
+        'col_label' => 'Label',
+        'col_table' => 'Profile Table',
+        'col_type' => 'Type',
+        'col_users' => 'User Count',
+
+        // Badges
+        'type_system' => 'System',
+        'type_custom' => 'Custom',
+
+        // Buttons
+        'add_button' => 'Add Role',
+
+        // Forms
+        'create_title' => 'Add New Role',
+        'create_subtitle' => 'Create a new user role',
+        'edit_title' => 'Edit Role',
+
+        'form_name' => 'Role Name',
+        'form_name_placeholder' => 'e.g. partner',
+        'form_name_help' => 'Unique name (lowercase, no spaces). Used as database key.',
+        'form_name_warning' => 'Warning: lowercase, numbers, and underscores only (no spaces & no capital letters).',
+        'form_label' => 'Display Label',
+        'form_label_placeholder' => 'e.g. Partner / Mitra',
+        'form_type' => 'Role Type',
+        'form_type_help' => 'System roles cannot be deleted. Custom roles can be deleted if they have no users.',
+        'form_table_name' => 'Profile Table Name',
+        'form_table_name_placeholder' => 'e.g. user_partners',
+        'form_table_name_help' => 'Database table name for storing this role\'s profile data.',
+        'form_relation_name' => 'Model Relation Name',
+        'form_relation_name_placeholder' => 'e.g. userPartner',
+        'form_relation_name_help' => 'Relation method name on User model. e.g. userPartner.',
+        'form_description' => 'Description',
+        'form_description_placeholder' => 'Short description of this role...',
+
+        'name_system_locked' => 'System role name cannot be changed.',
+
+        // Validation errors
+        'validation_name_unique' => 'Role name already taken. Please choose another name.',
+        'validation_name_regex' => 'Role name may only contain lowercase letters, numbers, and underscores (no spaces & no capital letters).',
+        'validation_table_name_unique' => 'Profile Table Name already used by another role.',
+        'validation_table_name_regex' => 'Table name may only contain lowercase letters, numbers, and underscores.',
+        'validation_relation_name_unique' => 'Model Relation Name already used by another role.',
+        'validation_relation_name_regex' => 'Relation name must be camelCase: lowercase first, then letters/numbers.',
+        'validation_table_name_required' => 'Profile Table Name is required.',
+        'validation_relation_name_required' => 'Model Relation Name is required.',
+
+        // Delete
+        'delete_confirm' => 'Are you sure you want to delete the role ":name"? Roles with users cannot be deleted.',
+
+        // Flash
+        'created_successfully' => 'Role created successfully.',
+        'updated_successfully' => 'Role updated successfully.',
+        'deleted_successfully' => 'Role deleted successfully.',
+        'cannot_delete_with_users' => 'This role cannot be deleted because it still has users.',
+        'cannot_delete_system' => 'System roles cannot be deleted.',
+
+        // Empty
+        'empty' => 'No roles yet.',
+    ],
+
 ];

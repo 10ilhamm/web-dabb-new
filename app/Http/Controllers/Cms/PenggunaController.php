@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,14 +14,20 @@ use Illuminate\Validation\Rules\Password;
 
 class PenggunaController extends Controller
 {
-    /** Map role → [relation method, table] on User model. */
-    private const ROLE_PROFILES = [
-        'admin' => ['relation' => 'userAdmin', 'table' => 'user_admins'],
-        'pegawai' => ['relation' => 'userPegawai', 'table' => 'user_pegawais'],
-        'umum' => ['relation' => 'userUmum', 'table' => 'user_umums'],
-        'pelajar_mahasiswa' => ['relation' => 'userPelajar', 'table' => 'user_pelajars'],
-        'instansi_swasta' => ['relation' => 'userInstansi', 'table' => 'user_instansis'],
-    ];
+    /** Get role profile metadata from roles table. */
+    private function roleProfileMeta(string $role): ?array
+    {
+        $roleModel = Role::where('name', $role)->first();
+
+        if (! $roleModel || ! $roleModel->table_name || ! $roleModel->relation_name) {
+            return null;
+        }
+
+        return [
+            'relation' => $roleModel->relation_name,
+            'table' => $roleModel->table_name,
+        ];
+    }
 
     /** Fields used by each role profile table. */
     private function profileFieldsFor(string $role): array
@@ -190,11 +197,13 @@ class PenggunaController extends Controller
             'kartu_identitas_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ];
 
-        if (!$role || !isset(self::ROLE_PROFILES[$role])) {
+        $meta = $this->roleProfileMeta($role);
+
+        if (!$role || ! $meta) {
             return $rules;
         }
 
-        $table = self::ROLE_PROFILES[$role]['table'];
+        $table = $meta['table'];
         $profileId = $existing?->profile?->id;
         $fields = $this->profileFieldsFor($role);
 
@@ -234,17 +243,21 @@ class PenggunaController extends Controller
      */
     private function syncRoleProfile(User $user, string $role, array $data, ?string $kartuPath, bool $isUpdate): void
     {
-        if (!isset(self::ROLE_PROFILES[$role])) {
+        $meta = $this->roleProfileMeta($role);
+
+        if (! $meta) {
             return;
         }
 
         // Delete profile rows on tables that no longer match the current role.
         if ($isUpdate) {
-            foreach (self::ROLE_PROFILES as $otherRole => $meta) {
-                if ($otherRole === $role) {
+            foreach (Role::whereNotNull('relation_name')->whereNotNull('table_name')->get() as $otherRoleModel) {
+                if ($otherRoleModel->name === $role) {
                     continue;
                 }
-                $user->{$meta['relation']}()->delete();
+                if (method_exists($user, $otherRoleModel->relation_name)) {
+                    $user->{$otherRoleModel->relation_name}()->delete();
+                }
             }
         }
 
@@ -259,7 +272,7 @@ class PenggunaController extends Controller
             $payload['kartu_identitas'] = $kartuPath;
         }
 
-        $relation = self::ROLE_PROFILES[$role]['relation'];
+        $relation = $meta['relation'];
         $user->{$relation}()->updateOrCreate(
             ['user_id' => $user->id],
             $payload

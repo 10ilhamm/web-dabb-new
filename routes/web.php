@@ -15,6 +15,7 @@ use App\Http\Controllers\Cms\VirtualBookPageController;
 use App\Http\Controllers\Cms\VirtualSlideshowController;
 use App\Http\Controllers\Cms\ProfileController as CmsProfileController;
 use App\Http\Controllers\Cms\PenggunaController;
+use App\Http\Controllers\Cms\RoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -199,6 +200,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/{pengguna}/edit', [PenggunaController::class, 'edit'])->name('edit');
         Route::put('/{pengguna}', [PenggunaController::class, 'update'])->name('update');
         Route::delete('/{pengguna}', [PenggunaController::class, 'destroy'])->name('destroy');
+
+        // Role Management
+        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 });
 
@@ -207,16 +216,16 @@ Route::middleware('auth')->group(function () {
 // Explicitly serve files from storage to prevent corruption issues
 Route::get('/storage/{path}', function($path) {
     $storagePath = storage_path('app/public/' . $path);
-    
+
     // Security: prevent directory traversal
     if (strpos(realpath($storagePath), realpath(storage_path('app/public'))) !== 0) {
         abort(403, 'Unauthorized access to storage.');
     }
-    
+
     if (!file_exists($storagePath)) {
         abort(404, 'File not found.');
     }
-    
+
     return response()->file($storagePath);
 })
 ->where('path', '.+');

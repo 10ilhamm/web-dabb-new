@@ -1083,4 +1083,81 @@ return [
         'filter_section_title' => 'Filter',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | CMS — Manajemen Peran (roles/index)
+    |--------------------------------------------------------------------------
+    */
+    'roles' => [
+        'title' => 'Manajemen Peran',
+        'subtitle' => 'Daftar Peran Pengguna',
+        'breadcrumb' => 'Peran',
+
+        // Stats
+        'stats_total' => 'Total Peran',
+        'stats_system' => 'Sistem',
+        'stats_custom' => 'Kustom',
+
+        // Table
+        'col_name' => 'Nama Peran',
+        'col_label' => 'Label',
+        'col_table' => 'Tabel Profil',
+        'col_type' => 'Tipe',
+        'col_users' => 'Jumlah User',
+
+        // Badges
+        'type_system' => 'Sistem',
+        'type_custom' => 'Kustom',
+
+        // Buttons
+        'add_button' => 'Tambah Peran',
+
+        // Forms
+        'create_title' => 'Tambah Peran Baru',
+        'create_subtitle' => 'Buat peran pengguna baru',
+        'edit_title' => 'Edit Peran',
+
+        'form_name' => 'Nama Peran',
+        'form_name_placeholder' => 'Contoh: mitra',
+        'form_name_help' => 'Nama unik (lowercase, tanpa spasi). Digunakan sebagai key di database.',
+        'form_name_warning' => 'Peringatan: hanya huruf kecil, angka, dan underscore (tanpa spasi & tanpa huruf besar).',
+        'form_label' => 'Label Tampilan',
+        'form_label_placeholder' => 'Contoh: Mitra / Partner',
+        'form_type' => 'Tipe Peran',
+        'form_type_help' => 'Peran sistem tidak dapat dihapus. Peran kustom dapat dihapus jika tidak memiliki pengguna.',
+        'form_table_name' => 'Nama Tabel Profil',
+        'form_table_name_placeholder' => 'Contoh: user_mitras',
+        'form_table_name_help' => 'Nama tabel di database untuk menyimpan data profil peran ini.',
+        'form_relation_name' => 'Nama Relasi Model',
+        'form_relation_name_placeholder' => 'Contoh: userMitra',
+        'form_relation_name_help' => 'Nama method relasi di model User. Contoh: userMitra.',
+        'form_description' => 'Deskripsi',
+        'form_description_placeholder' => 'Deskripsi singkat peran ini...',
+
+        'name_system_locked' => 'Nama peran sistem tidak dapat diubah.',
+
+        // Validation errors
+        'validation_name_unique' => 'Nama peran sudah digunakan. Silakan pilih nama lain.',
+        'validation_name_regex' => 'Nama peran hanya boleh mengandung huruf kecil, angka, dan underscore (tanpa spasi dan tanpa huruf besar).',
+        'validation_table_name_unique' => 'Nama Tabel Profil sudah digunakan oleh peran lain.',
+        'validation_table_name_regex' => 'Nama tabel hanya boleh mengandung huruf kecil, angka, dan underscore.',
+        'validation_relation_name_unique' => 'Nama Relasi Model sudah digunakan oleh peran lain.',
+        'validation_relation_name_regex' => 'Nama relasi harus camelCase: huruf kecil diawal, lalu huruf/angka.',
+        'validation_table_name_required' => 'Nama Tabel Profil wajib diisi.',
+        'validation_relation_name_required' => 'Nama Relasi Model wajib diisi.',
+
+        // Delete
+        'delete_confirm' => 'Apakah Anda yakin ingin menghapus peran ":name"? Peran yang memiliki user tidak dapat dihapus.',
+
+        // Flash
+        'created_successfully' => 'Peran berhasil ditambahkan.',
+        'updated_successfully' => 'Peran berhasil diperbarui.',
+        'deleted_successfully' => 'Peran berhasil dihapus.',
+        'cannot_delete_with_users' => 'Peran ini tidak dapat dihapus karena masih memiliki pengguna.',
+        'cannot_delete_system' => 'Peran sistem tidak dapat dihapus.',
+
+        // Empty
+        'empty' => 'Belum ada peran.',
+    ],
+
 ];
