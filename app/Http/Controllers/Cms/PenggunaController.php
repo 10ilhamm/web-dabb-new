@@ -58,12 +58,12 @@ class PenggunaController extends Controller
             'verified' => $users->whereNotNull('email_verified_at')->count(),
         ];
 
-        return view('cms.pengguna.index', compact('users', 'roles', 'stats'));
+        return view('cms.pengguna.page.index', compact('users', 'roles', 'stats'));
     }
 
     public function create()
     {
-        return view('cms.pengguna.create', [
+        return view('cms.pengguna.page.create', [
             'roles' => User::roleLabels(),
             'profile' => null,
             ...$this->profileOptions(),
@@ -103,7 +103,7 @@ class PenggunaController extends Controller
 
     public function edit(User $pengguna)
     {
-        return view('cms.pengguna.edit', [
+        return view('cms.pengguna.page.edit', [
             'user' => $pengguna,
             'roles' => User::roleLabels(),
             'profile' => $pengguna->profile,

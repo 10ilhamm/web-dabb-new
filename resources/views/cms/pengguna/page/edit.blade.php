@@ -16,14 +16,6 @@
                 <h1 class="text-2xl font-bold text-gray-800">{{ __('cms.pengguna.edit_title') }}</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ __('cms.pengguna.edit_subtitle') }}</p>
             </div>
-            <a href="{{ route('cms.pengguna.index') }}"
-                class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                    </path>
-                </svg>
-                {{ __('cms.pengguna.back') }}
-            </a>
         </div>
 
         <form id="formPengguna" action="{{ route('cms.pengguna.update', $user) }}" method="POST"
@@ -145,7 +137,7 @@
 
                     {{-- Admin section --}}
                     <div data-role-section="admin" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna._profile_fields', [
+                        @include('cms.pengguna.page._profile_fields', [
                             'role' => 'admin',
                             'profile' => $profile,
                             'jenisKelaminOptions' => $jenisKelaminOptions,
@@ -158,7 +150,7 @@
 
                     {{-- Pegawai section --}}
                     <div data-role-section="pegawai" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna._profile_fields', [
+                        @include('cms.pengguna.page._profile_fields', [
                             'role' => 'pegawai',
                             'profile' => $profile,
                             'jenisKelaminOptions' => $jenisKelaminOptions,
@@ -171,7 +163,7 @@
 
                     {{-- Umum section --}}
                     <div data-role-section="umum" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna._profile_fields_umum_pelajar', [
+                        @include('cms.pengguna.page._profile_fields_umum_pelajar', [
                             'role' => 'umum',
                             'profile' => $profile,
                             'jenisKelaminOptions' => $jenisKelaminOptions,
@@ -182,7 +174,7 @@
                     {{-- Pelajar Mahasiswa section --}}
                     <div data-role-section="pelajar_mahasiswa"
                         class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna._profile_fields_umum_pelajar', [
+                        @include('cms.pengguna.page._profile_fields_umum_pelajar', [
                             'role' => 'pelajar_mahasiswa',
                             'profile' => $profile,
                             'jenisKelaminOptions' => $jenisKelaminOptions,
@@ -193,7 +185,7 @@
                     {{-- Instansi Swasta section --}}
                     <div data-role-section="instansi_swasta"
                         class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna._profile_fields_instansi', [
+                        @include('cms.pengguna.page._profile_fields_instansi', [
                             'role' => 'instansi_swasta',
                             'profile' => $profile,
                             'jenisKeperluanOptions' => $jenisKeperluanOptions,
