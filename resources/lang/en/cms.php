@@ -1096,6 +1096,7 @@ return [
         'stats_custom' => 'Custom',
 
         // Table
+        'col_no' => 'No',
         'col_name' => 'Role Name',
         'col_label' => 'Label',
         'col_table' => 'Profile Table',
@@ -1151,7 +1152,58 @@ return [
         'updated_successfully' => 'Role updated successfully.',
         'deleted_successfully' => 'Role deleted successfully.',
         'cannot_delete_with_users' => 'This role cannot be deleted because it still has users.',
+        'cannot_delete_has_users' => 'This role cannot be deleted because it still has :count user(s).',
         'cannot_delete_system' => 'System roles cannot be deleted.',
+
+        // Permissions
+        'permissions_title' => 'Menu Permissions',
+        'permissions_desc' => 'Manage sidebar menu access for this role.',
+        'permissions_access' => 'Access Menu',
+
+        // Columns management
+        'col_columns' => 'Columns',
+        'columns_count' => 'columns',
+        'columns_title' => 'Table Column Structure',
+        'columns_desc' => 'Define columns for this role\'s profile table. Columns will be automatically created in the database.',
+        'add_column' => 'Add Column',
+        'select_template' => 'Select Template',
+        'empty_template' => 'Empty',
+        'column' => 'Column',
+        'table_structure' => 'Table Structure',
+        'no_columns' => 'No columns added yet.',
+        'col_column_name' => 'Column Name (DB)',
+        'col_column_type' => 'Data Type',
+        'col_column_label' => 'Display Label',
+        'col_nullable' => 'Nullable',
+        'col_unique' => 'Unique',
+        'col_column_length' => 'Length',
+        'col_options' => 'Options',
+        'sync_columns' => 'Sync Columns',
+        'sync_confirm' => 'Sync columns from database table to this form? Existing columns will be updated.',
+        'columns_synced' => 'Columns successfully synced from database table.',
+        'col_references_table' => 'References Table',
+        'col_references_column' => 'References Column',
+        'col_on_delete' => 'On Delete',
+        'col_on_update' => 'On Update',
+        'col_primary' => 'Primary',
+        'col_unsigned' => 'Unsigned',
+        'col_auto_increment' => 'Auto Increment',
+        'col_foreign' => 'Foreign Key',
+        'col_default' => 'Default',
+
+        // Validation/error messages
+        'error_unsigned_not_supported' => "Column ':column': UNSIGNED not supported for type ':type'.",
+        'error_auto_increment_integer_only' => "Column ':column': AUTO_INCREMENT is only supported for MySQL integer types.",
+        'error_auto_increment_not_null' => "Column ':column': AUTO_INCREMENT cannot be NULL.",
+        'error_column_prefix' => "Column ':column' (MySQL :code): :message",
+        'error_mysql_prefix' => "MySQL Error :code: :message",
+
+        // DataTables / Filters
+        'search_placeholder' => 'Search...',
+        'filter_type' => 'Select filter Type',
+        'filter_columns' => 'Select filter Columns',
+        'filter_columns_none' => 'No columns',
+        'filter_columns_has' => 'Has columns',
 
         // Empty
         'empty' => 'No roles yet.',

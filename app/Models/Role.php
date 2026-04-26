@@ -29,6 +29,22 @@ class Role extends Model
         return $this->hasMany(RoleColumn::class)->orderBy('sort_order');
     }
 
+    public function permissions()
+    {
+        return $this->hasMany(RolePermission::class);
+    }
+
+    public function hasPermission(string $menuKey): bool
+    {
+        // Admin always has all permissions
+        if ($this->name === 'admin') {
+            return true;
+        }
+        
+        $permission = $this->permissions()->where('menu_key', $menuKey)->first();
+        return $permission ? $permission->can_access : false;
+    }
+
     public static function roleLabels(): array
     {
         return self::pluck('label', 'name')->toArray();

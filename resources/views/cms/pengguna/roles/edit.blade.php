@@ -187,21 +187,21 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Nama Kolom</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_column_name') }}</label>
                                     <input type="text" name="columns[{{ $index }}][column_name]"
                                         value="{{ $col->column_name }}" required
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_column_label') }}</label>
                                     <input type="text" name="columns[{{ $index }}][column_label]"
                                         value="{{ $col->column_label }}" required
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Tipe</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_column_type') }}</label>
                                     <select name="columns[{{ $index }}][column_type]"
-                                        onchange="toggleOptions(this, {{ $index }})" required
+                                        onchange="toggleOptions(this, {{ $index }})" data-init="{{ $index }}" required
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                         @foreach ($columnTypes as $key => $label)
                                             <option value="{{ $key }}"
@@ -211,14 +211,14 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Panjang</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_column_length') }}</label>
                                     <input type="number" name="columns[{{ $index }}][column_length]"
                                         value="{{ $col->column_length }}"
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div id="options-{{ $index }}"
                                     class="{{ in_array($col->column_type, ['enum', 'set']) ? '' : 'hidden' }}">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Opsi (pisah koma)</label>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_options') }} (comma separated)</label>
                                     <input type="text" name="columns[{{ $index }}][options]"
                                         value="{{ $col->options ? implode(',', $col->options) : '' }}"
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -228,59 +228,57 @@
                                         <input type="checkbox" name="columns[{{ $index }}][is_nullable]"
                                             value="1" {{ $col->is_nullable ? 'checked' : '' }}
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Nullable</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_nullable') }}</span>
                                     </label>
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_unique]"
                                             value="1" {{ $col->is_unique ? 'checked' : '' }}
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Unique</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_unique') }}</span>
                                     </label>
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_primary]"
                                             value="1" {{ $col->is_primary ? 'checked' : '' }}
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Primary</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_primary') }}</span>
                                     </label>
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_unsigned]"
                                             value="1" {{ $col->is_unsigned ? 'checked' : '' }}
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Unsigned</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_unsigned') }}</span>
                                     </label>
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_auto_increment]"
                                             value="1" {{ $col->is_auto_increment ? 'checked' : '' }}
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Auto Increment</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_auto_increment') }}</span>
                                     </label>
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_foreign]"
                                             value="1" {{ $col->is_foreign ? 'checked' : '' }}
                                             onchange="toggleForeign(this, {{ $index }})"
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">Foreign Key</span>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.col_foreign') }}</span>
                                     </label>
                                 </div>
 
                                 <div id="foreign-{{ $index }}"
                                     class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-3 {{ $col->is_foreign ? '' : 'hidden' }}">
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">References
-                                            Table</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_references_table') }}</label>
                                         <input type="text" name="columns[{{ $index }}][references_table]"
                                             value="{{ $col->references_table }}"
                                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">References
-                                            Column</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_references_column') }}</label>
                                         <input type="text" name="columns[{{ $index }}][references_column]"
                                             value="{{ $col->references_column }}"
                                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">On Delete</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_on_delete') }}</label>
                                         <select name="columns[{{ $index }}][on_delete]"
                                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                             <option value="">Default</option>
@@ -295,7 +293,7 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">On Update</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_on_update') }}</label>
                                         <select name="columns[{{ $index }}][on_update]"
                                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                             <option value="">Default</option>
@@ -311,6 +309,60 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Menu Permissions Section --}}
+            <div class="px-6 py-5 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800">{{ __('cms.roles.permissions_title') }}</h3>
+                        <p class="text-sm text-gray-500">{{ __('cms.roles.permissions_desc') }}</p>
+                    </div>
+                </div>
+
+                @php
+                    $rolePerms = $role->permissions->pluck('can_access', 'menu_key')->toArray();
+                @endphp
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    @foreach ($menuPermissions as $key => $menu)
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <label class="inline-flex items-center gap-2 cursor-pointer mb-2">
+                                <input type="checkbox" class="menu-permission-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    data-menu-key="{{ $key }}"
+                                    onchange="toggleChildren(this, '{{ $key }}')"
+                                    @if(!isset($menu['children'])) checked @endif>
+                                <span class="text-sm font-semibold text-gray-800">{{ $menu['label'] }}</span>
+                            </label>
+                            @if (isset($menu['children']))
+                                <div class="ml-5 space-y-1.5 permissions-children" data-parent="{{ $key }}">
+                                    @foreach ($menu['children'] as $childKey => $childLabel)
+                                        @php $checked = $rolePerms[$childKey] ?? true; @endphp
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="hidden" name="permissions[{{ $childKey }}]" value="0">
+                                            <input type="checkbox" name="permissions[{{ $childKey }}]" value="1"
+                                                class="child-permission w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                data-parent="{{ $key }}"
+                                                {{ $checked ? 'checked' : '' }}>
+                                            <span class="text-sm text-gray-700">{{ $childLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                @php $checked = $rolePerms[$key] ?? true; @endphp
+                                <div class="ml-5">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="hidden" name="permissions[{{ $key }}]" value="0">
+                                        <input type="checkbox" name="permissions[{{ $key }}]" value="1"
+                                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            {{ $checked ? 'checked' : '' }}>
+                                        <span class="text-sm text-gray-700">{{ __('cms.roles.permissions_access') }}</span>
+                                    </label>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -337,6 +389,25 @@
     </style>
     <script>
         const columnTypes = @json($columnTypes);
+        const unsignedTypes = @json($unsignedTypes);
+        const integerTypes = @json($integerTypes);
+        const i18n = {
+            colColumnName: '{{ __('cms.roles.col_column_name') }}',
+            colColumnLabel: '{{ __('cms.roles.col_column_label') }}',
+            colColumnType: '{{ __('cms.roles.col_column_type') }}',
+            colColumnLength: '{{ __('cms.roles.col_column_length') }}',
+            colOptions: '{{ __('cms.roles.col_options') }}',
+            colNullable: '{{ __('cms.roles.col_nullable') }}',
+            colUnique: '{{ __('cms.roles.col_unique') }}',
+            colPrimary: '{{ __('cms.roles.col_primary') }}',
+            colUnsigned: '{{ __('cms.roles.col_unsigned') }}',
+            colAutoIncrement: '{{ __('cms.roles.col_auto_increment') }}',
+            colForeign: '{{ __('cms.roles.col_foreign') }}',
+            colReferencesTable: '{{ __('cms.roles.col_references_table') }}',
+            colReferencesColumn: '{{ __('cms.roles.col_references_column') }}',
+            colOnDelete: '{{ __('cms.roles.col_on_delete') }}',
+            colOnUpdate: '{{ __('cms.roles.col_on_update') }}',
+        };
         let columnIndex = {{ $role->columns->count() }};
 
         function addColumn() {
@@ -387,17 +458,17 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Nama Kolom</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colColumnName}</label>
                         <input type="text" name="columns[${index}][column_name]" required placeholder="e.g. nomor_kartu"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colColumnLabel}</label>
                         <input type="text" name="columns[${index}][column_label]" required placeholder="e.g. Nomor Kartu Identitas"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Tipe</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colColumnType}</label>
                         <select name="columns[${index}][column_type]" onchange="toggleOptions(this, ${index})" required
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                             ${Object.entries(columnTypes).map(([key, label]) =>
@@ -406,12 +477,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Panjang</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colColumnLength}</label>
                         <input type="number" name="columns[${index}][column_length]" placeholder="e.g. 255"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div id="options-${index}" class="hidden">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Opsi (pisah koma)</label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colOptions}</label>
                         <input type="text" name="columns[${index}][options]" placeholder="Option 1,Option 2,Option 3"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
@@ -419,49 +490,49 @@
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_nullable]" value="1" checked
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Nullable</span>
+                            <span class="text-sm text-gray-700">${i18n.colNullable}</span>
                         </label>
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_unique]" value="1"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Unique</span>
+                            <span class="text-sm text-gray-700">${i18n.colUnique}</span>
                         </label>
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_primary]" value="1"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Primary</span>
+                            <span class="text-sm text-gray-700">${i18n.colPrimary}</span>
                         </label>
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_unsigned]" value="1"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Unsigned</span>
+                            <span class="text-sm text-gray-700">${i18n.colUnsigned}</span>
                         </label>
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_auto_increment]" value="1"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Auto Increment</span>
+                            <span class="text-sm text-gray-700">${i18n.colAutoIncrement}</span>
                         </label>
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="columns[${index}][is_foreign]" value="1"
                                 onchange="toggleForeign(this, ${index})"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="text-sm text-gray-700">Foreign Key</span>
+                            <span class="text-sm text-gray-700">${i18n.colForeign}</span>
                         </label>
                     </div>
 
                     <div id="foreign-${index}" class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-3 hidden">
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">References Table</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colReferencesTable}</label>
                             <input type="text" name="columns[${index}][references_table]" placeholder="e.g. users"
                                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">References Column</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colReferencesColumn}</label>
                             <input type="text" name="columns[${index}][references_column]" placeholder="e.g. id"
                                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">On Delete</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colOnDelete}</label>
                             <select name="columns[${index}][on_delete]"
                                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                 <option value="">Default</option>
@@ -472,7 +543,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">On Update</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colOnUpdate}</label>
                             <select name="columns[${index}][on_update]"
                                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                 <option value="">Default</option>
@@ -487,6 +558,8 @@
             `;
 
             container.appendChild(div);
+            var typeSelect = div.querySelector('select[name="columns[' + index + '][column_type]"]');
+            if (typeSelect) toggleAttributes(typeSelect, index);
             reindexColumns(); // Reindex & setup drag
         }
 
@@ -499,6 +572,25 @@
             const optionsDiv = document.getElementById('options-' + index);
             if (!optionsDiv) return;
             optionsDiv.classList.toggle('hidden', select.value !== 'enum' && select.value !== 'set');
+            toggleAttributes(select, index);
+        }
+
+        function toggleAttributes(select, index) {
+            const type = select.value;
+            const div = select.closest('.bg-gray-50');
+            if (!div) return;
+            const unsignedCheckbox = div.querySelector('input[name="columns[' + index + '][is_unsigned]"]');
+            const autoIncCheckbox = div.querySelector('input[name="columns[' + index + '][is_auto_increment]"]');
+            if (unsignedCheckbox) {
+                const supported = unsignedTypes.includes(type);
+                unsignedCheckbox.disabled = !supported;
+                if (!supported) { unsignedCheckbox.checked = false; }
+            }
+            if (autoIncCheckbox) {
+                const supported = integerTypes.includes(type);
+                autoIncCheckbox.disabled = !supported;
+                if (!supported) { autoIncCheckbox.checked = false; }
+            }
         }
 
         function toggleForeign(checkbox, index) {
@@ -702,5 +794,46 @@
 
         // Init
         reindexColumns();
+
+        // Init client-side validation for existing columns
+        document.querySelectorAll('#columnsContainer select[name$="[column_type]"]').forEach(function(sel) {
+            var idx = sel.getAttribute('data-init');
+            if (idx !== null) toggleAttributes(sel, parseInt(idx));
+        });
+
+        // Permission parent-child toggle
+        function toggleChildren(checkbox, parentKey) {
+            const children = document.querySelectorAll(`.child-permission[data-parent="${parentKey}"]`);
+            children.forEach(child => {
+                child.checked = checkbox.checked;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.child-permission').forEach(child => {
+                child.addEventListener('change', function() {
+                    const parentKey = this.dataset.parent;
+                    const parentCheckbox = document.querySelector(`.menu-permission-checkbox[data-menu-key="${parentKey}"]`);
+                    const siblings = document.querySelectorAll(`.child-permission[data-parent="${parentKey}"]`);
+                    const allChecked = Array.from(siblings).every(s => s.checked);
+                    const anyChecked = Array.from(siblings).some(s => s.checked);
+                    if (parentCheckbox) {
+                        parentCheckbox.checked = allChecked;
+                        parentCheckbox.indeterminate = anyChecked && !allChecked;
+                    }
+                });
+            });
+
+            document.querySelectorAll('.menu-permission-checkbox').forEach(checkbox => {
+                const parentKey = checkbox.dataset.menuKey;
+                const children = document.querySelectorAll(`.child-permission[data-parent="${parentKey}"]`);
+                if (children.length > 0) {
+                    const allChecked = Array.from(children).every(c => c.checked);
+                    const anyChecked = Array.from(children).some(c => c.checked);
+                    checkbox.checked = allChecked;
+                    checkbox.indeterminate = anyChecked && !allChecked;
+                }
+            });
+        });
     </script>
 @endpush

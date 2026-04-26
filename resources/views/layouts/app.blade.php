@@ -101,7 +101,12 @@
                     </svg>
                 </a>
 
+                @php
+                    $userRole = auth()->user() ? \App\Models\Role::where('name', auth()->user()->role)->first() : null;
+                @endphp
+
                 <!-- CMS -->
+                @if (!$userRole || $userRole->hasPermission('cms.features') || $userRole->hasPermission('cms.footer') || $userRole->hasPermission('cms.disclaimer'))
                 <div x-data="{ open: {{ request()->routeIs('cms.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                         class="sidebar-link w-full flex items-center px-3 py-3 rounded-lg text-[#b8cdef] hover:text-white group {{ request()->routeIs('cms.*') ? 'active text-white' : '' }}">
@@ -131,22 +136,30 @@
                         x-transition:leave-end="opacity-0 -translate-y-1"
                         class="cms-dropdown mt-2 ml-9 mr-1 py-2 px-1 space-y-1">
 
+                        @if (!$userRole || $userRole->hasPermission('cms.features'))
                         <a href="{{ route('cms.features.index') }}"
                             class="flex items-center px-3 py-2 text-[13px] rounded-md {{ request()->routeIs('cms.features.*') ? 'active-item' : 'text-white/70 hover:text-white font-medium' }}">
                             {{ __('dashboard.sidebar.cms_features') }}
                         </a>
+                        @endif
+                        @if (!$userRole || $userRole->hasPermission('cms.footer'))
                         <a href="{{ route('cms.settings.footer.edit') }}"
                             class="flex items-center px-3 py-2 text-[13px] rounded-md {{ request()->routeIs('cms.settings.footer.*') ? 'active-item' : 'text-white/70 hover:text-white font-medium' }}">
                             {{ __('dashboard.sidebar.cms_footer') }}
                         </a>
+                        @endif
+                        @if (!$userRole || $userRole->hasPermission('cms.disclaimer'))
                         <a href="{{ route('cms.settings.disclaimer.edit') }}"
                             class="flex items-center px-3 py-2 text-[13px] rounded-md {{ request()->routeIs('cms.settings.disclaimer.*') ? 'active-item' : 'text-white/70 hover:text-white font-medium' }}">
                             Disclaimer
                         </a>
+                        @endif
                     </div>
                 </div>
+                @endif
 
                 <!-- Pengguna -->
+                @if (!$userRole || $userRole->hasPermission('pengguna.users') || $userRole->hasPermission('pengguna.roles'))
                 <a href="{{ route('cms.pengguna.index') }}"
                     class="sidebar-link {{ request()->routeIs('cms.pengguna.*') ? 'active text-white' : 'text-[#b8cdef] hover:text-white' }} flex items-center px-3 py-3 rounded-lg group">
                     <svg class="w-6 h-6 shrink-0 opacity-80 group-hover:opacity-100" fill="none"
@@ -158,6 +171,7 @@
                     <span x-show="sidebarOpen" class="ml-4 text-[14px] font-medium transition-opacity duration-300"
                         x-transition.opacity>{{ __('dashboard.sidebar.users') }}</span>
                 </a>
+                @endif
             </nav>
 
             <!-- Bottom Links -->

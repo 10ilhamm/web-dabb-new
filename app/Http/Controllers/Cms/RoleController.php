@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\RoleColumn;
+use App\Models\RolePermission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,40 @@ use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->ajax()) {
+            $roles = Role::withCount('columns')->withCount('users')
+                ->with('columns')
+                ->orderBy('id')
+                ->get()
+                ->map(function ($role) {
+                    $role->columns_data = $role->columns->map(function ($col) {
+                        return [
+                            'column_name' => $col->column_name,
+                            'column_type' => $col->column_type,
+                            'column_length' => $col->column_length,
+                            'column_label' => $col->column_label,
+                            'is_primary' => (bool) $col->is_primary,
+                            'is_unique' => (bool) $col->is_unique,
+                            'is_nullable' => (bool) $col->is_nullable,
+                            'is_unsigned' => (bool) $col->is_unsigned,
+                            'is_auto_increment' => (bool) $col->is_auto_increment,
+                            'is_foreign' => (bool) $col->is_foreign,
+                            'references_table' => $col->references_table,
+                            'references_column' => $col->references_column,
+                            'on_delete' => $col->on_delete,
+                            'on_update' => $col->on_update,
+                            'options' => is_array($col->options) ? implode(', ', $col->options) : null,
+                        ];
+                    });
+                    $role->makeHidden('columns');
+                    return $role;
+                });
+
+            return response()->json(['data' => $roles]);
+        }
+
         $roles = Role::withCount('columns')->orderBy('id')->get();
         $stats = [
             'total' => $roles->count(),
@@ -31,6 +64,7 @@ class RoleController extends Controller
     {
         $columnTypes = $this->getColumnTypes();
         $existingRoles = Role::with('columns')->get();
+        $menuPermissions = $this->getMenuDefinitions();
         $templatesJson = $existingRoles->keyBy('name')->map(function ($role) {
             return $role->columns->map(function ($column) {
                 return [
@@ -52,7 +86,9 @@ class RoleController extends Controller
                 ];
             })->values();
         })->toJson();
-        return view('cms.pengguna.roles.create', compact('columnTypes', 'templatesJson'));
+        $unsignedTypes = $this->supportsUnsignedTypes();
+        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
+        return view('cms.pengguna.roles.create', compact('columnTypes', 'templatesJson', 'menuPermissions', 'unsignedTypes', 'integerTypes'));
     }
 
     public function store(Request $request)
@@ -86,6 +122,9 @@ class RoleController extends Controller
 
             // Generate model file
             $this->generateRoleModel($data['relation_name'], $data['table_name']);
+
+            // Sync permissions
+            $this->syncPermissions($role, $request->input('permissions', []));
         });
 
         return redirect()
@@ -96,9 +135,12 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         $columnTypes = $this->getColumnTypes();
+        $menuPermissions = $this->getMenuDefinitions();
+        $unsignedTypes = $this->supportsUnsignedTypes();
+        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
 
-        $role->load('columns');
-        return view('cms.pengguna.roles.edit', compact('role', 'columnTypes'));
+        $role->load('columns', 'permissions');
+        return view('cms.pengguna.roles.edit', compact('role', 'columnTypes', 'menuPermissions', 'unsignedTypes', 'integerTypes'));
     }
 
     /**
@@ -163,9 +205,77 @@ class RoleController extends Controller
         // Update model file if relation_name changed
         $this->generateRoleModel($data['relation_name'], $data['table_name']);
 
+        // Sync permissions
+        $this->syncPermissions($role, $request->input('permissions', []));
+
         return redirect()
             ->route('cms.pengguna.roles.index')
             ->with('success', __('cms.roles.updated_successfully'));
+    }
+
+    /**
+     * Get available menu definitions for permission management.
+     */
+    private function getMenuDefinitions(): array
+    {
+        return [
+            'dashboard' => [
+                'label' => 'Dashboard',
+                'icon' => 'home',
+            ],
+            'cms' => [
+                'label' => 'CMS',
+                'children' => [
+                    'cms.features' => 'Manajemen Fitur',
+                    'cms.footer' => 'Footer',
+                    'cms.disclaimer' => 'Disclaimer',
+                ],
+            ],
+            'pengguna' => [
+                'label' => 'Pengguna',
+                'children' => [
+                    'pengguna.users' => 'Data Pengguna',
+                    'pengguna.roles' => 'Role Management',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Sync role permissions from request input.
+     */
+    private function syncPermissions(Role $role, array $permissionsInput): void
+    {
+        $existingKeys = $role->permissions()->pluck('menu_key')->toArray();
+        $updatedKeys = [];
+
+        foreach ($permissionsInput as $menuKey => $canAccess) {
+            $canAccessBool = in_array($canAccess, [true, 1, '1', 'on'], true);
+
+            $perm = RolePermission::where('role_id', $role->id)
+                ->where('menu_key', $menuKey)
+                ->first();
+
+            if ($perm) {
+                $perm->update(['can_access' => $canAccessBool]);
+            } else {
+                RolePermission::create([
+                    'role_id' => $role->id,
+                    'menu_key' => $menuKey,
+                    'can_access' => $canAccessBool,
+                ]);
+            }
+
+            $updatedKeys[] = $menuKey;
+        }
+
+        // Delete removed permissions
+        $toDelete = array_diff($existingKeys, $updatedKeys);
+        if (!empty($toDelete)) {
+            RolePermission::where('role_id', $role->id)
+                ->whereIn('menu_key', $toDelete)
+                ->delete();
+        }
     }
 
     public function destroy(Role $role)
@@ -512,18 +622,31 @@ class RoleController extends Controller
                 ];
 
                 if (!empty($input['id'])) {
-                    // Update existing
+                    // Update existing — apply in-memory first, try SQL, then persist
                     $column = RoleColumn::find($input['id']);
                     if ($column) {
                         $oldName = $column->column_name;
-                        $column->update($columnData);
-                        $this->alterColumn($role->table_name, $oldName, $column);
+                        foreach ($columnData as $k => $v) {
+                            $column->{$k} = $v;
+                        }
+                        try {
+                            $this->alterColumn($role->table_name, $oldName, $column);
+                        } catch (\Throwable $e) {
+                            $column->refresh();
+                            throw $e;
+                        }
+                        $column->save();
                         $updatedIds[] = $column->id;
                     }
                 } else {
-                    // Create new
-                    $column = RoleColumn::create(['role_id' => $role->id, ...$columnData]);
-                    $this->addColumnToTable($role->table_name, $column);
+                    // Create new — build object in-memory, try SQL, then persist
+                    $column = new RoleColumn(['role_id' => $role->id, ...$columnData]);
+                    try {
+                        $this->addColumnToTable($role->table_name, $column);
+                    } catch (\Throwable $e) {
+                        throw $e;
+                    }
+                    $column->save();
                     $updatedIds[] = $column->id;
                 }
             } catch (\Throwable $e) {
@@ -775,15 +898,15 @@ class RoleController extends Controller
         $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'integer'];
 
         if ($column->is_unsigned && !$unsignedSupported) {
-            throw new \InvalidArgumentException("Kolom '{$column->column_name}': UNSIGNED tidak didukung untuk tipe '{$type}'.");
+            throw new \InvalidArgumentException(__('cms.roles.error_unsigned_not_supported', ['column' => $column->column_name, 'type' => $type]));
         }
 
         if ($column->is_auto_increment && !in_array($type, $integerTypes, true)) {
-            throw new \InvalidArgumentException("Kolom '{$column->column_name}': AUTO_INCREMENT hanya didukung untuk tipe integer MySQL.");
+            throw new \InvalidArgumentException(__('cms.roles.error_auto_increment_integer_only', ['column' => $column->column_name]));
         }
 
         if ($column->is_auto_increment && $column->is_nullable) {
-            throw new \InvalidArgumentException("Kolom '{$column->column_name}': AUTO_INCREMENT tidak boleh NULL.");
+            throw new \InvalidArgumentException(__('cms.roles.error_auto_increment_not_null', ['column' => $column->column_name]));
         }
     }
 
@@ -794,11 +917,11 @@ class RoleController extends Controller
         if ($e instanceof QueryException && isset($e->errorInfo[1])) {
             $mysqlCode = (int) $e->errorInfo[1];
             $friendly = $this->mapMysqlErrorCodeToFriendlyMessage($mysqlCode, null, $base);
-            return "MySQL Error {$mysqlCode}: {$friendly}";
+            return __('cms.roles.error_mysql_prefix', ['code' => $mysqlCode, 'message' => $friendly]);
         }
 
         if (str_contains($base, 'SQLSTATE')) {
-            return "MySQL Error: {$base}";
+            return __('cms.roles.error_mysql_prefix', ['code' => '?', 'message' => $base]);
         }
 
         return $base;
@@ -811,14 +934,14 @@ class RoleController extends Controller
         if ($e instanceof QueryException && isset($e->errorInfo[1])) {
             $mysqlCode = (int) $e->errorInfo[1];
             $friendly = $this->mapMysqlErrorCodeToFriendlyMessage($mysqlCode, $columnName, $raw);
-            return "Kolom '{$columnName}' (MySQL {$mysqlCode}): {$friendly}";
+            return __('cms.roles.error_column_prefix', ['column' => $columnName, 'code' => $mysqlCode, 'message' => $friendly]);
         }
 
-        if (str_starts_with($raw, "Kolom '{$columnName}':")) {
+        if (str_starts_with($raw, "Kolom '{$columnName}':") || str_starts_with($raw, "Column '{$columnName}':")) {
             return $raw;
         }
 
-        return "Kolom '{$columnName}': {$raw}";
+        return __('cms.roles.error_column_prefix', ['column' => $columnName, 'code' => '?', 'message' => $raw]);
     }
 
     private function mapMysqlErrorCodeToFriendlyMessage(int $code, ?string $columnName, string $raw): string
@@ -883,11 +1006,14 @@ class RoleController extends Controller
         };
     }
 
+    private function supportsUnsignedTypes(): array
+    {
+        return ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'float', 'double', 'boolean'];
+    }
+
     private function supportsUnsigned(string $type): bool
     {
-        return in_array(strtolower($type), [
-            'tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'float', 'double', 'boolean'
-        ], true);
+        return in_array(strtolower($type), $this->supportsUnsignedTypes(), true);
     }
 
     /**

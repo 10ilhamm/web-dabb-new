@@ -1099,6 +1099,7 @@ return [
         'stats_custom' => 'Kustom',
 
         // Table
+        'col_no' => 'No',
         'col_name' => 'Nama Peran',
         'col_label' => 'Label',
         'col_table' => 'Tabel Profil',
@@ -1154,7 +1155,13 @@ return [
         'updated_successfully' => 'Peran berhasil diperbarui.',
         'deleted_successfully' => 'Peran berhasil dihapus.',
         'cannot_delete_with_users' => 'Peran ini tidak dapat dihapus karena masih memiliki pengguna.',
+        'cannot_delete_has_users' => 'Peran ini tidak dapat dihapus karena masih memiliki :count pengguna.',
         'cannot_delete_system' => 'Peran sistem tidak dapat dihapus.',
+
+        // Permissions
+        'permissions_title' => 'Izin Menu',
+        'permissions_desc' => 'Atur akses menu sidebar untuk peran ini.',
+        'permissions_access' => 'Akses Menu',
 
         // Columns management
         'col_columns' => 'Kolom',
@@ -1177,6 +1184,29 @@ return [
         'sync_columns' => 'Sinkronkan Kolom',
         'sync_confirm' => 'Sinkronkan kolom dari tabel database ke form ini? Kolom yang ada akan diperbarui.',
         'columns_synced' => 'Kolom berhasil disinkronkan dari tabel database.',
+        'col_references_table' => 'Tabel Referensi',
+        'col_references_column' => 'Kolom Referensi',
+        'col_on_delete' => 'Saat Hapus',
+        'col_on_update' => 'Saat Ubah',
+        'col_primary' => 'Primary',
+        'col_unsigned' => 'Unsigned',
+        'col_auto_increment' => 'Auto Increment',
+        'col_foreign' => 'Foreign Key',
+        'col_default' => 'Default',
+
+        // Validation/error messages
+        'error_unsigned_not_supported' => "Kolom ':column': UNSIGNED tidak didukung untuk tipe ':type'.",
+        'error_auto_increment_integer_only' => "Kolom ':column': AUTO_INCREMENT hanya didukung untuk tipe integer MySQL.",
+        'error_auto_increment_not_null' => "Kolom ':column': AUTO_INCREMENT tidak boleh NULL.",
+        'error_column_prefix' => "Kolom ':column' (MySQL :code): :message",
+        'error_mysql_prefix' => "MySQL Error :code: :message",
+
+        // DataTables / Filters
+        'search_placeholder' => 'Cari...',
+        'filter_type' => 'Pilih filter Tipe',
+        'filter_columns' => 'Pilih filter Kolom',
+        'filter_columns_none' => 'Tanpa kolom',
+        'filter_columns_has' => 'Memiliki kolom',
 
         // Empty
         'empty' => 'Belum ada peran.',
