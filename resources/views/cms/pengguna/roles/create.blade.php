@@ -202,7 +202,7 @@
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('cms.roles.column') }} #${index + 1}</span>
             <div class="flex items-center gap-1">
-                <button type="button" onclick="moveUp(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent" ${index === 0 ? 'disabled' : ''} title="Move Up">
+                <button type="button" onclick="moveUp(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}" title="Move Up">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
                     </svg>
@@ -212,7 +212,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
                     </svg>
                 </button>
-                <button type="button" onclick="moveDown(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent" title="Move Down">
+                <button type="button" onclick="moveDown(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors" title="Move Down">
                     <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
                     </svg>
