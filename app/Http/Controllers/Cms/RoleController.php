@@ -97,9 +97,6 @@ class RoleController extends Controller
     {
         $columnTypes = $this->getColumnTypes();
 
-        // Auto-sync table columns to role_columns so existing DB tables are reflected in the form
-        $this->syncTableColumnsToRole($role);
-
         $role->load('columns');
         return view('cms.pengguna.roles.edit', compact('role', 'columnTypes'));
     }
@@ -482,6 +479,7 @@ class RoleController extends Controller
      */
     private function syncColumns(Role $role, array $columnsInput): void
     {
+        $role->load('columns');
         $existingIds = $role->columns->pluck('id')->toArray();
         $updatedIds = [];
 
@@ -539,17 +537,11 @@ class RoleController extends Controller
         }
 
         // Delete removed columns only when sync phase is fully successful.
-        // Also protect system columns from accidental deletion.
-        $protectedColumns = ['id', 'user_id', 'created_at', 'updated_at'];
         $toDelete = array_diff($existingIds, $updatedIds);
 
         foreach ($toDelete as $id) {
             $column = RoleColumn::find($id);
             if (!$column) {
-                continue;
-            }
-
-            if (in_array($column->column_name, $protectedColumns, true)) {
                 continue;
             }
 
@@ -559,6 +551,17 @@ class RoleController extends Controller
             } catch (\Throwable $e) {
                 $columnErrors[] = $this->formatColumnErrorMessage($column->column_name, $e);
             }
+        }
+
+        if (!empty($columnErrors)) {
+            throw new \RuntimeException(implode("\n", $columnErrors));
+        }
+
+        // Reorder table columns physically to match sort_order
+        try {
+            $this->reorderTableColumns($role->table_name, $role);
+        } catch (\Throwable $e) {
+            $columnErrors[] = $this->formatColumnErrorMessage('(reorder)', $e);
         }
 
         if (!empty($columnErrors)) {
@@ -679,10 +682,8 @@ class RoleController extends Controller
      * Modify column using raw SQL for complex changes.
      * Uses EXACT MySQL types from role_columns.
      */
-    private function modifyColumn(string $tableName, string $oldName, RoleColumn $column): void
+    private function buildColumnSqlTail(RoleColumn $column): string
     {
-        $this->validateMysqlColumnRules($column);
-
         $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'integer'];
         $typeName = strtolower((string) $column->column_type);
 
@@ -706,7 +707,14 @@ class RoleController extends Controller
             $nullable = "NOT NULL";
         }
 
-        $sqlTail = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$type, $nullable, $default, $autoIncrement]))));
+        return trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([$type, $nullable, $default, $autoIncrement]))));
+    }
+
+    private function modifyColumn(string $tableName, string $oldName, RoleColumn $column): void
+    {
+        $this->validateMysqlColumnRules($column);
+
+        $sqlTail = $this->buildColumnSqlTail($column);
 
         try {
             if ($oldName !== $column->column_name) {
@@ -729,6 +737,34 @@ class RoleController extends Controller
             ]);
 
             throw $e;
+        }
+    }
+
+    private function reorderTableColumns(string $tableName, Role $role): void
+    {
+        $columns = $role->columns()->orderBy('sort_order')->get();
+        if ($columns->count() <= 1) return;
+
+        foreach ($columns as $i => $column) {
+            if (!Schema::hasColumn($tableName, $column->column_name)) continue;
+
+            $sqlTail = $this->buildColumnSqlTail($column);
+
+            try {
+                if ($i === 0) {
+                    DB::statement("ALTER TABLE `{$tableName}` MODIFY COLUMN `{$column->column_name}` {$sqlTail} FIRST");
+                } else {
+                    $prevCol = $columns[$i - 1];
+                    DB::statement("ALTER TABLE `{$tableName}` MODIFY COLUMN `{$column->column_name}` {$sqlTail} AFTER `{$prevCol->column_name}`");
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to reorder column', [
+                    'table' => $tableName,
+                    'column' => $column->column_name,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
         }
     }
 
@@ -883,16 +919,12 @@ class RoleController extends Controller
         // Get columns from role_columns table
         $role = Role::where('relation_name', $relationName)->first();
 
-        // Build fillable dynamically from role_columns, but avoid duplicates and
-        // avoid framework-managed / key columns from being mass assignable.
+        // Build fillable dynamically from all role_columns.
         $fillable = ['user_id'];
 
         if ($role) {
             $columns = $role->columns->pluck('column_name')->toArray();
             foreach ($columns as $col) {
-                if (in_array($col, ['id', 'user_id', 'created_at', 'updated_at'], true)) {
-                    continue;
-                }
                 $fillable[] = $col;
             }
         }

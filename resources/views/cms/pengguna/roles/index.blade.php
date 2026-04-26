@@ -196,28 +196,31 @@
                                                     <thead>
                                                         <tr class="border-b border-gray-200">
                                                             <th
-                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
-                                                                {{ __('cms.roles.col_column_name') }}</th>
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Column</th>
                                                             <th
-                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
-                                                                {{ __('cms.roles.col_column_type') }}</th>
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Type</th>
                                                             <th
-                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
-                                                                {{ __('cms.roles.col_column_label') }}</th>
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Label</th>
                                                             <th
-                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
-                                                                {{ __('cms.roles.col_nullable') }}</th>
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Attributes</th>
                                                             <th
-                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
-                                                                {{ __('cms.roles.col_unique') }}</th>
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Foreign Key</th>
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                                                                Options</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach ($role->columns as $col)
                                                             <tr class="border-b border-gray-100 last:border-b-0">
-                                                                <td class="py-2 px-3 font-mono text-xs">
+                                                                <td class="py-2 px-3 font-mono text-xs whitespace-nowrap">
                                                                     {{ $col->column_name }}</td>
-                                                                <td class="py-2 px-3">
+                                                                <td class="py-2 px-3 whitespace-nowrap">
                                                                     <span
                                                                         class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
                                                                         {{ $col->column_type }}
@@ -229,15 +232,60 @@
                                                                 <td class="py-2 px-3 text-gray-600">
                                                                     {{ $col->column_label }}</td>
                                                                 <td class="py-2 px-3">
-                                                                    @if ($col->is_nullable)
-                                                                        <span class="text-green-600 text-xs">✓</span>
+                                                                    <div class="flex flex-wrap gap-1">
+                                                                        @if ($col->is_primary)
+                                                                            <span
+                                                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200">Primary</span>
+                                                                        @endif
+                                                                        @if ($col->is_unique)
+                                                                            <span
+                                                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">Unique</span>
+                                                                        @endif
+                                                                        @if ($col->is_nullable)
+                                                                            <span
+                                                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 border border-green-200">Nullable</span>
+                                                                        @endif
+                                                                        @if ($col->is_unsigned)
+                                                                            <span
+                                                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">Unsigned</span>
+                                                                        @endif
+                                                                        @if ($col->is_auto_increment)
+                                                                            <span
+                                                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">Auto
+                                                                                Inc</span>
+                                                                        @endif
+                                                                        @if (!$col->is_primary && !$col->is_unique && !$col->is_nullable && !$col->is_unsigned && !$col->is_auto_increment)
+                                                                            <span class="text-gray-400 text-xs">—</span>
+                                                                        @endif
+                                                                    </div>
+                                                                </td>
+                                                                <td class="py-2 px-3">
+                                                                    @if ($col->is_foreign)
+                                                                        <div class="text-xs space-y-0.5">
+                                                                            <span
+                                                                                class="font-mono text-gray-700">{{ $col->references_table }}.{{ $col->references_column }}</span>
+                                                                            @if ($col->on_delete || $col->on_update)
+                                                                                <div class="text-gray-400">
+                                                                                    @if ($col->on_delete)
+                                                                                        <span class="mr-1">on delete:
+                                                                                            <span
+                                                                                                class="font-mono text-gray-600">{{ $col->on_delete }}</span></span>
+                                                                                    @endif
+                                                                                    @if ($col->on_update)
+                                                                                        <span>on update: <span
+                                                                                                class="font-mono text-gray-600">{{ $col->on_update }}</span></span>
+                                                                                    @endif
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
                                                                     @else
-                                                                        <span class="text-red-500 text-xs">✗</span>
+                                                                        <span class="text-gray-400 text-xs">—</span>
                                                                     @endif
                                                                 </td>
                                                                 <td class="py-2 px-3">
-                                                                    @if ($col->is_unique)
-                                                                        <span class="text-green-600 text-xs">✓</span>
+                                                                    @if (in_array($col->column_type, ['enum', 'set']) && $col->options)
+                                                                        <span
+                                                                            class="text-xs font-mono text-gray-600">{{ is_array($col->options) ? implode(', ', $col->options) : $col->options }}</span>
                                                                     @else
                                                                         <span class="text-gray-400 text-xs">—</span>
                                                                     @endif
@@ -292,3 +340,4 @@
         }
     </script>
 @endpush
+ 
