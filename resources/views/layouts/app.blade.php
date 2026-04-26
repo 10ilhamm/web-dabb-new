@@ -338,7 +338,7 @@
             </header>
 
             <!-- Page Content -->
-            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-[#F4F6FA] p-6 lg:p-8">
+            <div id="mainContent" class="flex-1 overflow-x-hidden overflow-y-auto bg-[#F4F6FA] p-6 lg:p-8">
                 <main class="max-w-7xl mx-auto w-full">
                     @if (isset($slot) && !$__env->yieldContent('content'))
                         {{-- Component mode: used by <x-app-layout> --}}

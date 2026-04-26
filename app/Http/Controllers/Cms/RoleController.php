@@ -31,7 +31,28 @@ class RoleController extends Controller
     {
         $columnTypes = $this->getColumnTypes();
         $existingRoles = Role::with('columns')->get();
-        return view('cms.pengguna.roles.create', compact('columnTypes', 'existingRoles'));
+        $templatesJson = $existingRoles->keyBy('name')->map(function ($role) {
+            return $role->columns->map(function ($column) {
+                return [
+                    'name' => $column->column_name,
+                    'type' => $column->column_type,
+                    'length' => $column->column_length,
+                    'label' => $column->column_label,
+                    'nullable' => (bool) $column->is_nullable,
+                    'unique' => (bool) $column->is_unique,
+                    'options' => is_array($column->options) ? implode(',', $column->options) : '',
+                    'primary' => (bool) $column->is_primary,
+                    'foreign' => (bool) $column->is_foreign,
+                    'references_table' => $column->references_table,
+                    'references_column' => $column->references_column,
+                    'on_delete' => $column->on_delete,
+                    'on_update' => $column->on_update,
+                    'unsigned' => (bool) $column->is_unsigned,
+                    'auto_increment' => (bool) $column->is_auto_increment,
+                ];
+            })->values();
+        })->toJson();
+        return view('cms.pengguna.roles.create', compact('columnTypes', 'templatesJson'));
     }
 
     public function store(Request $request)

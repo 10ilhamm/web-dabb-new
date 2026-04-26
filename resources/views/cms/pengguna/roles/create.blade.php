@@ -164,31 +164,13 @@
 @endsection
 
 @push('scripts')
+    <style>
+        .bg-gray-50.dragging { opacity: 0.4; }
+    </style>
     <script>
         const columnTypes = @json($columnTypes);
 
-        const templates = @json(
-            $existingRoles->keyBy('name')->map(function ($role) {
-                return $role->columns->map(function ($column) {
-                        return [
-                            'name' => $column->column_name,
-                            'type' => $column->column_type,
-                            'length' => $column->column_length,
-                            'label' => $column->column_label,
-                            'nullable' => (bool) $column->is_nullable,
-                            'unique' => (bool) $column->is_unique,
-                            'options' => is_array($column->options) ? implode(',', $column->options) : '',
-                            'primary' => (bool) $column->is_primary,
-                            'foreign' => (bool) $column->is_foreign,
-                            'references_table' => $column->references_table,
-                            'references_column' => $column->references_column,
-                            'on_delete' => $column->on_delete,
-                            'on_update' => $column->on_update,
-                            'unsigned' => (bool) $column->is_unsigned,
-                            'auto_increment' => (bool) $column->is_auto_increment,
-                        ];
-                    })->values();
-            }));
+        const templates = {!! $templatesJson !!};
 
         let columnIndex = 0;
 
@@ -219,11 +201,28 @@
             div.innerHTML = `
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ __('cms.roles.column') }} #${index + 1}</span>
-            <button type="button" onclick="removeColumn(this)" class="text-red-500 hover:text-red-700 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-            </button>
+            <div class="flex items-center gap-1">
+                <button type="button" onclick="moveUp(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent" ${index === 0 ? 'disabled' : ''} title="Move Up">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                </button>
+                <button type="button" class="drag-handle p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-grab active:cursor-grabbing" draggable="false" title="Drag to reorder">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                    </svg>
+                </button>
+                <button type="button" onclick="moveDown(this)" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent" title="Move Down">
+                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                </button>
+                <button type="button" onclick="removeColumn(this)" class="text-red-500 hover:text-red-700 text-sm p-1 rounded-md transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
@@ -329,20 +328,19 @@
     `;
 
             container.appendChild(div);
+            reindexColumns(); // Reindex after add
         }
 
         function removeColumn(btn) {
-            btn.closest('.bg-gray-50').remove();
+            const div = btn.closest('.bg-gray-50');
+            div.remove();
+            reindexColumns();
         }
 
         function toggleOptions(select, index) {
             const optionsDiv = document.getElementById('options-' + index);
             if (!optionsDiv) return;
-            if (select.value === 'enum' || select.value === 'set') {
-                optionsDiv.classList.remove('hidden');
-            } else {
-                optionsDiv.classList.add('hidden');
-            }
+            optionsDiv.classList.toggle('hidden', select.value !== 'enum' && select.value !== 'set');
         }
 
         function toggleForeign(checkbox, index) {
@@ -378,5 +376,147 @@
                 data.forEach(col => addColumn(col));
             });
         });
+
+        // Reorder functions
+        function reindexColumns() {
+            const container = document.getElementById('columnsContainer');
+            if (!container) return;
+            const columnDivs = container.querySelectorAll('.bg-gray-50');
+            const total = columnDivs.length;
+
+            columnDivs.forEach((div, i) => {
+                const headerSpan = div.querySelector('span[class*="text-gray-500"]');
+                if (headerSpan) headerSpan.textContent = `Column #${i + 1}`;
+
+                const inputs = div.querySelectorAll('[name^="columns["]');
+                inputs.forEach(input => {
+                    input.name = input.name.replace(/columns\[\d+\]/, `columns[${i}]`);
+                });
+
+                const btnGroup = div.querySelector('.flex.items-center.gap-1');
+                if (btnGroup) {
+                    const btns = btnGroup.querySelectorAll('button');
+                    if (btns.length >= 4) {
+                        btns[0].classList.toggle('opacity-30', i === 0);
+                        btns[0].classList.toggle('cursor-not-allowed', i === 0);
+                        btns[2].classList.toggle('opacity-30', i === total - 1);
+                        btns[2].classList.toggle('cursor-not-allowed', i === total - 1);
+                    }
+                }
+            });
+            columnIndex = total;
+        }
+
+        let draggedItem = null;
+        let ghostEl = null;
+        let ghostOffsetX = 0;
+        let ghostOffsetY = 0;
+        let isDragging = false;
+        let dragStartY = 0;
+        const scrollEl = document.getElementById('mainContent');
+
+        function moveUp(btn) {
+            const div = btn.closest('.bg-gray-50');
+            const prev = div.previousElementSibling;
+            if (prev && prev.matches('.bg-gray-50')) {
+                div.parentNode.insertBefore(div, prev);
+                reindexColumns();
+            }
+        }
+
+        function moveDown(btn) {
+            const div = btn.closest('.bg-gray-50');
+            const next = div.nextElementSibling;
+            if (next && next.matches('.bg-gray-50')) {
+                div.parentNode.insertBefore(next, div);
+                reindexColumns();
+            }
+        }
+
+        // Drag & Drop with mouse events (supports wheel scroll during drag)
+        document.addEventListener('DOMContentLoaded', () => {
+            reindexColumns();
+        });
+
+        const container = document.getElementById('columnsContainer');
+
+        container.addEventListener('mousedown', e => {
+            const handle = e.target.closest('.drag-handle');
+            if (!handle) return;
+            e.preventDefault();
+            draggedItem = handle.closest('.bg-gray-50');
+            if (!draggedItem) return;
+            isDragging = false;
+            dragStartY = e.clientY;
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!draggedItem) return;
+
+            if (e.clientY < 150) {
+                scrollEl.scrollBy(0, -20);
+            } else if (e.clientY > window.innerHeight - 150) {
+                scrollEl.scrollBy(0, 20);
+            }
+
+            if (!isDragging) {
+                if (Math.abs(e.clientY - dragStartY) < 5) return;
+                isDragging = true;
+                draggedItem.classList.add('dragging');
+
+                const rect = draggedItem.getBoundingClientRect();
+                ghostOffsetX = e.clientX - rect.left;
+                ghostOffsetY = e.clientY - rect.top;
+                ghostEl = draggedItem.cloneNode(true);
+                ghostEl.style.position = 'fixed';
+                ghostEl.style.pointerEvents = 'none';
+                ghostEl.style.opacity = '0.85';
+                ghostEl.style.zIndex = '9999';
+                ghostEl.style.width = rect.width + 'px';
+                ghostEl.style.boxShadow = '0 8px 30px rgba(0,0,0,0.15)';
+                ghostEl.style.borderRadius = '8px';
+                ghostEl.style.transform = 'scale(1.02)';
+                ghostEl.style.left = (e.clientX - ghostOffsetX) + 'px';
+                ghostEl.style.top = (e.clientY - ghostOffsetY) + 'px';
+                document.body.appendChild(ghostEl);
+            }
+
+            if (ghostEl) {
+                ghostEl.style.left = (e.clientX - ghostOffsetX) + 'px';
+                ghostEl.style.top = (e.clientY - ghostOffsetY) + 'px';
+            }
+
+            const afterElement = getDragAfterElement(container, e.clientY);
+            if (afterElement == null) {
+                container.appendChild(draggedItem);
+            } else {
+                container.insertBefore(draggedItem, afterElement);
+            }
+        });
+
+        document.addEventListener('mouseup', e => {
+            if (!draggedItem) return;
+            draggedItem.classList.remove('dragging');
+            if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            reindexColumns();
+            draggedItem = null;
+            isDragging = false;
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.bg-gray-50:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
     </script>
 @endpush
