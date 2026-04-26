@@ -93,6 +93,8 @@
                             <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 {{ __('cms.roles.col_table') }}</th>
                             <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                {{ __('cms.roles.col_columns') }}</th>
+                            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 {{ __('cms.roles.col_type') }}</th>
                             <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 {{ __('cms.roles.col_users') }}</th>
@@ -102,10 +104,19 @@
                     </thead>
                     <tbody>
                         @forelse ($roles as $role)
-                            <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-b-0">
+                            <tr class="hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-b-0 cursor-pointer"
+                                onclick="toggleColumns({{ $role->id }})">
                                 <td class="px-6 py-4">
-                                    <code
-                                        class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{{ $role->name }}</code>
+                                    <div class="flex items-center gap-2">
+                                        <svg id="arrow-{{ $role->id }}"
+                                            class="w-4 h-4 text-gray-400 transition-transform" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                        <code
+                                            class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{{ $role->name }}</code>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 font-medium text-gray-800">{{ $role->label }}</td>
                                 <td class="px-6 py-4 text-gray-600 text-sm">
@@ -115,6 +126,12 @@
                                     @else
                                         <span class="text-gray-400">—</span>
                                     @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
+                                        {{ $role->columns_count }} {{ __('cms.roles.columns_count') }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     @if ($role->is_system)
@@ -134,7 +151,8 @@
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="{{ route('cms.pengguna.roles.edit', $role) }}"
                                             class="inline-flex items-center justify-center w-8 h-8 bg-yellow-400 hover:bg-yellow-500 text-white rounded-md transition-colors"
-                                            title="{{ __('cms.pengguna.edit_button') }}">
+                                            title="{{ __('cms.pengguna.edit_button') }}"
+                                            onclick="event.stopPropagation()">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -143,13 +161,15 @@
                                             </svg>
                                         </a>
                                         @if (!$role->is_system)
-                                            <form action="{{ route('cms.pengguna.roles.destroy', $role) }}" method="POST"
+                                            <form action="{{ route('cms.pengguna.roles.destroy', $role) }}"
+                                                method="POST"
                                                 onsubmit="return confirm('{{ __('cms.roles.delete_confirm', ['name' => $role->label]) }}');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
                                                     class="inline-flex items-center justify-center w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
-                                                    title="{{ __('cms.pengguna.delete_button') }}">
+                                                    title="{{ __('cms.pengguna.delete_button') }}"
+                                                    onclick="event.stopPropagation()">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -163,9 +183,80 @@
                                     </div>
                                 </td>
                             </tr>
+                            {{-- Expandable columns detail --}}
+                            <tr id="columns-row-{{ $role->id }}" class="hidden bg-gray-50/30">
+                                <td colspan="7" class="px-6 py-4">
+                                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                        <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                                            {{ __('cms.roles.table_structure') }}: {{ $role->table_name }}
+                                        </h4>
+                                        @if ($role->columns->count() > 0)
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-sm">
+                                                    <thead>
+                                                        <tr class="border-b border-gray-200">
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
+                                                                {{ __('cms.roles.col_column_name') }}</th>
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
+                                                                {{ __('cms.roles.col_column_type') }}</th>
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
+                                                                {{ __('cms.roles.col_column_label') }}</th>
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
+                                                                {{ __('cms.roles.col_nullable') }}</th>
+                                                            <th
+                                                                class="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">
+                                                                {{ __('cms.roles.col_unique') }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($role->columns as $col)
+                                                            <tr class="border-b border-gray-100 last:border-b-0">
+                                                                <td class="py-2 px-3 font-mono text-xs">
+                                                                    {{ $col->column_name }}</td>
+                                                                <td class="py-2 px-3">
+                                                                    <span
+                                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                                                        {{ $col->column_type }}
+                                                                        @if ($col->column_length)
+                                                                            ({{ $col->column_length }})
+                                                                        @endif
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-gray-600">
+                                                                    {{ $col->column_label }}</td>
+                                                                <td class="py-2 px-3">
+                                                                    @if ($col->is_nullable)
+                                                                        <span class="text-green-600 text-xs">✓</span>
+                                                                    @else
+                                                                        <span class="text-red-500 text-xs">✗</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="py-2 px-3">
+                                                                    @if ($col->is_unique)
+                                                                        <span class="text-green-600 text-xs">✓</span>
+                                                                    @else
+                                                                        <span class="text-gray-400 text-xs">—</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @else
+                                            <p class="text-sm text-gray-400 italic">
+                                                {{ __('cms.roles.no_columns') }}</p>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-16 text-center">
+                                <td colspan="7" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center gap-3">
                                         <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -182,6 +273,22 @@
                 </table>
             </div>
         </div>
-
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function toggleColumns(roleId) {
+            const row = document.getElementById('columns-row-' + roleId);
+            const arrow = document.getElementById('arrow-' + roleId);
+
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                arrow.classList.add('rotate-90');
+            } else {
+                row.classList.add('hidden');
+                arrow.classList.remove('rotate-90');
+            }
+        }
+    </script>
+@endpush

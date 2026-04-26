@@ -1156,6 +1156,28 @@ return [
         'cannot_delete_with_users' => 'Peran ini tidak dapat dihapus karena masih memiliki pengguna.',
         'cannot_delete_system' => 'Peran sistem tidak dapat dihapus.',
 
+        // Columns management
+        'col_columns' => 'Kolom',
+        'columns_count' => 'kolom',
+        'columns_title' => 'Struktur Kolom Tabel',
+        'columns_desc' => 'Tentukan kolom-kolom yang ada di tabel profil peran ini. Kolom akan otomatis dibuat di database.',
+        'add_column' => 'Tambah Kolom',
+        'select_template' => 'Pilih Template',
+        'empty_template' => 'Kosong',
+        'column' => 'Kolom',
+        'table_structure' => 'Struktur Tabel',
+        'no_columns' => 'Belum ada kolom yang ditambahkan.',
+        'col_column_name' => 'Nama Kolom (DB)',
+        'col_column_type' => 'Tipe Data',
+        'col_column_label' => 'Label Tampilan',
+        'col_nullable' => 'Nullable',
+        'col_unique' => 'Unique',
+        'col_column_length' => 'Panjang',
+        'col_options' => 'Opsi',
+        'sync_columns' => 'Sinkronkan Kolom',
+        'sync_confirm' => 'Sinkronkan kolom dari tabel database ke form ini? Kolom yang ada akan diperbarui.',
+        'columns_synced' => 'Kolom berhasil disinkronkan dari tabel database.',
+
         // Empty
         'empty' => 'Belum ada peran.',
     ],

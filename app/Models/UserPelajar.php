@@ -18,7 +18,7 @@ class UserPelajar extends Model
         'alamat',
         'nomor_whatsapp',
         'jenis_keperluan',
-        'judul_keperluan',
+        'judul_keperluan'
     ];
 
     public function user()

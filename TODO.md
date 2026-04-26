@@ -1,71 +1,31 @@
-# TODO: Dynamic Role Management
+# TODO: Role Database Schema Management
 
-## Step 1: Database
+## Step 1: Database & Models
 
-- [x] Migration: `create_roles_table.php`
-- [x] Migration: `change_users_role_to_string.php`
-- [x] Seeder: `RoleSeeder.php` (populate existing roles)
+- [x] Create migration for `role_columns` table
+- [ ] Create `RoleColumn` model
+- [ ] Update `Role` model with `columns()` relation
 
-## Step 2: Model
+## Step 2: Controller Logic
 
-- [x] `app/Models/Role.php`
-- [x] Update `app/Models/User.php` (`roleLabels()`, `getProfileAttribute()`, add `role()` relation)
+- [ ] Update `RoleController@index` — load columns count
+- [ ] Update `RoleController@store` — auto-generate default columns + create DB table
+- [ ] Update `RoleController@update` — sync column changes + alter DB table
+- [ ] Update `RoleController@destroy` — drop table + delete columns
+- [ ] Add `syncColumns()`, `getTableColumns()`, `generateDefaultColumns()`, `alterTable()` helpers
 
-## Step 3: Controller
+## Step 3: Views
 
-- [x] `app/Http/Controllers/Cms/RoleController.php`
-- [x] Update `app/Http/Controllers/Cms/PenggunaController.php` (use dynamic roles)
+- [ ] Update `roles/index.blade.php` — expandable columns detail
+- [ ] Update `roles/create.blade.php` — dynamic column form
+- [ ] Update `roles/edit.blade.php` — edit existing columns
 
-## Step 4: Routes
+## Step 4: Language
 
-- [x] Update `routes/web.php` (add role CRUD routes under cms/pengguna)
+- [ ] Add role column keys to `id/cms.php` and `en/cms.php`
 
-## Step 5: Views
+## Step 5: Testing
 
-- [x] `resources/views/cms/pengguna/roles/index.blade.php`
-- [x] `resources/views/cms/pengguna/roles/create.blade.php`
-- [x] `resources/views/cms/pengguna/roles/edit.blade.php`
-- [x] Update `resources/views/cms/pengguna/page/index.blade.php` (add link to role management)
-
-## Step 6: Translations
-
-- [x] Update `resources/lang/id/cms.php`
-- [x] Update `resources/lang/en/cms.php`
-
-## Step 7: Test
-
-- [x] Run migrations
-- [x] Verify role CRUD works
-- [x] Verify user management still works with dynamic roles
-
-## Step 8: Auto NPM Build Command
-
-- [x] Create `app/Console/Commands/AutoNpmBuild.php` — artisan command `npm:build` with smart file change detection
-- [x] Update `routes/console.php` — schedule `npm:build` every 5 minutes alongside `db:dump`
-- [x] Update `tailwind.config.js` — add `safelist` patterns for all dynamic color classes (bg-, hover:bg-, text-, border-)
-
-## Step 9: Role Form Enhancements
-
-- [x] Update `resources/views/cms/pengguna/roles/create.blade.php` — change name help text to amber warning about lowercase/underscore-only
-- [x] Update `resources/views/cms/pengguna/roles/edit.blade.php` — same warning styling
-- [x] Update `resources/lang/id/cms.php` — add `form_name_warning` key
-- [x] Update `resources/lang/en/cms.php` — add `form_name_warning` key
-
-## Step 10: Role Type (is_system) in Forms
-
-- [x] Update `app/Http/Controllers/Cms/RoleController.php` — validate `is_system` in store/update, remove forced `false`
-- [x] Update `resources/views/cms/pengguna/roles/create.blade.php` — add `is_system` radio group (System/Custom)
-- [x] Update `resources/views/cms/pengguna/roles/edit.blade.php` — add `is_system` radio group with prefill
-- [x] Update `resources/views/cms/pengguna/roles/index.blade.php` — hide delete button for system roles
-- [x] Update `resources/lang/id/cms.php` — add `form_type` and `form_type_help` keys
-- [x] Update `resources/lang/en/cms.php` — add `form_type` and `form_type_help` keys
-
-## Step 11: Profile Data in User Create/Edit
-
-- [x] Update `resources/views/cms/pengguna/create.blade.php` — add role-specific profile sections with data-role-section wrappers
-- [x] Update `resources/views/cms/pengguna/edit.blade.php` — add role-specific profile sections with prefill from `$profile`
-- [x] Create `resources/views/cms/pengguna/_profile_fields.blade.php` — shared partial for admin & pegawai (NIP, jenis_kelamin, tempat_lahir, tanggal_lahir, kartu_identitas_file, nomor_kartu_identitas, alamat, nomor_whatsapp, agama, jabatan, pangkat_golongan)
-- [x] Create `resources/views/cms/pengguna/_profile_fields_umum_pelajar.blade.php` — shared partial for umum & pelajar_mahasiswa (jenis_kelamin, tempat_lahir, tanggal_lahir, kartu_identitas_file, nomor_kartu_identitas, alamat, nomor_whatsapp, jenis_keperluan, judul_keperluan)
-- [x] Create `resources/views/cms/pengguna/_profile_fields_instansi.blade.php` — partial for instansi_swasta (tanpa jenis_kelamin, dengan jenis_keperluan & judul_keperluan)
-- [x] Update `public/js/cms/features/pengguna/create.js` — add `updateRoleSections()` toggle handler on role select change
-- [x] Update `public/js/cms/features/pengguna/edit.js` — same toggle handler, call on init to show current role section
+- [ ] Verify existing roles show columns
+- [ ] Verify new role creates table with selected columns
+- [ ] Verify edit role adds/removes columns and alters table

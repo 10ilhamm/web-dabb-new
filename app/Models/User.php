@@ -120,4 +120,21 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserPegawai::class);
     }
+
+    /**
+     * Handle dynamic relation calls for role profiles.
+     */
+    public function __call($method, $parameters)
+    {
+        // Check if this is a dynamic role relation
+        $role = Role::where('relation_name', $method)->first();
+        if ($role) {
+            $modelClass = 'App\\Models\\' . ucfirst($method);
+            if (class_exists($modelClass)) {
+                return $this->hasOne($modelClass);
+            }
+        }
+
+        return parent::__call($method, $parameters);
+    }
 }

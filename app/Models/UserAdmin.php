@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserAdmin extends Model
 {
+    protected $table = 'user_admin';
+
     protected $fillable = [
         'user_id',
         'nip',
@@ -18,7 +20,7 @@ class UserAdmin extends Model
         'nomor_whatsapp',
         'agama',
         'jabatan',
-        'pangkat_golongan',
+        'pangkat_golongan'
     ];
 
     public function user()

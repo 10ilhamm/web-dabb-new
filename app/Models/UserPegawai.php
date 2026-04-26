@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserPegawai extends Model
 {
+    protected $table = 'user_pegawais';
+
     protected $fillable = [
         'user_id',
         'nip',
@@ -18,7 +20,7 @@ class UserPegawai extends Model
         'nomor_whatsapp',
         'agama',
         'jabatan',
-        'pangkat_golongan',
+        'pangkat_golongan'
     ];
 
     public function user()

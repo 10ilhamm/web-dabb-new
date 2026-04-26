@@ -14,6 +14,7 @@
 @section('content')
     <div class="space-y-6">
 
+        {{-- Header --}}
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">{{ __('cms.roles.edit_title') }}</h1>
@@ -21,13 +22,14 @@
             </div>
         </div>
 
+        {{-- Form --}}
         <form action="{{ route('cms.pengguna.roles.update', $role) }}" method="POST"
             class="bg-white rounded-xl shadow-sm border border-gray-100">
             @csrf
             @method('PUT')
 
             <div class="px-6 py-5 border-b border-gray-100">
-                <h2 class="text-base font-semibold text-gray-800">{{ $role->label }}</h2>
+                <h2 class="text-base font-semibold text-gray-800">{{ __('cms.roles.edit_title') }}</h2>
             </div>
 
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -47,8 +49,8 @@
 
                 {{-- Label --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_label') }} <span
-                            class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_label') }}
+                        <span class="text-red-500">*</span></label>
                     <input type="text" name="label" value="{{ old('label', $role->label) }}" required
                         placeholder="{{ __('cms.roles.form_label_placeholder') }}"
                         class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
@@ -83,9 +85,9 @@
 
                 {{-- Table Name --}}
                 <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_table_name') }}</label>
-                    <input type="text" name="table_name" value="{{ old('table_name', $role->table_name) }}"
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_table_name') }}
+                        <span class="text-red-500">*</span></label>
+                    <input type="text" name="table_name" value="{{ old('table_name', $role->table_name) }}" required
                         placeholder="{{ __('cms.roles.form_table_name_placeholder') }}"
                         class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                     <p class="text-xs text-gray-400 mt-1">{{ __('cms.roles.form_table_name_help') }}</p>
@@ -96,10 +98,10 @@
 
                 {{-- Relation Name --}}
                 <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_relation_name') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.roles.form_relation_name') }}
+                        <span class="text-red-500">*</span></label>
                     <input type="text" name="relation_name" value="{{ old('relation_name', $role->relation_name) }}"
-                        placeholder="{{ __('cms.roles.form_relation_name_placeholder') }}"
+                        required placeholder="{{ __('cms.roles.form_relation_name_placeholder') }}"
                         class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                     <p class="text-xs text-gray-400 mt-1">{{ __('cms.roles.form_relation_name_help') }}</p>
                     @error('relation_name')
@@ -119,7 +121,102 @@
                 </div>
             </div>
 
-            <div class="px-6 py-4 flex items-center justify-end gap-3 bg-gray-50/50 rounded-b-xl">
+            {{-- Columns Section --}}
+            <div class="px-6 py-5 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800">{{ __('cms.roles.columns_title') }}</h3>
+                        <p class="text-sm text-gray-500">{{ __('cms.roles.columns_desc') }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="syncColumnsFromDb()"
+                            class="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                            {{ __('cms.roles.sync_columns') }}
+                        </button>
+                        <button type="button" onclick="addColumn()"
+                            class="px-3 py-2 text-sm font-medium text-white bg-[#174E93] hover:bg-blue-800 rounded-lg transition-colors">
+                            + {{ __('cms.roles.add_column') }}
+                        </button>
+                    </div>
+                </div>
+
+                <div id="columnsContainer" class="space-y-3">
+                    @foreach ($role->columns as $index => $col)
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <input type="hidden" name="columns[{{ $index }}][id]" value="{{ $col->id }}">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Column
+                                    #{{ $index + 1 }}</span>
+                                <button type="button" onclick="removeColumn(this)"
+                                    class="text-red-500 hover:text-red-700 text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Column Name</label>
+                                    <input type="text" name="columns[{{ $index }}][column_name]"
+                                        value="{{ $col->column_name }}" required
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                    <input type="text" name="columns[{{ $index }}][column_label]"
+                                        value="{{ $col->column_label }}" required
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                                    <select name="columns[{{ $index }}][column_type]"
+                                        onchange="toggleOptions(this, {{ $index }})" required
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                        @foreach ($columnTypes as $key => $label)
+                                            <option value="{{ $key }}"
+                                                {{ $col->column_type == $key ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Length</label>
+                                    <input type="number" name="columns[{{ $index }}][column_length]"
+                                        value="{{ $col->column_length }}"
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div id="options-{{ $index }}"
+                                    class="{{ in_array($col->column_type, ['enum', 'set']) ? '' : 'hidden' }}">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Options (comma
+                                        separated)</label>
+                                    <input type="text" name="columns[{{ $index }}][options]"
+                                        value="{{ $col->options ? implode(',', $col->options) : '' }}"
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div class="flex items-center gap-4 pt-6">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" name="columns[{{ $index }}][is_nullable]"
+                                            value="1" {{ $col->is_nullable ? 'checked' : '' }}
+                                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="text-sm text-gray-700">Nullable</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" name="columns[{{ $index }}][is_unique]"
+                                            value="1" {{ $col->is_unique ? 'checked' : '' }}
+                                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="text-sm text-gray-700">Unique</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Footer Actions --}}
+            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50 rounded-b-xl">
                 <a href="{{ route('cms.pengguna.roles.index') }}"
                     class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
                     {{ __('cms.pengguna.cancel') }}
@@ -132,3 +229,145 @@
         </form>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        const columnTypes = @json($columnTypes);
+        let columnIndex = {{ $role->columns->count() }};
+
+        function addColumn() {
+            const container = document.getElementById('columnsContainer');
+            const index = columnIndex++;
+
+            const div = document.createElement('div');
+            div.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200';
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Column #${index + 1}</span>
+                    <button type="button" onclick="removeColumn(this)" class="text-red-500 hover:text-red-700 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Column Name</label>
+                        <input type="text" name="columns[${index}][column_name]" required placeholder="e.g. nomor_kartu"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                        <input type="text" name="columns[${index}][column_label]" required placeholder="e.g. Nomor Kartu Identitas"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                        <select name="columns[${index}][column_type]" onchange="toggleOptions(this, ${index})" required
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            ${Object.entries(columnTypes).map(([key, label]) =>
+                                `<option value="${key}">${label}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Length</label>
+                        <input type="number" name="columns[${index}][column_length]" placeholder="e.g. 255"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div id="options-${index}" class="hidden">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Options (comma separated)</label>
+                        <input type="text" name="columns[${index}][options]" placeholder="Option 1,Option 2,Option 3"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="flex items-center gap-4 pt-6">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="columns[${index}][is_nullable]" value="1" checked
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <span class="text-sm text-gray-700">Nullable</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="columns[${index}][is_unique]" value="1"
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <span class="text-sm text-gray-700">Unique</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+        }
+
+        function removeColumn(btn) {
+            btn.closest('.bg-gray-50').remove();
+        }
+
+        function toggleOptions(select, index) {
+            const optionsDiv = document.getElementById('options-' + index);
+            if (select.value === 'enum' || select.value === 'set') {
+                optionsDiv.classList.remove('hidden');
+            } else {
+                optionsDiv.classList.add('hidden');
+            }
+        }
+
+        function syncColumnsFromDb() {
+            Swal.fire({
+                icon: 'question',
+                title: '{{ __('cms.roles.sync_columns') }}',
+                text: '{{ __('cms.roles.sync_confirm') }}',
+                showCancelButton: true,
+                confirmButtonText: '{{ __('cms.roles.sync_columns') }}',
+                cancelButtonText: '{{ __('cms.pengguna.cancel') }}',
+                confirmButtonColor: '#174E93',
+                cancelButtonColor: '#9CA3AF'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                const btn = document.querySelector('button[onclick="syncColumnsFromDb()"]');
+                const originalText = btn.innerText;
+                btn.innerText = 'Syncing...';
+                btn.disabled = true;
+
+                fetch('{{ route('cms.pengguna.roles.sync', $role) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data.message || '{{ __('cms.roles.columns_synced') }}',
+                                confirmButtonColor: '#174E93'
+                            }).then(() => window.location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Sync failed.',
+                                confirmButtonColor: '#174E93'
+                            });
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: err.message || 'Sync failed.',
+                            confirmButtonColor: '#174E93'
+                        });
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    });
+            });
+        }
+    </script>
+@endpush
