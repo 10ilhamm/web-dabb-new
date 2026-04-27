@@ -12,15 +12,33 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    public static function getEnumValues($table, $column)
+    public static function getEnumValues(string $table, string $column): array
     {
-        $type = \Illuminate\Support\Facades\DB::select("SHOW COLUMNS FROM {$table} WHERE Field = '{$column}'")[0]->Type;
-        preg_match('/^enum\((.*)\)$/', $type, $matches);
-        $enum = [];
-        foreach (explode(',', $matches[1]) as $value) {
-            $enum[] = trim($value, "'");
+        try {
+            $result = \Illuminate\Support\Facades\DB::select(
+                "SHOW COLUMNS FROM {$table} WHERE Field = ?",
+                [$column]
+            );
+
+            if (empty($result)) {
+                return [];
+            }
+
+            $type = $result[0]->Type;
+            preg_match('/^enum\((.*)\)$/', $type, $matches);
+
+            if (empty($matches)) {
+                return [];
+            }
+
+            $enum = [];
+            foreach (explode(',', $matches[1]) as $value) {
+                $enum[] = trim($value, "'");
+            }
+            return $enum;
+        } catch (\Throwable) {
+            return [];
         }
-        return $enum;
     }
 
     /**
@@ -53,6 +71,14 @@ class User extends Authenticatable
     public static function roleLabels(): array
     {
         return Role::roleLabels();
+    }
+
+    /**
+     * Get profile columns from role_columns for a given role.
+     */
+    public static function roleProfileColumns(string $role): \Illuminate\Database\Eloquent\Collection
+    {
+        return Role::profileColumnsFor($role);
     }
 
     /**

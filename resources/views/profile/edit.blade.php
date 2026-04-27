@@ -52,65 +52,6 @@
                             @enderror
                         </div>
 
-                        <!-- NIP (Admin/Pegawai) -->
-                        @if (in_array($user->role, ['admin', 'pegawai']))
-                            <div>
-                                <label
-                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.nip') }}</label>
-                                <input type="text" name="nip" value="{{ old('nip', $user->profile?->nip ?? '') }}"
-                                    maxlength="18"
-                                    class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
-                            </div>
-                        @endif
-
-                        <!-- Jenis Kelamin -->
-                        @if ($user->role !== 'instansi_swasta')
-                            <div>
-                                <label
-                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.gender') }}</label>
-                                @php
-                                    $tableName = match($user->role) {
-                                        'admin' => 'user_admins',
-                                        'pegawai' => 'user_pegawais',
-                                        'umum' => 'user_umums',
-                                        'pelajar_mahasiswa' => 'user_pelajars',
-                                        default => 'user_umums'
-                                    };
-                                    $jkList = \App\Models\User::getEnumValues($tableName, 'jenis_kelamin');
-                                @endphp
-                                <select name="jenis_kelamin"
-                                    class="tom-select-class w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                                    <option value="">Pilih Jenis Kelamin</option>
-                                    @foreach($jkList as $jk)
-                                    <option value="{{ $jk }}"
-                                        {{ old('jenis_kelamin', $user->profile?->jenis_kelamin ?? '') == $jk ? 'selected' : '' }}>
-                                        {{ $jk }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-
-                        <!-- Agama -->
-                        @if (in_array($user->role, ['admin', 'pegawai']))
-                            <div>
-                                <label
-                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.religion') }}</label>
-                                @php 
-                                    $tableName = $user->role === 'admin' ? 'user_admins' : 'user_pegawais';
-                                    $agamaList = \App\Models\User::getEnumValues($tableName, 'agama'); 
-                                @endphp
-                                <select name="agama"
-                                    class="tom-select-class w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                                    <option value="">Pilih Agama</option>
-                                    @foreach ($agamaList as $agama)
-                                        <option value="{{ $agama }}"
-                                            {{ old('agama', $user->profile?->agama ?? '') == $agama ? 'selected' : '' }}>
-                                            {{ $agama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-
                         <!-- Email -->
                         <div>
                             <label
@@ -122,98 +63,132 @@
                             @enderror
                         </div>
 
-                        <!-- Nomor WhatsApp -->
-                        <div>
-                            <label
-                                class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.phone_number') }}</label>
-                            <input type="text" name="nomor_whatsapp"
-                                value="{{ old('nomor_whatsapp', $user->profile?->nomor_whatsapp ?? '') }}" maxlength="20"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
-                        </div>
+                        @php
+                            // Separate profile columns into groups
+                            $textAreaFields = [];
+                            $fileFields = [];
+                            $selectFields = [];
+                            $inputFields = [];
 
-                        <!-- Jabatan -->
-                        @if (in_array($user->role, ['admin', 'pegawai']))
+                            $skipFields = ['user_id', 'id', 'created_at', 'updated_at'];
+
+                            foreach ($profileColumns as $col) {
+                                if (in_array($col->column_name, $skipFields)) continue;
+
+                                if (in_array($col->column_type, ['text', 'longtext', 'mediumtext'])) {
+                                    $textAreaFields[] = $col;
+                                } elseif ($col->column_type === 'blob') {
+                                    $fileFields[] = $col;
+                                } elseif (in_array($col->column_type, ['enum', 'set'])) {
+                                    $selectFields[] = $col;
+                                } else {
+                                    $inputFields[] = $col;
+                                }
+                            }
+                        @endphp
+
+                        {{-- Dynamic input fields --}}
+                        @foreach($inputFields as $col)
+                            @if(!in_array($col->column_name, ['name', 'email', 'photo']))
+                                <div>
+                                    <label
+                                        class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ str()->headline($col->column_name) }}</label>
+
+                                    @if(in_array($col->column_type, ['date', 'datetime', 'timestamp']))
+                                        <input type="{{ $col->column_type === 'date' ? 'date' : 'datetime-local' }}"
+                                            name="{{ $col->column_name }}"
+                                            value="{{ old($col->column_name, $user->profile?->{$col->column_name} ?? '') }}"
+                                            maxlength="{{ $col->column_length }}"
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
+                                    @elseif(in_array($col->column_type, ['int', 'bigint', 'smallint', 'tinyint']))
+                                        <input type="number"
+                                            name="{{ $col->column_name }}"
+                                            value="{{ old($col->column_name, $user->profile?->{$col->column_name} ?? '') }}"
+                                            maxlength="{{ $col->column_length }}"
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
+                                    @else
+                                        <input type="text"
+                                            name="{{ $col->column_name }}"
+                                            value="{{ old($col->column_name, $user->profile?->{$col->column_name} ?? '') }}"
+                                            maxlength="{{ $col->column_length }}"
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
+                                    @endif
+
+                                    @error($col->column_name)
+                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endif
+                        @endforeach
+
+                        {{-- Dynamic select fields (enum/set) --}}
+                        @foreach($selectFields as $col)
                             <div>
                                 <label
-                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.position') }}</label>
-                                @php 
-                                    $tableName = $user->role === 'admin' ? 'user_admins' : 'user_pegawais';
-                                    $jabatanList = \App\Models\User::getEnumValues($tableName, 'jabatan'); 
-                                @endphp
-                                <select name="jabatan"
+                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ str()->headline($col->column_name) }}</label>
+                                <select name="{{ $col->column_name }}"
                                     class="tom-select-class w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                                    <option value="">Pilih Jabatan</option>
-                                    @foreach ($jabatanList as $jabatan)
-                                        <option value="{{ $jabatan }}"
-                                            {{ old('jabatan', $user->profile?->jabatan ?? '') == $jabatan ? 'selected' : '' }}>
-                                            {{ $jabatan }}</option>
+                                    <option value="">Pilih {{ str()->headline($col->column_name) }}</option>
+                                    @foreach(($enumOptions[$col->column_name] ?? []) as $option)
+                                        <option value="{{ $option }}"
+                                            {{ old($col->column_name, $user->profile?->{$col->column_name} ?? '') == $option ? 'selected' : '' }}>
+                                            {{ $option }}
+                                        </option>
                                     @endforeach
                                 </select>
+                                @error($col->column_name)
+                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
+                        @endforeach
 
-                            <!-- Pangkat/Golongan -->
+                        {{-- Dynamic textarea fields --}}
+                        @foreach($textAreaFields as $col)
+                            @if($col->column_name !== 'alamat')
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ str()->headline($col->column_name) }}</label>
+                                    <textarea name="{{ $col->column_name }}" rows="3"
+                                        class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors resize-none">{{ old($col->column_name, $user->profile?->{$col->column_name} ?? '') }}</textarea>
+                                    @error($col->column_name)
+                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endif
+                        @endforeach
+
+                        {{-- Dynamic file fields --}}
+                        @foreach($fileFields as $col)
                             <div>
                                 <label
-                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.rank_class') }}</label>
-                                @php 
-                                    $tableName = $user->role === 'admin' ? 'user_admins' : 'user_pegawais';
-                                    $pangkatList = \App\Models\User::getEnumValues($tableName, 'pangkat_golongan'); 
-                                @endphp
-                                <select name="pangkat_golongan"
-                                    class="tom-select-class w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                                    <option value="">Pilih Pangkat/Golongan</option>
-                                    @foreach ($pangkatList as $pangkat)
-                                        <option value="{{ $pangkat }}"
-                                            {{ old('pangkat_golongan', $user->profile?->pangkat_golongan ?? '') == $pangkat ? 'selected' : '' }}>
-                                            {{ $pangkat }}</option>
-                                    @endforeach
-                                </select>
+                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">Upload {{ str()->headline($col->column_name) }} (Opsional)</label>
+                                <input type="file" name="{{ $col->column_name }}"
+                                    accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
+                                @if($user->profile?->{$col->column_name})
+                                    <a href="{{ Storage::url($user->profile->{$col->column_name}) }}" target="_blank"
+                                        class="text-xs text-blue-500 mt-1 block">Lihat Dokumen Saat Ini</a>
+                                @endif
+                                @error($col->column_name)
+                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endforeach
+
+                        <!-- Alamat (always at end, full width) -->
+                        @if($profileColumns->contains('column_name', 'alamat'))
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-[12px] font-medium text-gray-400 mb-1.5">
+                                    {{ $profileColumns->firstWhere('column_name', 'alamat')->column_label ?? __('dashboard.profile.address') }}
+                                </label>
+                                <textarea name="alamat" rows="3"
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors resize-none">{{ old('alamat', $user->profile?->alamat ?? '') }}</textarea>
+                                @error('alamat')
+                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
                         @endif
-
-                        <!-- Tempat Lahir -->
-                        <div>
-                            <label class="block text-[12px] font-medium text-gray-400 mb-1.5">Tempat Lahir</label>
-                            <input type="text" name="tempat_lahir"
-                                value="{{ old('tempat_lahir', $user->profile?->tempat_lahir ?? '') }}" maxlength="100"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
-                        </div>
-
-                        <!-- Tanggal Lahir -->
-                        <div>
-                            <label class="block text-[12px] font-medium text-gray-400 mb-1.5">Tanggal Lahir</label>
-                            <input type="date" name="tanggal_lahir"
-                                value="{{ old('tanggal_lahir', $user->profile?->tanggal_lahir ?? '') }}"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                        </div>
-
-                        <!-- Nomor Kartu Identitas -->
-                        <div>
-                            <label class="block text-[12px] font-medium text-gray-400 mb-1.5">Nomor Kartu Identitas</label>
-                            <input type="text" name="nomor_kartu_identitas"
-                                value="{{ old('nomor_kartu_identitas', $user->profile?->nomor_kartu_identitas ?? '') }}"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors">
-                        </div>
-
-                        <!-- Kartu Identitas -->
-                        <div>
-                            <label class="block text-[12px] font-medium text-gray-400 mb-1.5">Upload Kartu Identitas (Opsional Perbarui)</label>
-                            <input type="file" name="kartu_identitas" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer">
-                            @if($user->profile?->kartu_identitas)
-                                <a href="{{ Storage::url($user->profile->kartu_identitas) }}" target="_blank" class="text-xs text-blue-500 mt-1 block">Lihat KTP/Identitas Saat Ini</a>
-                            @endif
-                        </div>
-
-
-
-                        <!-- Alamat -->
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-[12px] font-medium text-gray-400 mb-1.5">{{ __('dashboard.profile.address') }}</label>
-                            <textarea name="alamat" rows="3"
-                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-[13px] rounded-lg p-2.5 outline-none focus:border-blue-500 focus:bg-white transition-colors resize-none">{{ old('alamat', $user->profile?->alamat ?? '') }}</textarea>
-                        </div>
                     </div>
                 </div>
 
@@ -268,11 +243,9 @@
             const input = event.target;
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-
                 reader.onload = function(e) {
                     document.getElementById('profile-photo-preview').src = e.target.result;
                 }
-
                 reader.readAsDataURL(input.files[0]);
             }
         }

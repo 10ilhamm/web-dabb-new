@@ -67,7 +67,7 @@
                 </button>
             </form>
 
-            @if (session('status') === 'browser-sessions-terminated')
+            @if (session('status') === 'sessions-terminated')
                 <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
                     class="text-sm text-green-600 font-medium mt-4">{{ __('dashboard.activity.logout_success') }}</p>
             @endif

@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/activity/logout-others', [ProfileController::class, 'logoutOtherBrowserSessions'])->name('profile.activity.logout-others');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/send-verification', [ProfileController::class, 'sendVerificationNotification'])->name('profile.send-verification');
 
     // CMS Home Content Editor (supports multiple beranda pages by feature_id)
     Route::middleware('role:admin')->prefix('cms/home/{feature_id}')->name('cms.home.')->group(function () {
@@ -200,6 +201,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{pengguna}/edit', [PenggunaController::class, 'edit'])->name('edit');
         Route::put('/{pengguna}', [PenggunaController::class, 'update'])->name('update');
         Route::delete('/{pengguna}', [PenggunaController::class, 'destroy'])->name('destroy');
+        Route::post('/{pengguna}/resend-verification', [PenggunaController::class, 'resendVerification'])->name('resend-verification');
+        Route::post('/{pengguna}/mark-verified', [PenggunaController::class, 'markVerified'])->name('mark-verified');
 
         // Role Management
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
@@ -209,6 +212,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
         Route::post('/roles/{role}/sync', [RoleController::class, 'triggerSync'])->name('roles.sync');
+
+        // FK reference: list all DB tables
+        Route::get('/roles/tables', [RoleController::class, 'getTables'])->name('roles.tables');
+        // FK reference: list columns for a given table
+        Route::get('/roles/tables/{table}/columns', [RoleController::class, 'getTableColumns'])->name('roles.tables.columns');
     });
 });
 

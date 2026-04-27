@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
+use App\Models\RoleColumn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class PasswordController extends Controller
@@ -44,9 +47,7 @@ class PasswordController extends Controller
         }
 
         $validated = $request->validateWithBag('setPassword', [
-            'role' => ['required', 'in:umum,pelajar_mahasiswa,instansi_swasta'],
-            'jenis_keperluan' => ['required', 'string', 'max:255'],
-            'judul_keperluan' => ['required', 'string', 'max:255'],
+            'role' => ['required', Rule::in(Role::registerable()->pluck('name')->toArray())],
             'password' => [
                 'required',
                 'confirmed',
@@ -62,21 +63,26 @@ class PasswordController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        $profileData = [
-            'jenis_keperluan' => $validated['jenis_keperluan'],
-            'judul_keperluan' => $validated['judul_keperluan'],
-        ];
+        // Build dynamic profile data from role_columns
+        $roleModel = Role::where('name', $validated['role'])->first();
+        $profileData = [];
 
-        switch ($user->role) {
-            case 'umum':
-                $user->userUmum()->create($profileData);
-                break;
-            case 'pelajar_mahasiswa':
-                $user->userPelajar()->create($profileData);
-                break;
-            case 'instansi_swasta':
-                $user->userInstansi()->create($profileData);
-                break;
+        if ($roleModel) {
+            $profileColumns = $roleModel->profileColumns();
+            foreach ($profileColumns as $col) {
+                // Only take fields that are submitted in the request (keperluan, etc.)
+                if ($request->has($col->column_name)) {
+                    $profileData[$col->column_name] = $request->input($col->column_name);
+                }
+            }
+        }
+
+        // Create profile dynamically using role's relation_name
+        if ($roleModel && $roleModel->relation_name) {
+            $relation = $roleModel->relation_name;
+            if (method_exists($user, $relation)) {
+                $user->{$relation}()->create($profileData);
+            }
         }
 
         return redirect()->route('profile.show')->with('info', __('Silakan lengkapi data diri Anda untuk melanjutkan.'));

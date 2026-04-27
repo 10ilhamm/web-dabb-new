@@ -140,7 +140,33 @@ class RoleController extends Controller
         $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
 
         $role->load('columns', 'permissions');
-        return view('cms.pengguna.roles.edit', compact('role', 'columnTypes', 'menuPermissions', 'unsignedTypes', 'integerTypes'));
+
+        // All DB tables for FK dropdown
+        $skipTables = [
+            'migrations', 'password_reset_tokens', 'personal_access_tokens',
+            'failed_jobs', 'job_batches', 'sessions', 'cache', 'notifications',
+        ];
+        $dbTables = collect(Schema::getTables())
+            ->pluck('name')
+            ->reject(fn($t) => in_array($t, $skipTables) || str_starts_with($t, '_'))
+            ->sort()
+            ->values()
+            ->map(fn($t) => ['name' => $t])
+            ->all();
+
+        // Pre-load columns for all tables referenced by existing FK columns
+        $dbColumnsByTable = [];
+        foreach ($role->columns->where('is_foreign', true)->pluck('references_table')->filter() as $refTable) {
+            if (!isset($dbColumnsByTable[$refTable]) && Schema::hasTable($refTable)) {
+                $dbColumnsByTable[$refTable] = collect(Schema::getColumns($refTable))
+                    ->map(fn($col) => [
+                        'name' => $col['name'],
+                        'type' => $col['type_name'] ?? $col['type'],
+                    ])->values()->all();
+            }
+        }
+
+        return view('cms.pengguna.roles.edit', compact('role', 'columnTypes', 'menuPermissions', 'unsignedTypes', 'integerTypes', 'dbTables', 'dbColumnsByTable'));
     }
 
     /**
@@ -312,6 +338,49 @@ class RoleController extends Controller
     }
 
     /**
+     * Return all database table names (excluding internal/system tables).
+     * Used for FK dropdown in role column definition.
+     */
+    public function getTables()
+    {
+        $skipTables = [
+            'migrations', 'password_reset_tokens', 'personal_access_tokens',
+            'failed_jobs', 'job_batches', 'sessions', 'cache', 'notifications',
+        ];
+
+        $tables = collect(Schema::getTables())
+            ->pluck('name')
+            ->reject(fn($t) => in_array($t, $skipTables) || str_starts_with($t, '_'))
+            ->sort()
+            ->values()
+            ->map(fn($t) => ['name' => $t])
+            ->all();
+
+        return response()->json($tables);
+    }
+
+    /**
+     * Return all column names for a given table.
+     * Used for FK dropdown in role column definition.
+     */
+    public function getTableColumns(string $table)
+    {
+        if (!Schema::hasTable($table)) {
+            return response()->json(['error' => 'Table not found'], 404);
+        }
+
+        $columns = collect(Schema::getColumns($table))
+            ->map(fn($col) => [
+                'name' => $col['name'],
+                'type' => $col['type_name'] ?? $col['type'],
+            ])
+            ->values()
+            ->all();
+
+        return response()->json($columns);
+    }
+
+    /**
      * Sync existing DB table columns to role_columns for a given role.
      * Stores EXACT MySQL DATA_TYPE from INFORMATION_SCHEMA (varchar, int, datetime, enum, etc.)
      * to match phpMyAdmin exactly.
@@ -358,30 +427,45 @@ class RoleController extends Controller
         ", [$dbName, $role->table_name]);
         $primaryColumns = array_column($primaryKeyColumns, 'COLUMN_NAME');
 
-        // Get foreign key metadata
-        $foreignKeys = DB::connection($connectionName)->select("
+        // Get foreign key metadata using TABLE_CONSTRAINTS for reliability
+        $fkQuery = "
             SELECT
                 kcu.COLUMN_NAME,
                 kcu.REFERENCED_TABLE_NAME,
                 kcu.REFERENCED_COLUMN_NAME,
+                tc.CONSTRAINT_NAME,
                 rc.UPDATE_RULE,
                 rc.DELETE_RULE
             FROM information_schema.KEY_COLUMN_USAGE kcu
+            JOIN information_schema.TABLE_CONSTRAINTS tc
+                ON tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
+                AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                AND tc.TABLE_NAME = kcu.TABLE_NAME
+                AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
             JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
                 ON rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
                 AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-            WHERE kcu.TABLE_SCHEMA = ?
+            WHERE kcu.TABLE_SCHEMA = DATABASE()
               AND kcu.TABLE_NAME = ?
               AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-        ", [$dbName, $role->table_name]);
+        ";
+
+        $foreignKeys = DB::connection($connectionName)->select($fkQuery, [$role->table_name]);
+
+        Log::info('FK Sync Debug', [
+            'table' => $role->table_name,
+            'fk_count' => count($foreignKeys),
+            'fk_data' => array_map(fn($f) => (array) $f, $foreignKeys),
+        ]);
 
         $foreignMap = [];
         foreach ($foreignKeys as $fk) {
-            $foreignMap[$fk->COLUMN_NAME] = [
-                'references_table' => $fk->REFERENCED_TABLE_NAME,
-                'references_column' => $fk->REFERENCED_COLUMN_NAME,
-                'on_update' => strtolower($fk->UPDATE_RULE),
-                'on_delete' => strtolower($fk->DELETE_RULE),
+            $fkArr = (array) $fk;
+            $foreignMap[$fkArr['COLUMN_NAME']] = [
+                'references_table' => $fkArr['REFERENCED_TABLE_NAME'],
+                'references_column' => $fkArr['REFERENCED_COLUMN_NAME'],
+                'on_update' => strtolower($fkArr['UPDATE_RULE'] ?? 'no action'),
+                'on_delete' => strtolower($fkArr['DELETE_RULE'] ?? 'no action'),
             ];
         }
 
@@ -605,15 +689,15 @@ class RoleController extends Controller
                     'column_name' => $input['column_name'],
                     'column_type' => $input['column_type'],
                     'column_label' => $input['column_label'],
-                    'column_length' => $input['column_length'] ?? null,
+                    'column_length' => $input['column_length'] != '' ? (int) $input['column_length'] : null,
                     'is_nullable' => $toBool($input['is_nullable'] ?? '0'),
                     'is_unique' => $toBool($input['is_unique'] ?? '0'),
                     'is_primary' => $toBool($input['is_primary'] ?? '0'),
                     'is_foreign' => $toBool($input['is_foreign'] ?? '0'),
-                    'references_table' => $input['references_table'] ?? null,
-                    'references_column' => $input['references_column'] ?? null,
-                    'on_delete' => $input['on_delete'] ?? null,
-                    'on_update' => $input['on_update'] ?? null,
+                    'references_table' => $input['references_table'] ?: null,
+                    'references_column' => $input['references_column'] ?: null,
+                    'on_delete' => ($input['on_delete'] ?? '') !== '' ? $input['on_delete'] : null,
+                    'on_update' => ($input['on_update'] ?? '') !== '' ? $input['on_update'] : null,
                     'is_unsigned' => $toBool($input['is_unsigned'] ?? '0'),
                     'is_auto_increment' => $toBool($input['is_auto_increment'] ?? '0'),
                     'default_value' => $input['default_value'] ?? null,
@@ -705,8 +789,45 @@ class RoleController extends Controller
             return;
         }
 
-        Schema::table($tableName, function ($table) use ($column) {
-            $this->defineColumn($table, $column, 'add');
+        // Use raw SQL for column definition + FK constraint (Laravel Blueprint drops ON UPDATE/DELETE)
+        $sqlTail = $this->buildColumnSqlTail($column);
+
+        try {
+            DB::statement("ALTER TABLE `{$tableName}` ADD COLUMN `{$column->column_name}` {$sqlTail}");
+        } catch (\Throwable $e) {
+            Log::error('Failed to add column', [
+                'table' => $tableName,
+                'column' => $column->column_name,
+                'sql_tail' => $sqlTail,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        // Add FK constraint separately so ON UPDATE/DELETE are preserved
+        if ($column->is_foreign && $column->references_table && $column->references_column) {
+            $this->addForeignKeyConstraint($tableName, $column);
+        }
+    }
+
+    /**
+     * Drop a column from the database table.
+     */
+    private function dropColumnFromTable(string $tableName, string $columnName): void
+    {
+        if (!Schema::hasTable($tableName)) {
+            return;
+        }
+
+        if (!Schema::hasColumn($tableName, $columnName)) {
+            return;
+        }
+
+        // Drop FK constraint first before dropping column
+        $this->dropForeignKeyForColumn($tableName, $columnName);
+
+        Schema::table($tableName, function ($table) use ($columnName) {
+            $table->dropColumn($columnName);
         });
     }
 
@@ -837,6 +958,9 @@ class RoleController extends Controller
     {
         $this->validateMysqlColumnRules($column);
 
+        // Drop existing FK constraint for this column before modifying (FK is separate from column definition)
+        $this->dropForeignKeyForColumn($tableName, $column->column_name);
+
         $sqlTail = $this->buildColumnSqlTail($column);
 
         try {
@@ -859,6 +983,91 @@ class RoleController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+            throw $e;
+        }
+
+        // Re-add FK constraint after column modification if this column has FK
+        if ($column->is_foreign && $column->references_table && $column->references_column) {
+            $this->addForeignKeyConstraint($tableName, $column);
+        }
+    }
+
+    /**
+     * Drop any existing FK constraint on a column so column can be modified without conflict.
+     * Uses TABLE_CONSTRAINTS to find the actual constraint name regardless of Laravel naming convention.
+     */
+    private function dropForeignKeyForColumn(string $tableName, string $columnName): void
+    {
+        $constraints = DB::select("
+            SELECT tc.CONSTRAINT_NAME
+            FROM information_schema.TABLE_CONSTRAINTS tc
+            JOIN information_schema.KEY_COLUMN_USAGE kcu
+                ON kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+                AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+                AND kcu.TABLE_NAME = tc.TABLE_NAME
+            WHERE tc.TABLE_SCHEMA = DATABASE()
+              AND tc.TABLE_NAME = ?
+              AND kcu.COLUMN_NAME = ?
+              AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ", [$tableName, $columnName]);
+
+        foreach ($constraints as $c) {
+            try {
+                DB::statement("ALTER TABLE `{$tableName}` DROP FOREIGN KEY `{$c->CONSTRAINT_NAME}`");
+                Log::info('FK dropped', ['constraint' => $c->CONSTRAINT_NAME, 'table' => $tableName, 'column' => $columnName]);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to drop FK', [
+                    'constraint' => $c->CONSTRAINT_NAME,
+                    'table' => $tableName,
+                    'column' => $columnName,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Add FK constraint for a column using raw SQL so ON UPDATE/DELETE are preserved.
+     */
+    private function addForeignKeyConstraint(string $tableName, RoleColumn $column): void
+    {
+        $constraintName = "fk_{$tableName}_{$column->column_name}";
+        $onDelete = $column->on_delete ? strtoupper(str_replace(' ', '_', $column->on_delete)) : 'NO ACTION';
+        $onUpdate = $column->on_update ? strtoupper(str_replace(' ', '_', $column->on_update)) : 'NO ACTION';
+
+        $sql = "ALTER TABLE `{$tableName}` ADD CONSTRAINT `{$constraintName}` FOREIGN KEY (`{$column->column_name}`) REFERENCES `{$column->references_table}`(`{$column->references_column}`) ON DELETE {$onDelete} ON UPDATE {$onUpdate}";
+
+        Log::info('Adding FK constraint', [
+            'table' => $tableName,
+            'column' => $column->column_name,
+            'constraint_name' => $constraintName,
+            'on_delete' => $onDelete,
+            'on_update' => $onUpdate,
+            'sql' => $sql,
+        ]);
+
+        try {
+            DB::statement($sql);
+        } catch (\Throwable $e) {
+            // If constraint name already exists, try with a unique suffix
+            if (str_contains($e->getMessage(), 'Duplicate foreign key constraint name')) {
+                $constraintNameAlt = $constraintName . '_' . time();
+                $sqlAlt = "ALTER TABLE `{$tableName}` ADD CONSTRAINT `{$constraintNameAlt}` FOREIGN KEY (`{$column->column_name}`) REFERENCES `{$column->references_table}`(`{$column->references_column}`) ON DELETE {$onDelete} ON UPDATE {$onUpdate}";
+                try {
+                    DB::statement($sqlAlt);
+                    Log::info('FK added with alt name', ['constraint' => $constraintNameAlt]);
+                    return;
+                } catch (\Throwable $e2) {
+                    Log::error('Failed to add FK (alt name)', ['error' => $e2->getMessage(), 'sql' => $sqlAlt]);
+                    throw $e2;
+                }
+            }
+            Log::error('Failed to add FK constraint', [
+                'table' => $tableName,
+                'column' => $column->column_name,
+                'on_update' => $onUpdate,
+                'error' => $e->getMessage(),
+            ]);
             throw $e;
         }
     }
@@ -1014,24 +1223,6 @@ class RoleController extends Controller
     private function supportsUnsigned(string $type): bool
     {
         return in_array(strtolower($type), $this->supportsUnsignedTypes(), true);
-    }
-
-    /**
-     * Drop a column from the database table.
-     */
-    private function dropColumnFromTable(string $tableName, string $columnName): void
-    {
-        if (!Schema::hasTable($tableName)) {
-            return;
-        }
-
-        if (!Schema::hasColumn($tableName, $columnName)) {
-            return;
-        }
-
-        Schema::table($tableName, function ($table) use ($columnName) {
-            $table->dropColumn($columnName);
-        });
     }
 
     /**

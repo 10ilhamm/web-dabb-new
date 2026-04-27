@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     <style>
         /* Table styling is handled globally by public/css/datatables.css (AdminLTE style).
-               Do not override table borders here — keep markup plain so global CSS applies. */
+                       Do not override table borders here — keep markup plain so global CSS applies. */
 
         /* Filter row (merged into card) */
         .pengguna-filter-row {
@@ -265,8 +265,8 @@
             </a>
         </div>
 
-        {{-- Stats Cards --}}
-        <div class="pengguna-stats-grid" style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:0.75rem;">
+        {{-- Dynamic Stats Cards (built from DB roles + verified count) --}}
+        <div style="display:grid;grid-template-columns:repeat({{ $allRoles->count() + 1 }}, minmax(0, 1fr));gap:0.75rem;">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
                 <div>
                     <p class="text-sm text-gray-500">{{ __('cms.pengguna.stats_total') }}</p>
@@ -282,64 +282,51 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
-                <div>
-                    <p class="text-sm text-gray-500">{{ __('cms.pengguna.stats_admin') }}</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $stats['admin'] }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ __('cms.pengguna.stats_admin_sub') }}</p>
+            @foreach ($allRoles as $role)
+                @php
+                    $count = $stats['by_role'][$role->name]['count'] ?? 0;
+                    $colorMap = [
+                        'red' => 'bg-red-50 text-red-600',
+                        'yellow' => 'bg-yellow-50 text-yellow-600',
+                        'blue' => 'bg-blue-50 text-blue-600',
+                        'purple' => 'bg-purple-50 text-purple-600',
+                        'green' => 'bg-green-50 text-green-600',
+                        'gray' => 'bg-gray-50 text-gray-600',
+                        'indigo' => 'bg-indigo-50 text-indigo-600',
+                    ];
+                    $iconMap = [
+                        'red' =>
+                            'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+                        'yellow' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+                        'blue' =>
+                            'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                        'purple' =>
+                            'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+                        'green' => 'M5 13l4 4L19 7',
+                        'gray' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+                        'indigo' =>
+                            'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    ];
+                    $colorClass = $colorMap[$role->badge_color] ?? 'bg-gray-50 text-gray-600';
+                    $iconPath =
+                        $iconMap[$role->badge_color] ??
+                        'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z';
+                @endphp
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
+                    <div>
+                        <p class="text-sm text-gray-500">{{ $role->label }}</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ $count }}</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-lg {{ $colorClass }} flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $iconPath }}">
+                            </path>
+                        </svg>
+                    </div>
                 </div>
-                <div class="w-11 h-11 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                        </path>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
-                <div>
-                    <p class="text-sm text-gray-500">{{ __('cms.pengguna.stats_pegawai') }}</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $stats['pegawai'] }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ __('cms.pengguna.stats_pegawai_sub') }}</p>
-                </div>
-                <div class="w-11 h-11 rounded-lg bg-yellow-50 text-yellow-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
-                <div>
-                    <p class="text-sm text-gray-500">{{ __('cms.pengguna.stats_eksternal') }}</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $stats['eksternal'] }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ __('cms.pengguna.stats_eksternal_sub') }}</p>
-                </div>
-                <div class="w-11 h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                        </path>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
-                <div>
-                    <p class="text-sm text-gray-500">{{ __('cms.pengguna.stats_verified') }}</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $stats['verified'] }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ __('cms.pengguna.stats_verified_sub') }}</p>
-                </div>
-                <div class="w-11 h-11 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-            </div>
+            @endforeach
         </div>
-
         {{-- Unified Table Card: Header + Filters + Toolbar + Table --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100">
             <div class="px-6 py-5 border-b border-gray-100">
@@ -352,8 +339,8 @@
                     <label>{{ __('cms.pengguna.filter_role') }}</label>
                     <select id="filter-role">
                         <option value="">{{ __('cms.pengguna.filter_role') }}</option>
-                        @foreach ($roles as $key => $label)
-                            <option value="{{ $label }}">{{ $label }}</option>
+                        @foreach ($allRoles as $role)
+                            <option value="{{ $role->label }}">{{ $role->label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -386,7 +373,7 @@
                     <tbody>
                         @forelse ($users as $index => $user)
                             @php
-                                $roleLabel = $roles[$user->role] ?? $user->role;
+                                $roleLabel = $allRoles->firstWhere('name', $user->role)?->label ?? $user->role;
                                 $isVerified = !is_null($user->email_verified_at);
                                 $initials = collect(explode(' ', trim($user->name)))
                                     ->map(fn($p) => mb_substr($p, 0, 1))
@@ -423,15 +410,21 @@
                                 </td>
                                 <td class="px-6 py-4 text-gray-600">{{ $user->username ?? '-' }}</td>
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                @switch($user->role)
-                                    @case('admin') bg-red-50 text-red-600 border border-red-100 @break
-                                    @case('pegawai') bg-yellow-50 text-yellow-700 border border-yellow-100 @break
-                                    @case('pelajar_mahasiswa') bg-blue-50 text-blue-600 border border-blue-100 @break
-                                    @case('instansi_swasta') bg-purple-50 text-purple-600 border border-purple-100 @break
-                                    @default bg-gray-100 text-gray-600 border border-gray-200
-                                @endswitch">
+                                    @php
+                                        $roleModel = $allRoles->firstWhere('name', $user->role);
+                                        $badgeColor = $roleModel->badge_color ?? 'gray';
+                                        $colorMap = [
+                                            'red' => 'bg-red-50 text-red-600 border border-red-100',
+                                            'yellow' => 'bg-yellow-50 text-yellow-700 border border-yellow-100',
+                                            'blue' => 'bg-blue-50 text-blue-600 border border-blue-100',
+                                            'purple' => 'bg-purple-50 text-purple-600 border border-purple-100',
+                                            'green' => 'bg-green-50 text-green-600 border border-green-100',
+                                            'gray' => 'bg-gray-100 text-gray-600 border border-gray-200',
+                                            'indigo' => 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+                                        ];
+                                        $badgeClass = $colorMap[$badgeColor] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
                                         {{ $roleLabel }}
                                     </span>
                                 </td>
@@ -473,6 +466,57 @@
                                                 </path>
                                             </svg>
                                         </button>
+                                        @if (!$isVerified)
+                                            <div class="relative inline-block" x-data="{ open{{ $user->id }}: false }">
+                                                <button type="button"
+                                                    @click="open{{ $user->id }} = !open{{ $user->id }}"
+                                                    class="inline-flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                                                    title="More actions">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <div x-show="open{{ $user->id }}"
+                                                    @click.away="open{{ $user->id }} = false" x-cloak
+                                                    class="absolute right-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+                                                    style="min-width: 180px;">
+                                                    <form action="{{ route('cms.pengguna.resend-verification', $user) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                                </path>
+                                                            </svg>
+                                                            Kirim Ulang Link Verifikasi
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('cms.pengguna.mark-verified', $user) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center gap-2 transition-colors">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                                </path>
+                                                            </svg>
+                                                            Tandai Terverifikasi
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -599,3 +643,4 @@
         @endif
     @endpush
 @endsection
+

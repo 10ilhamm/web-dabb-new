@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,93 +15,92 @@ use Illuminate\Validation\Rules\Password;
 
 class PenggunaController extends Controller
 {
-    /** Get role profile metadata from roles table. */
-    private function roleProfileMeta(string $role): ?array
-    {
-        $roleModel = Role::where('name', $role)->first();
-
-        if (! $roleModel || ! $roleModel->table_name || ! $roleModel->relation_name) {
-            return null;
-        }
-
-        return [
-            'relation' => $roleModel->relation_name,
-            'table' => $roleModel->table_name,
-        ];
-    }
-
-    /** Fields used by each role profile table. */
-    private function profileFieldsFor(string $role): array
-    {
-        return match ($role) {
-            'admin', 'pegawai' => [
-                'nip', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
-                'nomor_kartu_identitas', 'alamat', 'nomor_whatsapp',
-                'agama', 'jabatan', 'pangkat_golongan',
-            ],
-            'umum', 'pelajar_mahasiswa' => [
-                'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
-                'nomor_kartu_identitas', 'alamat', 'nomor_whatsapp',
-                'jenis_keperluan', 'judul_keperluan',
-            ],
-            'instansi_swasta' => [
-                'tempat_lahir', 'tanggal_lahir',
-                'nomor_kartu_identitas', 'alamat', 'nomor_whatsapp',
-                'jenis_keperluan', 'judul_keperluan',
-            ],
-            default => [],
-        };
-    }
-
     public function index()
     {
         $users = User::orderByDesc('created_at')->get();
-        $roles = User::roleLabels();
+        $allRoles = Role::all();
 
+        // Dynamic stats: build per-role counts from DB
         $stats = [
             'total' => $users->count(),
-            'admin' => $users->where('role', 'admin')->count(),
-            'pegawai' => $users->where('role', 'pegawai')->count(),
-            'eksternal' => $users->filter(fn($u) => !in_array($u->role, ['admin', 'pegawai']))->count(),
             'verified' => $users->whereNotNull('email_verified_at')->count(),
+            'by_role' => [],
         ];
+        foreach ($allRoles as $r) {
+            $stats['by_role'][$r->name] = [
+                'label' => $r->label,
+                'badge_color' => $r->badge_color ?? 'gray',
+                'count' => $users->where('role', $r->name)->count(),
+            ];
+        }
 
-        return view('cms.pengguna.page.index', compact('users', 'roles', 'stats'));
+        return view('cms.pengguna.page.index', [
+            'users' => $users,
+            'allRoles' => $allRoles,
+            'stats' => $stats,
+        ]);
     }
 
     public function create()
     {
+        $allRoles = Role::all();
+        // Pre-compute enum options for each role
+        $enumOptions = [];
+        foreach ($allRoles as $r) {
+            $enumOptions[$r->name] = $this->buildRoleEnumOptions($r);
+        }
+
         return view('cms.pengguna.page.create', [
-            'roles' => User::roleLabels(),
+            'allRoles' => $allRoles,
             'profile' => null,
-            ...$this->profileOptions(),
+            'enumOptions' => $enumOptions,
         ]);
     }
 
     public function store(Request $request)
     {
         $role = $request->input('role');
+        $roleModel = Role::where('name', $role)->first();
 
-        $data = $request->validate($this->validationRules($role));
+        if (!$roleModel) {
+            return back()->withInput()->with('error', 'Role tidak valid.')->withInput();
+        }
 
-        DB::transaction(function () use ($request, $data, $role) {
+        // Build dynamic validation
+        $rules = $this->buildValidationRules($roleModel, null);
+
+        // Username required for registerable roles (those with profile tables / public-facing accounts)
+        if (Role::registerable()->where('name', $role)->exists()) {
+            $rules['username'] = ['required', 'string', 'max:255', Rule::unique('users', 'username')];
+        }
+
+        $data = $request->validate($rules);
+
+        DB::transaction(function () use ($request, $data, $role, $roleModel) {
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 $data['photo'] = $request->file('photo')->store('user_photos', 'public');
             }
 
-            $kartuPath = null;
-            if ($request->hasFile('kartu_identitas_file')) {
-                $kartuPath = $request->file('kartu_identitas_file')->store('identitas', 'public');
+            // Handle profile file fields
+            $profileColumns = $roleModel->profileColumns();
+            $fileColumns = $profileColumns->filter(fn($c) => $c->column_type === 'blob');
+            $profileFileData = [];
+            foreach ($fileColumns as $col) {
+                $fieldName = $col->column_name;
+                if ($request->hasFile($fieldName)) {
+                    $profileFileData[$fieldName] = $request->file($fieldName)->store('identitas', 'public');
+                }
             }
 
-            $userPayload = collect($data)
-                ->only(['name', 'username', 'email', 'role', 'photo'])
-                ->all();
+            // Create user
+            $userPayload = collect($data)->only(['name', 'username', 'email', 'role', 'photo'])->all();
             $userPayload['password'] = Hash::make($data['password']);
 
             $user = User::create($userPayload);
 
-            $this->syncRoleProfile($user, $role, $data, $kartuPath, false);
+            // Create profile dynamically
+            $this->syncRoleProfile($user, $roleModel, $data, $profileFileData, false);
         });
 
         return redirect()
@@ -110,33 +110,55 @@ class PenggunaController extends Controller
 
     public function edit(User $pengguna)
     {
+        $allRoles = Role::all();
+        $enumOptions = [];
+        foreach ($allRoles as $r) {
+            $enumOptions[$r->name] = $this->buildRoleEnumOptions($r);
+        }
+
         return view('cms.pengguna.page.edit', [
             'user' => $pengguna,
-            'roles' => User::roleLabels(),
+            'allRoles' => $allRoles,
             'profile' => $pengguna->profile,
-            ...$this->profileOptions(),
+            'enumOptions' => $enumOptions,
         ]);
     }
 
     public function update(Request $request, User $pengguna)
     {
         $role = $request->input('role');
+        $roleModel = Role::where('name', $role)->first();
 
-        $data = $request->validate($this->validationRules($role, $pengguna));
+        if (!$roleModel) {
+            return back()->withInput()->with('error', 'Role tidak valid.')->withInput();
+        }
 
-        DB::transaction(function () use ($request, $data, $role, $pengguna) {
+        $rules = $this->buildValidationRules($roleModel, $pengguna);
+
+        // Username rules
+        $rules['username'] = ['nullable', 'string', 'max:255', Rule::unique('users', 'username')->ignore($pengguna->id)];
+
+        $data = $request->validate($rules);
+
+        DB::transaction(function () use ($request, $data, $role, $roleModel, $pengguna) {
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 $data['photo'] = $request->file('photo')->store('user_photos', 'public');
             }
 
-            $kartuPath = null;
-            if ($request->hasFile('kartu_identitas_file')) {
-                $kartuPath = $request->file('kartu_identitas_file')->store('identitas', 'public');
+            // Handle profile file fields
+            $profileColumns = $roleModel->profileColumns();
+            $fileColumns = $profileColumns->filter(fn($c) => $c->column_type === 'blob');
+            $profileFileData = [];
+            foreach ($fileColumns as $col) {
+                $fieldName = $col->column_name;
+                if ($request->hasFile($fieldName)) {
+                    $profileFileData[$fieldName] = $request->file($fieldName)->store('identitas', 'public');
+                }
             }
 
-            $userPayload = collect($data)
-                ->only(['name', 'username', 'email', 'role', 'photo'])
-                ->all();
+            // Update user
+            $userPayload = collect($data)->only(['name', 'username', 'email', 'role', 'photo'])->all();
 
             if (!empty($data['password'])) {
                 $userPayload['password'] = Hash::make($data['password']);
@@ -144,7 +166,8 @@ class PenggunaController extends Controller
 
             $pengguna->update($userPayload);
 
-            $this->syncRoleProfile($pengguna, $role, $data, $kartuPath, true);
+            // Sync profile
+            $this->syncRoleProfile($pengguna, $roleModel, $data, $profileFileData, true);
         });
 
         return redirect()
@@ -167,115 +190,197 @@ class PenggunaController extends Controller
             ->with('success', __('cms.pengguna.deleted_successfully'));
     }
 
-    /** Enum & select options shared by create/edit views. */
-    private function profileOptions(): array
-    {
-        return [
-            'jenisKelaminOptions' => User::getEnumValues('user_umums', 'jenis_kelamin'),
-            'agamaOptions' => User::getEnumValues('user_admins', 'agama'),
-            'jabatanOptions' => User::getEnumValues('user_admins', 'jabatan'),
-            'pangkatOptions' => User::getEnumValues('user_admins', 'pangkat_golongan'),
-            'jenisKeperluanOptions' => [
-                'Hanya Daftar Akun' => __('cms.pengguna.keperluan_register_only'),
-                'Penelitian' => __('cms.pengguna.keperluan_research'),
-                'Kunjungan' => __('cms.pengguna.keperluan_visit'),
-            ],
-        ];
-    }
-
-    private function validationRules(?string $role, ?User $existing = null): array
+    /**
+     * Build validation rules from role_columns for a given role.
+     */
+    private function buildValidationRules(Role $roleModel, ?User $existing): array
     {
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'username')->ignore($existing?->id)],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($existing?->id)],
-            'role' => ['required', Rule::in(array_keys(User::roleLabels()))],
+            'email' => [
+                'required', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($existing?->id),
+            ],
+            'role' => ['required', Rule::in(Role::pluck('name')->toArray())],
             'password' => $existing
                 ? ['nullable', 'confirmed', Password::min(8)]
                 : ['required', 'confirmed', Password::min(8)],
             'photo' => ['nullable', 'image', 'max:2048'],
-            'kartu_identitas_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ];
 
-        $meta = $this->roleProfileMeta($role);
-
-        if (!$role || ! $meta) {
-            return $rules;
-        }
-
-        $table = $meta['table'];
+        $profileColumns = $roleModel->profileColumns();
+        $tableName = $roleModel->table_name;
         $profileId = $existing?->profile?->id;
-        $fields = $this->profileFieldsFor($role);
 
-        $profileRules = [
-            'nip' => ['nullable', 'string', 'max:18'],
-            'jenis_kelamin' => ['nullable', 'in:Laki-Laki,Perempuan'],
-            'tempat_lahir' => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir' => ['nullable', 'date'],
-            'nomor_kartu_identitas' => [
-                'nullable', 'string', 'max:25',
-                Rule::unique($table, 'nomor_kartu_identitas')->ignore($profileId),
-            ],
-            'alamat' => ['nullable', 'string'],
-            'nomor_whatsapp' => [
-                'nullable', 'string', 'max:20',
-                Rule::unique($table, 'nomor_whatsapp')->ignore($profileId),
-            ],
-            'agama' => ['nullable', 'string', 'max:50'],
-            'jabatan' => ['nullable', 'string', 'max:100'],
-            'pangkat_golongan' => ['nullable', 'string', 'max:100'],
-            'jenis_keperluan' => ['nullable', 'string', 'max:255'],
-            'judul_keperluan' => ['nullable', 'string', 'max:255'],
-        ];
+        foreach ($profileColumns as $col) {
+            $field = $col->column_name;
+            $type = $col->column_type;
+            $length = $col->column_length;
+            $isNullable = $col->is_nullable;
 
-        foreach ($fields as $field) {
-            if (isset($profileRules[$field])) {
-                $rules[$field] = $profileRules[$field];
+            // File field (blob)
+            if ($type === 'blob') {
+                $rules[$field] = ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
+                continue;
             }
+
+            // Enum/set field
+            if (in_array($type, ['enum', 'set'])) {
+                $options = [];
+                if (!empty($col->options)) {
+                    $options = $col->options;
+                } else {
+                    $options = User::getEnumValues($tableName, $field);
+                }
+                $rules[$field] = $isNullable
+                    ? ['nullable', Rule::in($options)]
+                    : ['required', Rule::in($options)];
+                continue;
+            }
+
+            // Unique constraint: dynamically from role_columns is_unique flag
+            if ($col->is_unique && $profileId) {
+                $rule[] = Rule::unique($tableName, $field)->ignore($profileId);
+            }
+
+            // Generate rule based on type
+            $rule = match ($type) {
+                'varchar', 'char' => $isNullable
+                    ? ['nullable', 'string', 'max:' . ($length ?? 255)]
+                    : ['required', 'string', 'max:' . ($length ?? 255)],
+                'text' => $isNullable ? ['nullable', 'string'] : ['required', 'string'],
+                'int', 'bigint', 'smallint', 'tinyint' => $isNullable
+                    ? ['nullable', 'integer']
+                    : ['required', 'integer'],
+                'decimal', 'float', 'double' => $isNullable
+                    ? ['nullable', 'numeric']
+                    : ['required', 'numeric'],
+                'date' => $isNullable
+                    ? ['nullable', 'date']
+                    : ['required', 'date'],
+                'datetime', 'timestamp' => $isNullable
+                    ? ['nullable', 'date']
+                    : ['required', 'date'],
+                default => $isNullable
+                    ? ['nullable', 'string']
+                    : ['required', 'string'],
+            };
+
+            $rules[$field] = $rule;
         }
 
         return $rules;
     }
 
     /**
-     * Persist the role-specific profile record. Removes profiles on other
-     * role tables when the user's role changes.
+     * Build enum/set options for a role from role_columns.
      */
-    private function syncRoleProfile(User $user, string $role, array $data, ?string $kartuPath, bool $isUpdate): void
+    private function buildRoleEnumOptions(Role $role): array
     {
-        $meta = $this->roleProfileMeta($role);
+        $options = [];
+        $profileColumns = $role->profileColumns();
 
-        if (! $meta) {
-            return;
-        }
-
-        // Delete profile rows on tables that no longer match the current role.
-        if ($isUpdate) {
-            foreach (Role::whereNotNull('relation_name')->whereNotNull('table_name')->get() as $otherRoleModel) {
-                if ($otherRoleModel->name === $role) {
-                    continue;
-                }
-                if (method_exists($user, $otherRoleModel->relation_name)) {
-                    $user->{$otherRoleModel->relation_name}()->delete();
+        foreach ($profileColumns as $col) {
+            if (in_array($col->column_type, ['enum', 'set'])) {
+                if (!empty($col->options)) {
+                    $options[$col->column_name] = $col->options;
+                } else {
+                    $options[$col->column_name] = User::getEnumValues($role->table_name, $col->column_name);
                 }
             }
         }
+
+        return $options;
+    }
+
+    /**
+     * Resend email verification link to a user from CMS.
+     */
+    public function resendVerification(User $pengguna): RedirectResponse
+    {
+        if ($pengguna->hasVerifiedEmail()) {
+            return redirect()
+                ->route('cms.pengguna.index')
+                ->with('error', __('cms.pengguna.already_verified'));
+        }
+
+        $pengguna->sendEmailVerificationNotification();
+
+        return redirect()
+            ->route('cms.pengguna.index')
+            ->with('success', __('cms.pengguna.verification_sent'));
+    }
+
+    /**
+     * Manually mark a user's email as verified (admin action).
+     */
+    public function markVerified(User $pengguna): RedirectResponse
+    {
+        if ($pengguna->hasVerifiedEmail()) {
+            return redirect()
+                ->route('cms.pengguna.index')
+                ->with('error', __('cms.pengguna.already_verified'));
+        }
+
+        $pengguna->email_verified_at = now();
+        $pengguna->save();
+
+        return redirect()
+            ->route('cms.pengguna.index')
+            ->with('success', __('cms.pengguna.marked_verified', ['name' => $pengguna->name]));
+    }
+
+    /**
+     * Sync role profile - dynamically handles all role-specific profile tables.
+     */
+    private function syncRoleProfile(User $user, Role $roleModel, array $data, array $fileData, bool $isUpdate): void
+    {
+        $relation = $roleModel->relation_name;
+        if (!$relation) return;
+
+        // Delete other role profiles on update
+        if ($isUpdate) {
+            $allRoles = Role::whereNotNull('relation_name')
+                ->whereNotNull('table_name')
+                ->where('name', '!=', $roleModel->name)
+                ->get();
+
+            foreach ($allRoles as $otherRole) {
+                $otherRelation = $otherRole->relation_name;
+                if (method_exists($user, $otherRelation)) {
+                    $user->{$otherRelation}()->delete();
+                }
+            }
+        }
+
+        // Collect profile data from role_columns
+        $profileColumns = $roleModel->profileColumns();
+        $profileColumnNames = $profileColumns->pluck('column_name')->toArray();
+        $skipFields = ['user_id', 'id', 'created_at', 'updated_at', 'name', 'email', 'password', 'photo'];
 
         $payload = [];
-        foreach ($this->profileFieldsFor($role) as $field) {
-            if (array_key_exists($field, $data)) {
+        foreach ($profileColumnNames as $field) {
+            if (in_array($field, $skipFields)) continue;
+
+            // Check if field exists in data (handles checkbox/radio edge cases)
+            if (isset($data[$field])) {
                 $payload[$field] = $data[$field];
+            } elseif ($field === 'username' && isset($data['username'])) {
+                // Username might be needed on profile table depending on role
             }
         }
 
-        if ($kartuPath) {
-            $payload['kartu_identitas'] = $kartuPath;
+        // Merge file data
+        foreach ($fileData as $field => $path) {
+            $payload[$field] = $path;
         }
 
-        $relation = $meta['relation'];
-        $user->{$relation}()->updateOrCreate(
-            ['user_id' => $user->id],
-            $payload
-        );
+        // Create or update profile
+        if (method_exists($user, $relation)) {
+            $user->{$relation}()->updateOrCreate(
+                ['user_id' => $user->id],
+                $payload
+            );
+        }
     }
 }

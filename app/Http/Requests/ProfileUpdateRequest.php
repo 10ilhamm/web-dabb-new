@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,11 +11,13 @@ class ProfileUpdateRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
+     * Rules are dynamically generated from role_columns.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $user = $this->user();
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -23,48 +26,89 @@ class ProfileUpdateRequest extends FormRequest
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
+                Rule::unique(User::class)->ignore($user->id),
             ],
             'photo' => ['nullable', 'image', 'max:2048'],
-            'nip' => ['nullable', 'string', 'max:18'],
-            'nomor_whatsapp' => ['nullable', 'string', 'max:20'],
-            'tempat_lahir' => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir' => ['nullable', 'date'],
-            'jenis_kelamin' => ['nullable'], // will be handled below
-            'agama' => ['nullable', 'string', 'max:30'],
-            'jabatan' => ['nullable', 'string', 'max:80'],
-            'pangkat_golongan' => ['nullable', 'string', 'max:80'],
-            'alamat' => ['nullable', 'string'],
-            'kartu_identitas' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
-            'nomor_kartu_identitas' => ['nullable', 'string', 'max:50'],
-            'jenis_keperluan' => ['nullable', 'string', 'max:255'],
-            'judul_keperluan' => ['nullable', 'string', 'max:255'],
         ];
 
-        $tableName = match($this->user()->role) {
-            'admin' => 'user_admins',
-            'pegawai' => 'user_pegawais',
-            'umum' => 'user_umums',
-            'pelajar_mahasiswa' => 'user_pelajars',
-            default => 'user_umums'
-        };
+        // Build dynamic rules from role_columns
+        $profileColumns = User::roleProfileColumns($user->role);
+        $roleModel = Role::where('name', $user->role)->first();
 
-        if ($this->user()->role !== 'instansi_swasta') {
-            $jkList = \App\Models\User::getEnumValues($tableName, 'jenis_kelamin');
-            $rules['jenis_kelamin'] = ['nullable', 'in:' . implode(',', $jkList)];
-        }
+        foreach ($profileColumns as $col) {
+            $field = $col->column_name;
+            $type = $col->column_type;
+            $length = $col->column_length;
+            $isNullable = $col->is_nullable;
 
-        if (in_array($this->user()->role, ['admin', 'pegawai'])) {
-            $tableName = $this->user()->role === 'admin' ? 'user_admins' : 'user_pegawais';
-            $agamaList = \App\Models\User::getEnumValues($tableName, 'agama');
-            $jabatanList = \App\Models\User::getEnumValues($tableName, 'jabatan');
-            $pangkatList = \App\Models\User::getEnumValues($tableName, 'pangkat_golongan');
+            // Skip if rule already exists (e.g., name, email)
+            if (isset($rules[$field])) {
+                continue;
+            }
 
-            $rules['agama'] = ['nullable', 'in:' . implode(',', $agamaList)];
-            $rules['jabatan'] = ['nullable', 'in:' . implode(',', $jabatanList)];
-            $rules['pangkat_golongan'] = ['nullable', 'in:' . implode(',', $pangkatList)];
+            // File fields
+            if ($type === 'blob' || $field === 'kartu_identitas') {
+                $rules[$field] = ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
+                continue;
+            }
+
+            // Enum/set fields
+            if (in_array($type, ['enum', 'set'])) {
+                $options = [];
+                if (!empty($col->options)) {
+                    $options = $col->options;
+                } elseif ($roleModel) {
+                    $options = User::getEnumValues($roleModel->table_name, $field);
+                }
+                $rules[$field] = $isNullable
+                    ? ['nullable', Rule::in($options)]
+                    : ['required', Rule::in($options)];
+                continue;
+            }
+
+            // Generate rule based on column type
+            $rule = match ($type) {
+                'varchar', 'char' => $isNullable
+                    ? ['nullable', 'string', 'max:' . ($length ?? 255)]
+                    : ['required', 'string', 'max:' . ($length ?? 255)],
+                'text' => $isNullable ? ['nullable', 'string'] : ['required', 'string'],
+                'int', 'bigint', 'smallint', 'tinyint' => $isNullable
+                    ? ['nullable', 'integer']
+                    : ['required', 'integer'],
+                'decimal', 'float', 'double' => $isNullable
+                    ? ['nullable', 'numeric']
+                    : ['required', 'numeric'],
+                'date' => $isNullable
+                    ? ['nullable', 'date']
+                    : ['required', 'date'],
+                'datetime', 'timestamp' => $isNullable
+                    ? ['nullable', 'date']
+                    : ['required', 'date'],
+                'boolean' => ['nullable', 'boolean'],
+                default => $isNullable
+                    ? ['nullable', 'string']
+                    : ['required', 'string'],
+            };
+
+            $rules[$field] = $rule;
         }
 
         return $rules;
+    }
+
+    /**
+     * Get custom attribute names for error messages.
+     */
+    public function attributes(): array
+    {
+        $user = $this->user();
+        $attrs = [];
+
+        $profileColumns = User::roleProfileColumns($user->role);
+        foreach ($profileColumns as $col) {
+            $attrs[$col->column_name] = $col->column_label ?? $col->column_name;
+        }
+
+        return $attrs;
     }
 }

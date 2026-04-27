@@ -1,6 +1,15 @@
 function updateFileName(input) {
-    const fileName = input.files[0] ? input.files[0].name : authTranslations.noFile;
-    document.getElementById('file-name').textContent = fileName;
+    if (input.files && input.files[0]) {
+        var fileName = input.files[0].name;
+        var textEl = document.getElementById('file-name');
+        if (textEl) textEl.textContent = fileName;
+        // Also update the specific file-name span
+        var parent = input.closest('.file-upload-wrapper');
+        if (parent) {
+            var textSpan = parent.querySelector('.file-upload-text');
+            if (textSpan) textSpan.textContent = fileName;
+        }
+    }
 }
 
 function showForm() {
@@ -13,36 +22,56 @@ function showForm() {
     if (!selected) return;
 
     formContainer.style.display = 'block';
+    hiddenRoleInput.value = selected;
 
-    if (selected === 'umum') {
-        hiddenRoleInput.value = 'umum';
-        document.getElementById('label-name').textContent = authTranslations.fullName;
-        document.getElementById('name').placeholder = authTranslations.fullName;
-        document.getElementById('label-kartu-identitas').textContent = authTranslations.identityCardKtp;
+    // Show dynamic role profile fields
+    document.querySelectorAll('.reg-profile-fields').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    const selectedProfileFields = document.querySelector('[data-reg-role="' + selected + '"]');
+    if (selectedProfileFields) {
+        selectedProfileFields.style.display = 'block';
+    }
 
-        // Show JK
-        jkGroupElements.forEach(el => el.style.display = 'contents');
-        jkInputs.forEach(el => el.required = true);
+    // Show/hide keperluan fields based on whether role has them in dynamic columns
+    const staticKeperluan = document.getElementById('static-keperluan-fields');
+    const profileFields = selectedProfileFields ? selectedProfileFields.querySelectorAll('[name]') : [];
+    const hasKeperluan = Array.from(profileFields).some(function(input) {
+        return input.name === 'jenis_keperluan' || input.name === 'judul_keperluan';
+    });
 
-    } else if (selected === 'pelajar') {
-        hiddenRoleInput.value = 'pelajar_mahasiswa';
-        document.getElementById('label-name').textContent = authTranslations.fullName;
-        document.getElementById('name').placeholder = authTranslations.fullName;
-        document.getElementById('label-kartu-identitas').textContent = authTranslations.identityCardKtm;
+    if (hasKeperluan && staticKeperluan) {
+        staticKeperluan.style.display = 'none';
+    } else if (staticKeperluan) {
+        staticKeperluan.style.display = 'block';
+    }
 
-        // Show JK
-        jkGroupElements.forEach(el => el.style.display = 'contents');
-        jkInputs.forEach(el => el.required = true);
+    // Update labels based on role
+    if (authTranslations.isOrganizationRole && authTranslations.isOrganizationRole.includes(selected)) {
+        const nameLabel = document.getElementById('label-name');
+        if (nameLabel) nameLabel.textContent = authTranslations.institutionName || 'Nama Instansi';
+        const nameInput = document.getElementById('name');
+        if (nameInput) nameInput.placeholder = authTranslations.institutionName || 'Nama Instansi';
 
-    } else if (selected === 'instansi') {
-        hiddenRoleInput.value = 'instansi_swasta';
-        document.getElementById('label-name').textContent = authTranslations.institutionName;
-        document.getElementById('name').placeholder = authTranslations.institutionName;
-        document.getElementById('label-kartu-identitas').textContent = authTranslations.identityCardInstansi;
+        // Hide JK fields for instance
+        jkGroupElements.forEach(function(el) { el.style.display = 'none'; });
+        jkInputs.forEach(function(el) { el.required = false; });
+    } else {
+        const nameLabel = document.getElementById('label-name');
+        if (nameLabel) nameLabel.textContent = authTranslations.fullName || 'Nama Lengkap';
+        const nameInput = document.getElementById('name');
+        if (nameInput) nameInput.placeholder = authTranslations.fullName || 'Nama Lengkap';
 
-        // Hide JK
-        jkGroupElements.forEach(el => el.style.display = 'none');
-        jkInputs.forEach(el => el.required = false);
+        // Show JK fields for umum/pelajar
+        jkGroupElements.forEach(function(el) { el.style.display = 'contents'; });
+        // Set required for JK only if the field exists in the form
+        const jkRadio = document.querySelector('input[name="jenis_kelamin"]');
+        if (jkRadio && selectedProfileFields) {
+            const hasJk = Array.from(selectedProfileFields.querySelectorAll('[name="jenis_kelamin"]')).length > 0;
+            jkInputs.forEach(function(el) {
+                el.required = hasJk;
+            });
+        }
     }
 }
 
@@ -52,9 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const oldRole = oldRoleEl ? oldRoleEl.value : '';
     if (oldRole) {
         const select = document.getElementById('role-select');
-        if (oldRole === 'umum') select.value = 'umum';
-        if (oldRole === 'pelajar_mahasiswa') select.value = 'pelajar';
-        if (oldRole === 'instansi_swasta') select.value = 'instansi';
+        if (select) select.value = oldRole;
         showForm();
     }
 });

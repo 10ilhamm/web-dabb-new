@@ -77,4 +77,15 @@ return [
 
     // Banner
     'banner_title' => 'Depot Arsip<br>Berkelanjutan Bandung',
+
+    // Profile status messages
+    'profile-updated' => 'Profil berhasil diperbarui.',
+    'profile-update-failed' => 'Data profil gagal diubah.',
+    'already-verified' => 'Email sudah terverifikasi.',
+    'verification-sent' => 'Tautan verifikasi email telah dikirim. Silakan cek inbox email Anda.',
+    'verification-link-sent' => 'Tautan verifikasi baru telah dikirim ke alamat email Anda.',
+    'password-updated' => 'Password berhasil diperbarui.',
+    'sessions-terminated' => 'Semua sesi di perangkat lain telah dihapus.',
+    'saved' => 'Tersimpan.',
+    'password-updated' => 'Password Anda telah diperbarui.',
 ];

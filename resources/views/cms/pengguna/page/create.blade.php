@@ -92,11 +92,12 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms.pengguna.form_role') }} <span
                             class="text-red-500">*</span></label>
                     <select name="role" required
+                        onchange="onRoleChange(this.value)"
                         class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
                         <option value="">{{ __('cms.pengguna.form_role_placeholder') }}</option>
-                        @foreach ($roles as $key => $label)
-                            <option value="{{ $key }}" {{ old('role') === $key ? 'selected' : '' }}>
-                                {{ $label }}</option>
+                        @foreach ($allRoles as $role)
+                            <option value="{{ $role->name }}" {{ old('role') === $role->name ? 'selected' : '' }}>
+                                {{ $role->label }}</option>
                         @endforeach
                     </select>
                     @error('role')
@@ -126,70 +127,28 @@
                 </div>
             </div>
 
-            {{-- Role-specific profile data --}}
+            {{-- Dynamic Role-specific profile data --}}
             <div class="px-6 py-5 border-t border-gray-100">
                 <h2 class="text-base font-semibold text-gray-800 mb-1">{{ __('cms.pengguna.form_profile_title') }}</h2>
                 <p class="text-sm text-gray-500 mb-4">{{ __('cms.pengguna.form_profile_desc') }}</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                    {{-- Admin section --}}
-                    <div data-role-section="admin" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna.page._profile_fields', [
-                            'role' => 'admin',
-                            'profile' => null,
-                            'jenisKelaminOptions' => $jenisKelaminOptions,
-                            'agamaOptions' => $agamaOptions,
-                            'jabatanOptions' => $jabatanOptions,
-                            'pangkatOptions' => $pangkatOptions,
-                            'jenisKeperluanOptions' => $jenisKeperluanOptions,
-                        ])
-                    </div>
-
-                    {{-- Pegawai section --}}
-                    <div data-role-section="pegawai" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna.page._profile_fields', [
-                            'role' => 'pegawai',
-                            'profile' => null,
-                            'jenisKelaminOptions' => $jenisKelaminOptions,
-                            'agamaOptions' => $agamaOptions,
-                            'jabatanOptions' => $jabatanOptions,
-                            'pangkatOptions' => $pangkatOptions,
-                            'jenisKeperluanOptions' => $jenisKeperluanOptions,
-                        ])
-                    </div>
-
-                    {{-- Umum section --}}
-                    <div data-role-section="umum" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna.page._profile_fields_umum_pelajar', [
-                            'role' => 'umum',
-                            'profile' => null,
-                            'jenisKelaminOptions' => $jenisKelaminOptions,
-                            'jenisKeperluanOptions' => $jenisKeperluanOptions,
-                        ])
-                    </div>
-
-                    {{-- Pelajar Mahasiswa section --}}
-                    <div data-role-section="pelajar_mahasiswa"
-                        class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna.page._profile_fields_umum_pelajar', [
-                            'role' => 'pelajar_mahasiswa',
-                            'profile' => null,
-                            'jenisKelaminOptions' => $jenisKelaminOptions,
-                            'jenisKeperluanOptions' => $jenisKeperluanOptions,
-                        ])
-                    </div>
-
-                    {{-- Instansi Swasta section --}}
-                    <div data-role-section="instansi_swasta"
-                        class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @include('cms.pengguna.page._profile_fields_instansi', [
-                            'role' => 'instansi_swasta',
-                            'profile' => null,
-                            'jenisKeperluanOptions' => $jenisKeperluanOptions,
-                        ])
-                    </div>
-
+                    {{-- Render all roles' profile sections, show/hide based on selected role --}}
+                    @foreach($allRoles as $r)
+                        @php
+                            $profileColumns = $r->profileColumns();
+                            $roleEnumOptions = $enumOptions[$r->name] ?? [];
+                        @endphp
+                        <div data-role-section="{{ $r->name }}"
+                            class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            @include('cms.pengguna.page._profile_fields_dynamic', [
+                                'profileColumns' => $profileColumns,
+                                'role' => $r->name,
+                                'profile' => null,
+                                'enumOptions' => $roleEnumOptions,
+                            ])
+                        </div>
+                    @endforeach
                 </div>
             </div>
 

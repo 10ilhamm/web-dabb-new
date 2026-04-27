@@ -19,7 +19,8 @@
       "Bash(powershell.exe -Command \"Get-Process -Id 6204 | Select-Object -Property ProcessName,Path | Format-List\")",
       "Bash(docker compose:*)",
       "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" \"http://localhost:8080/storage/features/profile/DQ68brYAeP2f7qAYnGLIStKuVn3OHJEqRZ8EtvU0.png\")",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(node *)"
     ]
   }
 }

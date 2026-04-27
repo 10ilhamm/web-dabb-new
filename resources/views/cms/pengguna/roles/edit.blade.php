@@ -239,6 +239,7 @@
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_primary]"
                                             value="1" {{ $col->is_primary ? 'checked' : '' }}
+                                            onchange="toggleAttributes(this, {{ $index }})"
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                                         <span class="text-sm text-gray-700">{{ __('cms.roles.col_primary') }}</span>
                                     </label>
@@ -251,6 +252,7 @@
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" name="columns[{{ $index }}][is_auto_increment]"
                                             value="1" {{ $col->is_auto_increment ? 'checked' : '' }}
+                                            onchange="toggleAttributes(this, {{ $index }})"
                                             class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                                         <span class="text-sm text-gray-700">{{ __('cms.roles.col_auto_increment') }}</span>
                                     </label>
@@ -267,15 +269,27 @@
                                     class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-3 {{ $col->is_foreign ? '' : 'hidden' }}">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_references_table') }}</label>
-                                        <input type="text" name="columns[{{ $index }}][references_table]"
-                                            value="{{ $col->references_table }}"
-                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <select name="columns[{{ $index }}][references_table]"
+                                            onchange="loadForeignColumns(this, {{ $index }})"
+                                            class="tom-fk w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                            <option value="">— Select Table —</option>
+                                            @foreach($dbTables as $t)
+                                                <option value="{{ $t['name'] }}" {{ $col->references_table == $t['name'] ? 'selected' : '' }}>{{ $t['name'] }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_references_column') }}</label>
-                                        <input type="text" name="columns[{{ $index }}][references_column]"
-                                            value="{{ $col->references_column }}"
-                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <select name="columns[{{ $index }}][references_column]"
+                                            data-saved="{{ $col->references_column }}"
+                                            class="tom-fk-col w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                            <option value="">— Select Column —</option>
+                                            @if($col->references_table && isset($dbColumnsByTable[$col->references_table]))
+                                                @foreach($dbColumnsByTable[$col->references_table] as $c)
+                                                    <option value="{{ $c['name'] }}" {{ $col->references_column == $c['name'] ? 'selected' : '' }}>{{ $c['name'] }} <span class="text-gray-400">({{ $c['type'] }})</span></option>
+                                                @endforeach
+                                            @endif
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_on_delete') }}</label>
@@ -576,28 +590,176 @@
             toggleAttributes(select, index);
         }
 
-        function toggleAttributes(select, index) {
-            const type = select.value;
-            const div = select.closest('.bg-gray-50');
-            if (!div) return;
-            const unsignedCheckbox = div.querySelector('input[name="columns[' + index + '][is_unsigned]"]');
-            const autoIncCheckbox = div.querySelector('input[name="columns[' + index + '][is_auto_increment]"]');
-            if (unsignedCheckbox) {
-                const supported = unsignedTypes.includes(type);
-                unsignedCheckbox.disabled = !supported;
-                if (!supported) { unsignedCheckbox.checked = false; }
+        /**
+         * Toggle all attribute checkboxes and field visibility based on MySQL rules.
+         * MySQL Reference: https://dev.mysql.com/doc/refman/8.0/en/create-index.html
+         *
+         * PRIMARY KEY  : integer types only; implies NOT NULL
+         * AUTO_INC    : integer types only; implies NOT NULL and PR
+         * NOT NULL    : NOT allowed if PK or AUTO_INCREMENT is checked
+         * UNIQUE      : all scalar types EXCEPT BLOB/TEXT (any variant)
+         * UNSIGNED    : integer + decimal + float + double + boolean
+         * FOREIGN KEY : integer + char + varchar only; implies NOT NULL
+         * LENGTH      : varchar + char + decimal only
+         */
+        function toggleAttributes(el, index) {
+            // el can be the column-type <select> OR a checkbox (is_primary / is_auto_increment)
+            const isElementSelect = el.tagName === 'SELECT';
+            const colDiv = el.closest('.bg-gray-50');
+            if (!colDiv) return;
+
+            // Get current column type — from select OR from the dropdown in this column block
+            let type = isElementSelect ? el.value : (
+                colDiv.querySelector('select[name^="columns["][name$="[column_type]"]')?.value || ''
+            );
+            if (!type) return;
+
+            const isInteger     = integerTypes.includes(type);
+            const isDecimal     = type === 'decimal';
+            const isUnsignedable = unsignedTypes.includes(type);
+            const isUnindexable = ['text','longtext','mediumtext','tinytext','blob','longblob','mediumblob'].includes(type);
+            const canHaveLength = ['varchar','char'].includes(type) || isDecimal;
+
+            // --- Column Length ---
+            const lengthRow = colDiv.querySelector('input[name="columns[' + index + '][column_length]"]')?.closest('div');
+            if (lengthRow) {
+                const hideLength = !canHaveLength;
+                lengthRow.style.display = hideLength ? 'none' : '';
+                if (hideLength) {
+                    const input = lengthRow.querySelector('input');
+                    if (input) input.value = '';
+                }
             }
-            if (autoIncCheckbox) {
-                const supported = integerTypes.includes(type);
-                autoIncCheckbox.disabled = !supported;
-                if (!supported) { autoIncCheckbox.checked = false; }
+
+            // --- All attribute checkboxes ---
+            const checkboxesContainer = colDiv.querySelector('.md\\:col-span-3.grid');
+            if (!checkboxesContainer) return;
+
+            const cb = {};
+            ['is_nullable','is_unique','is_primary','is_unsigned','is_auto_increment','is_foreign'].forEach(function(name) {
+                const element = checkboxesContainer.querySelector('input[name="columns[' + index + '][' + name + ']"]');
+                if (element) cb[name] = element;
+            });
+
+            // --- Resolve intended new state for this column ---
+            // --- Resolve intended new state ---
+            // onchange fires AFTER toggle, so el.checked = NEW intended state directly.
+            const isFromPrimaryCB   = !!(el.name && el.name.includes('is_primary'));
+            const isFromAutoIncCB   = !!(el.name && el.name.includes('is_auto_increment'));
+
+            const intendedPK    = isFromPrimaryCB   ? el.checked : !!cb.is_primary?.checked;
+            const intendedAuto  = isFromAutoIncCB   ? el.checked : !!cb.is_auto_increment?.checked;
+
+            // NOT NULL forced when PK or AUTO_INCREMENT would be active after this interaction
+            const forcedNotNull = intendedPK || intendedAuto;
+
+            // --- Per-checkbox: disabled + checked state ---
+
+            // PRIMARY KEY: only integer types
+            if (cb.is_primary) {
+                cb.is_primary.disabled = !isInteger;
+                if (!isInteger) cb.is_primary.checked = false;
+            }
+
+            // AUTO_INCREMENT: only integer types
+            if (cb.is_auto_increment) {
+                cb.is_auto_increment.disabled = !isInteger;
+                if (!isInteger) cb.is_auto_increment.checked = false;
+            }
+
+            // UNIQUE: all scalar types EXCEPT BLOB/TEXT
+            if (cb.is_unique) {
+                cb.is_unique.disabled = isUnindexable;
+                if (isUnindexable) cb.is_unique.checked = false;
+            }
+
+            // UNSIGNED: integer + decimal + float + double + boolean
+            if (cb.is_unsigned) {
+                cb.is_unsigned.disabled = !isUnsignedable;
+                if (!isUnsignedable) cb.is_unsigned.checked = false;
+            }
+
+            // FOREIGN KEY: integer + varchar + char only
+            if (cb.is_foreign) {
+                cb.is_foreign.disabled = !isInteger && type !== 'varchar' && type !== 'char';
+                if (cb.is_foreign.disabled) {
+                    cb.is_foreign.checked = false;
+                    const foreignDiv = document.getElementById('foreign-' + index);
+                    if (foreignDiv) foreignDiv.classList.add('hidden');
+                }
+            }
+
+            // NOT NULL: disabled when PK or AUTO_INCREMENT is active
+            if (cb.is_nullable) {
+                cb.is_nullable.disabled = forcedNotNull;
+                if (forcedNotNull) cb.is_nullable.checked = false;
+            }
+
+            // Cascade: AUTO_INC→PK — only when AUTO_INC is being CHECKED ON (el.checked = true = new state).
+            // Nullable's disabled state is driven purely by forcedNotNull above — never touch it here.
+            if (isFromAutoIncCB && el.checked && cb.is_primary) {
+                cb.is_primary.checked = true;
+                cb.is_primary.disabled = !isInteger;
             }
         }
 
         function toggleForeign(checkbox, index) {
             const foreignDiv = document.getElementById('foreign-' + index);
             if (!foreignDiv) return;
-            foreignDiv.classList.toggle('hidden', !checkbox.checked);
+            const shouldShow = checkbox.checked;
+            foreignDiv.classList.toggle('hidden', !shouldShow);
+            // When panel opens and a table is already selected, reload its columns
+            if (shouldShow) {
+                const tableSelect = foreignDiv.querySelector('select[name="columns[' + index + '][references_table]"]');
+                if (tableSelect && tableSelect.value) {
+                    loadForeignColumns(tableSelect, index);
+                }
+            }
+        }
+
+        /**
+         * Cascade: when a FK table is selected, load its columns into the column dropdown.
+         */
+        function loadForeignColumns(tableSelect, index) {
+            const table = tableSelect.value;
+            const colSelect = document.querySelector(`select[name="columns[${index}][references_column]"]`);
+            if (!colSelect) return;
+
+            colSelect.innerHTML = '<option value="">Loading…</option>';
+            if (!table) {
+                colSelect.innerHTML = '<option value="">— Select Column —</option>';
+                return;
+            }
+
+            fetch(`{{ route('cms.pengguna.roles.tables.columns', ['table' => '__TABLE__']) }}`.replace('__TABLE__', encodeURIComponent(table)), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(r => r.json())
+            .then(cols => {
+                const savedValue = colSelect.dataset.saved || '';
+                colSelect.innerHTML = '<option value="">— Select Column —</option>';
+                cols.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name + ' (' + c.type + ')';
+                    if (c.name === savedValue) opt.selected = true;
+                    colSelect.appendChild(opt);
+                });
+                // If saved value not in list, select it anyway so it doesn't disappear
+                if (savedValue && !cols.find(c => c.name === savedValue)) {
+                    const placeholder = document.createElement('option');
+                    placeholder.value = savedValue;
+                    placeholder.textContent = savedValue + ' (unknown type)';
+                    placeholder.selected = true;
+                    colSelect.appendChild(placeholder);
+                }
+            })
+            .catch(() => {
+                colSelect.innerHTML = '<option value="">Error loading columns</option>';
+            });
         }
 
         function syncColumnsFromDb() {

@@ -18,101 +18,116 @@
                     src="{{ $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=E5E7EB&color=374151&bold=true&size=128' }}"
                     alt="Avatar">
             </div>
-            <div class="ml-5">
-                <h2 class="text-lg font-bold text-gray-900">{{ $user->name }}</h2>
-                <div class="text-sm font-medium border-l-[3px] border-blue-200 pl-3 mt-1.5 flex items-center space-x-3">
-                    @if(in_array($user->role, ['admin', 'pegawai']))
-                    <span class="text-gray-400">NIP. {{ $user->profile?->nip ?? '-' }}</span>
-                    <span class="text-gray-300">|</span>
+            <div class="ml-5 flex-1">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">{{ $user->name }}</h2>
+                        <div class="text-sm font-medium border-l-[3px] border-blue-200 pl-3 mt-1.5 flex items-center space-x-3">
+                            <span class="text-gray-500">{{ App\Models\User::roleLabels()[$user->role] ?? __('dashboard.roles.default') }}</span>
+                        </div>
+                    </div>
+                    {{-- Email Verification Badge / Resend Button --}}
+                    @if(is_null($user->email_verified_at))
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                {{ __('dashboard.profile.status_unverified') }}
+                            </span>
+                            <form action="{{ route('profile.send-verification') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    {{ __('dashboard.profile.send_verification') }}
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-600 border border-green-100">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ __('dashboard.profile.status_verified') }}
+                        </span>
                     @endif
-                    <span class="text-gray-500">{{ App\Models\User::roleLabels()[$user->role] ?? __('dashboard.roles.default') }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Card: Details Form -->
+        <!-- Bottom Card: Details Form - Fully Dynamic -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full relative">
             <div class="p-6 pb-20">
                 <h3 class="text-base font-bold text-gray-800 mb-6">{{ __('dashboard.profile.personal_data') }}</h3>
 
+                @php
+                    // Group profile columns for display layout
+                    $twoColFields = [];  // Fields that go in 2-column grid
+                    $fullWidthFields = [];  // Fields that go full width
+
+                    foreach ($profileColumns as $col) {
+                        $skipFields = ['user_id', 'id', 'created_at', 'updated_at', 'alamat'];
+                        if (in_array($col->column_name, $skipFields)) continue;
+
+                        // Determine if field should be full width based on type
+                        if (in_array($col->column_type, ['text', 'longtext', 'blob'])) {
+                            $fullWidthFields[] = $col;
+                        } else {
+                            $twoColFields[] = $col;
+                        }
+                    }
+                @endphp
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8">
+                    {{-- Always show core user fields --}}
                     <div>
                         <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.full_name') }}
                         </div>
                         <div class="text-[13px] font-medium text-gray-800">{{ $user->name }}</div>
                     </div>
-                    
-                    @if(in_array($user->role, ['admin', 'pegawai']))
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.nip') }}</div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->nip ?? '-' }}</div>
-                    </div>
-                    @endif
-
-                    @if($user->role !== 'instansi_swasta')
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.gender') }}</div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->jenis_kelamin ?? '-' }}</div>
-                    </div>
-                    @endif
 
                     <div>
                         <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.email') }}</div>
                         <div class="text-[13px] font-medium text-gray-800">{{ $user->email }}</div>
                     </div>
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.phone_number') }}
+
+                    {{-- Dynamic profile fields from role_columns --}}
+                    @foreach($twoColFields as $col)
+                        <div>
+                            <div class="text-[11px] font-medium text-gray-400 mb-1">
+                                {{ $col->column_label ?? str()->headline($col->column_name) }}
+                            </div>
+                            <div class="text-[13px] font-medium text-gray-800">
+                                @php
+                                    $value = $user->profile?->{$col->column_name};
+                                @endphp
+                                @if($value === null || $value === '')
+                                    -
+                                @elseif(in_array($col->column_type, ['date', 'datetime', 'timestamp']))
+                                    {{ \Carbon\Carbon::parse($value)->translatedFormat('d F Y') }}
+                                @elseif($col->column_type === 'blob')
+                                    <a href="{{ Storage::url($value) }}" target="_blank" class="text-blue-500 hover:underline">Lihat Dokumen</a>
+                                @else
+                                    {{ $value }}
+                                @endif
+                            </div>
                         </div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->nomor_whatsapp ?? '-' }}</div>
-                    </div>
-                    
-                    @if(in_array($user->role, ['admin', 'pegawai']))
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.religion') }}
+                    @endforeach
+
+                    {{-- Alamat as full width --}}
+                    @if($profileColumns->contains('column_name', 'alamat'))
+                        <div class="md:col-span-3">
+                            <div class="text-[11px] font-medium text-gray-400 mb-1">
+                                {{ $profileColumns->firstWhere('column_name', 'alamat')->column_label ?? 'Alamat' }}
+                            </div>
+                            <div class="text-[13px] font-medium text-gray-800 leading-relaxed">
+                                {{ $user->profile?->alamat ?? '-' }}
+                            </div>
                         </div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->agama ?? '-' }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.position') }}
-                        </div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->jabatan ?? '-' }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.rank_class') }}
-                        </div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->pangkat_golongan ?? '-' }}</div>
-                    </div>
                     @endif
-
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">
-                            {{ __('dashboard.profile.birth_place_date') }}</div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->tempat_lahir ?? '-' }}, {{ $user->profile?->tanggal_lahir ? \Carbon\Carbon::parse($user->profile?->tanggal_lahir)->translatedFormat('d F Y') : '-' }}</div>
-                    </div>
-
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">Nomor Kartu Identitas</div>
-                        <div class="text-[13px] font-medium text-gray-800">{{ $user->profile?->nomor_kartu_identitas ?? '-' }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">Kartu Identitas</div>
-                        <div class="text-[13px] font-medium text-gray-800">
-                            @if($user->profile?->kartu_identitas)
-                            <a href="{{ Storage::url($user->profile->kartu_identitas) }}" target="_blank" class="text-blue-500 hover:underline">Lihat Dokumen</a>
-                            @else
-                            -
-                            @endif
-                        </div>
-                    </div>
-
-
-
-                    <div class="md:col-span-3">
-                        <div class="text-[11px] font-medium text-gray-400 mb-1">{{ __('dashboard.profile.address') }}</div>
-                        <div class="text-[13px] font-medium text-gray-800 leading-relaxed">
-                            {{ $user->profile?->alamat ?? '-' }}
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -130,4 +145,20 @@
             </div>
         </div>
     </div>
+
+    {{-- Status messages --}}
+    @if(session('status'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
+            class="fixed top-4 right-4 z-50 bg-green-500 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-sm">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm font-medium">{{ __(session('status')) }}</span>
+            <button @click="show = false" class="ml-2 hover:opacity-70">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    @endif
 @endsection

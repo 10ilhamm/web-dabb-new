@@ -1068,6 +1068,9 @@ return [
         'updated_successfully' => 'Pengguna berhasil diperbarui.',
         'deleted_successfully' => 'Pengguna berhasil dihapus.',
         'cannot_delete_self' => 'Anda tidak dapat menghapus akun Anda sendiri.',
+        'already_verified' => 'Email pengguna ini sudah terverifikasi.',
+        'verification_sent' => 'Tautan verifikasi berhasil dikirim.',
+        'marked_verified' => 'Email :name telah ditandai terverifikasi.',
 
         // Empty
         'empty' => 'Belum ada pengguna.',

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Role;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,8 +21,12 @@ class ProfileController extends Controller
      */
     public function show(Request $request): View
     {
+        $user = $request->user();
+        $profileColumns = User::roleProfileColumns($user->role);
+
         return view('profile.show', [
-            'user' => $request->user(),
+            'user' => $user,
+            'profileColumns' => $profileColumns,
         ]);
     }
 
@@ -29,8 +35,31 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        $profileColumns = User::roleProfileColumns($user->role);
+
+        // Pre-fetch enum options for enum-type columns
+        $role = Role::where('name', $user->role)->first();
+        $enumOptions = [];
+        if ($role) {
+            foreach ($profileColumns as $col) {
+                if (in_array($col->column_type, ['enum', 'set'])) {
+                    // Try to get options from role_columns first
+                    if (!empty($col->options)) {
+                        $enumOptions[$col->column_name] = $col->options;
+                    } else {
+                        // Fall back to actual DB enum values
+                        $tableName = $role->table_name;
+                        $enumOptions[$col->column_name] = User::getEnumValues($tableName, $col->column_name);
+                    }
+                }
+            }
+        }
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'profileColumns' => $profileColumns,
+            'enumOptions' => $enumOptions,
         ]);
     }
 
@@ -132,11 +161,12 @@ class ProfileController extends Controller
                 ->delete();
         }
 
-        return Redirect::route('profile.activity')->with('status', 'browser-sessions-terminated');
+        return Redirect::route('profile.activity')->with('status', 'sessions-terminated');
     }
 
     /**
      * Update the user's profile information.
+     * Dynamically handles all fields defined in role_columns.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -144,6 +174,7 @@ class ProfileController extends Controller
             $user = $request->user();
             $data = $request->validated();
 
+            // 1. Update user table fields
             $userData = [
                 'name' => $data['name'] ?? $user->name,
                 'email' => $data['email'] ?? $user->email,
@@ -164,54 +195,45 @@ class ProfileController extends Controller
 
             $user->save();
 
-            // Handle Profile Data
-            if ($request->hasFile('kartu_identitas')) {
-                if ($user->profile && $user->profile->kartu_identitas) {
-                    Storage::disk('public')->delete($user->profile->kartu_identitas);
+            // 2. Handle profile data dynamically from role_columns
+            $role = Role::where('name', $user->role)->first();
+            if ($role) {
+                $profileColumns = $role->profileColumns();
+                $profileColumnNames = $profileColumns->pluck('column_name')->toArray();
+
+                // Collect only fields that exist in role_columns
+                $profileData = [];
+                foreach ($profileColumnNames as $field) {
+                    if (array_key_exists($field, $data)) {
+                        $profileData[$field] = $data[$field];
+                    }
                 }
-                $data['kartu_identitas'] = $request->file('kartu_identitas')->store('kartu-identitas', 'public');
-            }
 
-            $profileFields = ['nip', 'nomor_whatsapp', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama', 'jabatan', 'pangkat_golongan', 'alamat', 'nomor_kartu_identitas', 'jenis_keperluan', 'judul_keperluan', 'kartu_identitas'];
-            $profileData = [];
-
-            foreach ($profileFields as $field) {
-                if (array_key_exists($field, $data)) {
-                    $profileData[$field] = $data[$field];
+                // Handle kartu_identitas file upload
+                if ($request->hasFile('kartu_identitas')) {
+                    if ($user->profile && $user->profile->kartu_identitas) {
+                        Storage::disk('public')->delete($user->profile->kartu_identitas);
+                    }
+                    $profileData['kartu_identitas'] = $request->file('kartu_identitas')->store('kartu-identitas', 'public');
                 }
-            }
 
-            if (!empty($profileData)) {
-                if ($user->profile) {
-                    // Ensure we don't try to save a field that doesn't exist on this particular profile
-                    $validProfileData = array_intersect_key($profileData, array_flip(app()->make(get_class($user->profile))->getFillable() ?: $profileFields));
-                    
-                    // Fast workaround since some fillable might not be set in models, we can just do a direct update:
-                    $user->profile->update($profileData);
-                } else {
-                    switch ($user->role) {
-                        case 'umum':
-                            $user->userUmum()->create($profileData);
-                            break;
-                        case 'pelajar_mahasiswa':
-                            $user->userPelajar()->create($profileData);
-                            break;
-                        case 'instansi_swasta':
-                            $user->userInstansi()->create($profileData);
-                            break;
-                        case 'admin':
-                            $user->userAdmin()->create($profileData);
-                            break;
-                        case 'pegawai':
-                            $user->userPegawai()->create($profileData);
-                            break;
+                if (!empty($profileData)) {
+                    if ($user->profile) {
+                        $user->profile->update($profileData);
+                    } else {
+                        $relation = $role->relation_name;
+                        if (method_exists($user, $relation)) {
+                            $user->{$relation}()->create($profileData);
+                        }
                     }
                 }
             }
 
-            return Redirect::route('profile.show')->with('success', 'Profil berhasil diperbarui.');
+            return Redirect::route('profile.show')->with('success', 'profile-updated');
         } catch (\Throwable $e) {
-            return Redirect::route('profile.edit')->with('error', 'Data gagal diubah: ' . $e->getMessage());
+            return Redirect::route('profile.edit')
+                ->withInput()
+                ->with('error', 'profile-update-failed');
         }
     }
 
@@ -234,5 +256,23 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Send a fresh verification link to the user's email.
+     */
+    public function sendVerificationNotification(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return Redirect::route('profile.show')
+                ->with('status', 'already-verified');
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return Redirect::route('profile.show')
+            ->with('status', 'verification-sent');
     }
 }

@@ -77,4 +77,15 @@ return [
 
     // Banner
     'banner_title' => 'Bandung Sustainable<br>Archives Depot',
+
+    // Profile status messages
+    'profile-updated' => 'Profile updated successfully.',
+    'profile-update-failed' => 'Profile update failed.',
+    'already-verified' => 'Email is already verified.',
+    'verification-sent' => 'Verification link has been sent. Please check your email inbox.',
+    'verification-link-sent' => 'A new verification link has been sent to your email address.',
+    'password-updated' => 'Password updated successfully.',
+    'sessions-terminated' => 'All sessions on other devices have been removed.',
+    'saved' => 'Saved.',
+    'password-updated' => 'Your password has been updated.',
 ];

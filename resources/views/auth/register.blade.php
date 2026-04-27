@@ -47,9 +47,9 @@
                 <div class="role-selector-wrapper" id="initial-selector">
                     <select class="role-selector" id="role-select" onchange="showForm()">
                         <option value="" disabled selected>{{ __('auth.select_account_type') }}</option>
-                        <option value="umum">{{ __('auth.role_umum') }}</option>
-                        <option value="pelajar">{{ __('auth.role_pelajar') }}</option>
-                        <option value="instansi">{{ __('auth.role_instansi') }}</option>
+                        @foreach($rolesData as $roleKey => $roleInfo)
+                            <option value="{{ $roleKey }}">{{ $roleInfo['label'] }}</option>
+                        @endforeach
                     </select>
 
                     <div class="login-divider" style="margin: 30px 0 20px 0; display: flex; align-items: center; text-align: center; color: #a0aec0;">
@@ -73,72 +73,38 @@
                     <input type="hidden" name="role" id="form-role-input">
 
                     <div class="form-grid">
-                        <!-- Nama -->
+                        <!-- Always show: Nama -->
                         <label for="name" class="required" id="label-name">{{ __('auth.full_name') }}</label>
                         <input type="text" name="name" id="name" class="login-input"
                             placeholder="{{ __('auth.full_name') }}" value="{{ old('name') }}" required>
 
-                        <!-- Username -->
+                        <!-- Always show: Username -->
                         <label for="username" class="required">{{ __('auth.username') }}</label>
-                        <input type="text" name="username" id="username" class="login-input" placeholder="{{ strtolower(__('auth.username')) }}"
+                        <input type="text" name="username" id="username" class="login-input"
+                            placeholder="{{ strtolower(__('auth.username')) }}"
                             value="{{ old('username') }}" required>
 
-                        <!-- Email -->
+                        <!-- Always show: Email -->
                         <label for="email" class="required">{{ __('Email') }}</label>
                         <input type="email" name="email" id="email" class="login-input"
                             placeholder="nama@gmail.com" value="{{ old('email') }}" required>
 
-                        <div class="jk-group" style="display: contents;">
-                            <label class="required">{{ __('auth.gender') }}</label>
-                            <div class="radio-group" id="jk-container">
-                                @php
-                                    $jkList = \App\Models\User::getEnumValues('user_umums', 'jenis_kelamin');
-                                @endphp
-                                @foreach($jkList as $jk)
-                                    <label class="radio-item">
-                                        <input type="radio" name="jenis_kelamin" value="{{ $jk }}"
-                                            {{ old('jenis_kelamin') == $jk ? 'checked' : '' }}> {{ $jk }}
-                                    </label>
-                                @endforeach
+                        <!-- Divider -->
+                        <div style="grid-column: 1 / -1;">
+                            <hr>
+                        </div>
+
+                        <!-- Dynamic profile fields loaded per role via JS, rendered via includes -->
+                        @foreach($rolesData as $roleKey => $roleInfo)
+                            <div data-reg-role="{{ $roleKey }}" class="reg-profile-fields" style="display: none; grid-column: 1 / -1;">
+                                @include('auth.register._profile_fields_dynamic', [
+                                    'role' => $roleKey,
+                                    'rolesData' => $rolesData,
+                                ])
                             </div>
-                        </div>
+                        @endforeach
 
-                        <!-- Tempat & Tanggal Lahir -->
-                        <label for="tempat_lahir" class="required" id="label-tempat-lahir">{{ __('auth.birth_place_date') }}</label>
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px;">
-                            <input type="text" name="tempat_lahir" id="tempat_lahir" class="login-input"
-                                placeholder="{{ __('auth.birth_place') }}" value="{{ old('tempat_lahir') }}" required>
-                            <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="login-input"
-                                value="{{ old('tanggal_lahir') }}" required>
-                        </div>
-
-                        <!-- Kartu Identitas Upload -->
-                        <label for="kartu_identitas" class="required" id="label-kartu-identitas">{{ __('auth.identity_card') }}</label>
-                        <div class="file-upload-wrapper">
-                            <button type="button" class="file-upload-btn"
-                                onclick="document.getElementById('kartu_identitas').click()">{{ __('auth.choose_file') }}</button>
-                            <span class="file-upload-text" id="file-name">{{ __('auth.no_file') }}</span>
-                            <input type="file" name="kartu_identitas" id="kartu_identitas"
-                                accept=".jpg,.jpeg,.png,.pdf" onchange="updateFileName(this)" required>
-                        </div>
-
-                        <!-- Nomor Kartu Identitas -->
-                        <label for="nomor_kartu_identitas" class="required">{{ __('auth.identity_number') }}</label>
-                        <input type="text" name="nomor_kartu_identitas" id="nomor_kartu_identitas"
-                            class="login-input" placeholder="{{ __('auth.identity_number') }}"
-                            value="{{ old('nomor_kartu_identitas') }}" required>
-
-                        <!-- Alamat -->
-                        <label for="alamat" class="required">{{ __('auth.address') }}</label>
-                        <input type="text" name="alamat" id="alamat" class="login-input"
-                            placeholder="{{ __('auth.address') }}" value="{{ old('alamat') }}" required>
-
-                        <!-- Whatsapp -->
-                        <label for="nomor_whatsapp" class="required">{{ __('auth.whatsapp') }}</label>
-                        <input type="text" name="nomor_whatsapp" id="nomor_whatsapp" class="login-input"
-                            placeholder="0831xxxxxxxx" value="{{ old('nomor_whatsapp') }}" required>
-
-                        <!-- Divider inside grid -->
+                        <!-- Divider -->
                         <div style="grid-column: 1 / -1;">
                             <hr>
                         </div>
@@ -161,23 +127,26 @@
                             <hr>
                         </div>
 
-                        <!-- Jenis Keperluan -->
-                        <label for="jenis_keperluan" class="required">{{ __('auth.purpose_type') }}</label>
-                        <select name="jenis_keperluan" id="jenis_keperluan" class="login-input" required>
-                            <option value="">{{ __('auth.select_purpose') }}</option>
-                            <option value="Hanya Daftar Akun"
-                                {{ old('jenis_keperluan') == 'Hanya Daftar Akun' ? 'selected' : '' }}>{{ __('auth.purpose_register_only') }}
-                            </option>
-                            <option value="Penelitian" {{ old('jenis_keperluan') == 'Penelitian' ? 'selected' : '' }}>
-                                {{ __('auth.purpose_research') }}</option>
-                            <option value="Kunjungan" {{ old('jenis_keperluan') == 'Kunjungan' ? 'selected' : '' }}>
-                                {{ __('auth.purpose_visit') }}</option>
-                        </select>
+                        <!-- Static keperluan fields as fallback - shown via JS when no dynamic data -->
+                        <div id="static-keperluan-fields">
+                            <!-- Jenis Keperluan -->
+                            <label for="jenis_keperluan" class="required">{{ __('auth.purpose_type') }}</label>
+                            <select name="jenis_keperluan" id="jenis_keperluan" class="login-input" required>
+                                <option value="">{{ __('auth.select_purpose') }}</option>
+                                <option value="Hanya Daftar Akun"
+                                    {{ old('jenis_keperluan') == 'Hanya Daftar Akun' ? 'selected' : '' }}>{{ __('auth.purpose_register_only') }}
+                                </option>
+                                <option value="Penelitian" {{ old('jenis_keperluan') == 'Penelitian' ? 'selected' : '' }}>
+                                    {{ __('auth.purpose_research') }}</option>
+                                <option value="Kunjungan" {{ old('jenis_keperluan') == 'Kunjungan' ? 'selected' : '' }}>
+                                    {{ __('auth.purpose_visit') }}</option>
+                            </select>
 
-                        <!-- Judul Keperluan -->
-                        <label for="judul_keperluan" class="required">{{ __('auth.purpose_title') }}</label>
-                        <input type="text" name="judul_keperluan" id="judul_keperluan" class="login-input"
-                            value="{{ old('judul_keperluan') }}" required>
+                            <!-- Judul Keperluan -->
+                            <label for="judul_keperluan" class="required">{{ __('auth.purpose_title') }}</label>
+                            <input type="text" name="judul_keperluan" id="judul_keperluan" class="login-input"
+                                value="{{ old('judul_keperluan') }}" required>
+                        </div>
 
                     </div>
 
@@ -212,6 +181,7 @@
             identityCardKtm: @json(__('auth.identity_card_ktm')),
             identityCardInstansi: @json(__('auth.identity_card_instansi')),
             noFile: @json(__('auth.no_file')),
+            isOrganizationRole: @json(\App\Models\Role::where('badge_color', 'purple')->pluck('name')->toArray()),
         };
     </script>
     <input type="hidden" id="old-role-value" value="{{ old('role') }}">

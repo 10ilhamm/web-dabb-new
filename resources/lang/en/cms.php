@@ -1065,6 +1065,9 @@ return [
         'updated_successfully' => 'User updated successfully.',
         'deleted_successfully' => 'User deleted successfully.',
         'cannot_delete_self' => 'You cannot delete your own account.',
+        'already_verified' => 'This user\'s email is already verified.',
+        'verification_sent' => 'Verification link sent successfully.',
+        'marked_verified' => ':name\'s email has been marked as verified.',
 
         // Empty
         'empty' => 'No users yet.',
