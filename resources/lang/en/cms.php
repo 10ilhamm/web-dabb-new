@@ -1204,7 +1204,7 @@ return [
         // Column pre-validation errors (store / update)
         'column_enum_space_empty' => 'Column #:index: ENUM/SET values must be comma-separated WITHOUT spaces. Use format: IV,IB,VIP (no spaces).',
         'column_enum_space_in_value' => "Column #:index: ENUM/SET values must not contain spaces. Change ':part' to ':clean'. Example: IV,IB,VIP",
-        'column_enum_invalid_char' => "Column #:index: ENUM/SET value ':value' contains invalid characters. Only letters, numbers, and underscores are allowed.",
+        'column_enum_invalid_char' => "Column #:index: ENUM/SET value ':value' contains invalid characters. Single-quote ('), double-quote (\"), backslash (\\), and comma (,) are not allowed inside a value.",
         'column_name_empty' => 'Column #:index: Column name cannot be empty.',
         'column_name_has_space' => "Column #:index: Column name ':name' must not contain spaces. Use underscores instead: nomor_kartu.",
         'column_name_invalid_pattern' => "Column #:index: Column name ':name' can only contain letters, numbers, and underscores. Must not start with a number.",
@@ -1212,6 +1212,17 @@ return [
         'column_set_required' => "Column #:index: SET requires at least one option in the 'Options' field. Example: option_1,option_2",
         'column_enum_duplicate' => "Column #:index: ENUM/SET values must not contain duplicates. Duplicate values: ':values'",
         'column_name_prefix' => "Column ':column':",
+
+        // ENUM/SET editor
+        'enum_editor_btn' => 'Open Editor',
+        'enum_editor_title' => 'ENUM/SET Value Editor',
+        'enum_editor_subtitle' => 'Manage option values easily, no more space issues.',
+        'enum_editor_help' => 'Press Enter in an input to add a new row. Use arrow buttons ↑↓ to reorder.',
+        'enum_editor_add' => 'Add Value',
+        'enum_editor_value_placeholder' => 'Type a value here...',
+        'enum_editor_move_up' => 'Move up',
+        'enum_editor_move_down' => 'Move down',
+        'enum_editor_remove' => 'Remove',
 
         // MySQL error code mapped messages
         'mysql_1064' => 'Invalid SQL syntax. Check the combination of type, length, unsigned, nullability, and default value.',

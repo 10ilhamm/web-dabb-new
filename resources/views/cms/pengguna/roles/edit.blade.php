@@ -218,9 +218,16 @@
                                 </div>
                                 <div id="options-{{ $index }}"
                                     class="{{ in_array($col->column_type, ['enum', 'set']) ? '' : 'hidden' }}">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{ __('cms.roles.col_options') }} (comma separated)</label>
-                                    <input type="text" name="columns[{{ $index }}][options]"
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-xs font-medium text-gray-600">{{ __('cms.roles.col_options') }} (comma separated)</label>
+                                        <button type="button" onclick="openEnumEditor({{ $index }})"
+                                            class="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 border border-blue-200 hover:bg-blue-50 transition-colors">
+                                            {{ __('cms.roles.enum_editor_btn') }}
+                                        </button>
+                                    </div>
+                                    <input type="text" id="options-input-{{ $index }}" name="columns[{{ $index }}][options]"
                                         value="{{ $col->options ? implode(',', $col->options) : '' }}"
+                                        placeholder="IV,IB,VIP"
                                         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
@@ -394,6 +401,53 @@
                 </button>
             </div>
         </form>
+
+        {{-- ENUM/SET Editor Modal (phpMyAdmin style) --}}
+        <div id="enumEditorModal" tabindex="-1" class="fixed inset-0 z-[100] hidden" aria-modal="true" role="dialog">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEnumEditor()"></div>
+            <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg pointer-events-auto flex flex-col max-h-[85vh]">
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-800">{{ __('cms.roles.enum_editor_title') }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ __('cms.roles.enum_editor_subtitle') }}</p>
+                        </div>
+                        <button type="button" onclick="closeEnumEditor()"
+                            class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    {{-- Content --}}
+                    <div class="flex-1 overflow-y-auto p-5">
+                        <p class="text-xs text-gray-500 mb-3">{{ __('cms.roles.enum_editor_help') }}</p>
+                        <div id="enumValuesList" class="space-y-2">
+                            {{-- Dynamic rows will be inserted here by JS --}}
+                        </div>
+                        <button type="button" onclick="enumAddValue()"
+                            class="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            {{ __('cms.roles.enum_editor_add') }}
+                        </button>
+                    </div>
+                    {{-- Footer --}}
+                    <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 flex-shrink-0 bg-gray-50/50 rounded-b-xl">
+                        <button type="button" onclick="closeEnumEditor()"
+                            class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            {{ __('cms.pengguna.cancel') }}
+                        </button>
+                        <button type="button" onclick="saveEnumEditor()"
+                            class="px-4 py-2 text-sm font-semibold text-white bg-[#174E93] hover:bg-blue-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {{ __('cms.pengguna.save') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -401,6 +455,11 @@
     <style>
         .bg-gray-50.dragging { opacity: 0.4; }
         input[type="checkbox"]:disabled { opacity: 0.3; cursor: not-allowed; }
+        #enumEditorModal { transition: opacity 0.2s ease; }
+        #enumEditorModal.hidden { opacity: 0; pointer-events: none; }
+        .enum-value-row { display: flex; align-items: center; gap: 6px; }
+        .enum-value-row .move-btns { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+        .enum-value-row .move-btns button { padding: 1px 4px; }
     </style>
     <script>
         const columnTypes = @json($columnTypes);
@@ -422,6 +481,7 @@
             colReferencesColumn: '{{ __('cms.roles.col_references_column') }}',
             colOnDelete: '{{ __('cms.roles.col_on_delete') }}',
             colOnUpdate: '{{ __('cms.roles.col_on_update') }}',
+            enumEditorBtn: '{{ __('cms.roles.enum_editor_btn') }}',
         };
         let columnIndex = {{ $role->columns->count() }};
 
@@ -497,8 +557,14 @@
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div id="options-${index}" class="hidden">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">${i18n.colOptions}</label>
-                        <input type="text" name="columns[${index}][options]" placeholder="Option 1,Option 2,Option 3"
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-medium text-gray-600">${i18n.colOptions}</label>
+                            <button type="button" onclick="openEnumEditor(${index})"
+                                class="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 border border-blue-200 hover:bg-blue-50 transition-colors">
+                                ${i18n.enumEditorBtn}
+                            </button>
+                        </div>
+                        <input type="text" id="options-input-${index}" name="columns[${index}][options]" placeholder="IV,IB,VIP"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
@@ -1004,5 +1070,150 @@
                 if (match) toggleAttributes(sel, parseInt(match[1]));
             });
         });
+
+        // =====================================================
+        // ENUM/SET Editor Modal (phpMyAdmin style)
+        // =====================================================
+        let _enumEditorIndex = null;
+
+        function openEnumEditor(index) {
+            _enumEditorIndex = index;
+            const modal = document.getElementById('enumEditorModal');
+            const input = document.getElementById('options-input-' + index);
+            const values = input && input.value
+                ? input.value.split(',').map(v => v.trim()).filter(v => v !== '')
+                : [];
+
+            const list = document.getElementById('enumValuesList');
+            list.innerHTML = '';
+
+            if (values.length === 0) {
+                // Add one empty row as default
+                values.push('');
+            }
+
+            values.forEach((val, i) => {
+                addEnumValueRow(list, val, i);
+            });
+
+            // Remove the "add" button temporarily to avoid duplication
+            // (it's already in the modal HTML, not here)
+
+            modal.classList.remove('hidden');
+            modal.focus();
+
+            // Focus first input
+            const firstInput = list.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+
+        function addEnumValueRow(container, value, index) {
+            const row = document.createElement('div');
+            row.className = 'enum-value-row';
+            row.dataset.index = index;
+            row.innerHTML = `
+                <span class="text-xs text-gray-400 font-mono w-6 text-center flex-shrink-0 select-none">${index + 1}.</span>
+                <input type="text"
+                    value="${_escapeHtml(value)}"
+                    placeholder="{{ __('cms.roles.enum_editor_value_placeholder') }}"
+                    class="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();enumAddValue();}">
+                <div class="move-btns">
+                    <button type="button" onclick="enumMoveValue(this, -1)" title="{{ __('cms.roles.enum_editor_move_up') }}"
+                        class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-blue-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                    </button>
+                    <button type="button" onclick="enumMoveValue(this, 1)" title="{{ __('cms.roles.enum_editor_move_down') }}"
+                        class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-blue-400">
+                        <svg class="w-3.5 h-3.5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+                <button type="button" onclick="enumRemoveValue(this)" title="{{ __('cms.roles.enum_editor_remove') }}"
+                    class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-red-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        function enumAddValue() {
+            const list = document.getElementById('enumValuesList');
+            addEnumValueRow(list, '', list.children.length);
+            // Focus the newly added input
+            const inputs = list.querySelectorAll('input');
+            inputs[inputs.length - 1].focus();
+        }
+
+        function enumRemoveValue(btn) {
+            const row = btn.closest('.enum-value-row');
+            const list = row.parentElement;
+            if (list.children.length <= 1) return; // Keep at least one row
+            row.remove();
+            reindexEnumRows();
+        }
+
+        function enumMoveValue(btn, direction) {
+            const row = btn.closest('.enum-value-row');
+            const list = row.parentElement;
+
+            if (direction === -1) {
+                // Move UP: swap with previous sibling
+                const prev = row.previousElementSibling;
+                if (!prev) return;
+                list.insertBefore(row, prev);
+            } else {
+                // Move DOWN: swap with next sibling
+                const next = row.nextElementSibling;
+                if (!next) return;
+                list.insertBefore(next, row);
+            }
+            reindexEnumRows();
+        }
+
+        function reindexEnumRows() {
+            const list = document.getElementById('enumValuesList');
+            [...list.children].forEach((row, i) => {
+                row.dataset.index = i;
+                const span = row.querySelector('span');
+                if (span) span.textContent = (i + 1) + '.';
+            });
+        }
+
+        function saveEnumEditor() {
+            if (_enumEditorIndex === null) return;
+            const list = document.getElementById('enumValuesList');
+            const inputs = list.querySelectorAll('input');
+            const values = [...inputs]
+                .map(inp => inp.value.trim())
+                .filter(v => v !== '');
+
+            const inputField = document.getElementById('options-input-' + _enumEditorIndex);
+            if (inputField) inputField.value = values.join(',');
+
+            closeEnumEditor();
+        }
+
+        function closeEnumEditor() {
+            const modal = document.getElementById('enumEditorModal');
+            modal.classList.add('hidden');
+            _enumEditorIndex = null;
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeEnumEditor();
+        });
+
+        function _escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
     </script>
 @endpush

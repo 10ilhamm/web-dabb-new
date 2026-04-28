@@ -111,7 +111,9 @@ class RoleController extends Controller
                         return redirect()->back()->withInput()->with('error',
                             str_replace([':part', ':clean'], [$part, $clean], $this->t('cms.roles.column_enum_space_in_value', $idx + 1)));
                     }
-                    if (!preg_match('/^[a-zA-Z0-9_]+$/', $clean)) {
+                    // MySQL ENUM values: reject only chars that break SQL parsing
+                    // (single-quote, backslash, comma = delimiter)
+                    if (preg_match('/[\'\"\\\\,]/', $clean)) {
                         return redirect()->back()->withInput()->with('error',
                             str_replace(':value', $clean, $this->t('cms.roles.column_enum_invalid_char', $idx + 1)));
                     }
@@ -269,7 +271,9 @@ class RoleController extends Controller
                         return redirect()->back()->withInput()->with('error',
                             str_replace([':part', ':clean'], [$part, $clean], $this->t('cms.roles.column_enum_space_in_value', $idx + 1)));
                     }
-                    if (!preg_match('/^[a-zA-Z0-9_]+$/', $clean)) {
+                    // MySQL ENUM values: reject only chars that break SQL parsing
+                    // (single-quote, backslash, comma = delimiter)
+                    if (preg_match('/[\'\"\\\\,]/', $clean)) {
                         return redirect()->back()->withInput()->with('error',
                             str_replace(':value', $clean, $this->t('cms.roles.column_enum_invalid_char', $idx + 1)));
                     }

@@ -1207,7 +1207,7 @@ return [
         // Column pre-validation errors (store / update)
         'column_enum_space_empty' => 'Kolom #:index: nilai ENUM/SET harus dipisah koma TANPA spasi. Gunakan format: IV,IB,VIP (tanpa spasi).',
         'column_enum_space_in_value' => "Kolom #:index: nilai ENUM/SET tidak boleh mengandung spasi. Ubah ':part' menjadi ':clean'. Contoh: IV,IB,VIP",
-        'column_enum_invalid_char' => "Kolom #:index: nilai ENUM/SET ':value' mengandung karakter tidak valid. Hanya huruf, angka, dan underscore yang diizinkan.",
+        'column_enum_invalid_char' => "Kolom #:index: nilai ENUM/SET ':value' mengandung karakter tidak valid. Karakter kutip (' \"), backslash (\\), dan koma (,) tidak diizinkan di dalam value.",
         'column_name_empty' => 'Kolom #:index: Nama kolom tidak boleh kosong.',
         'column_name_has_space' => "Kolom #:index: Nama kolom ':name' tidak boleh mengandung spasi. Gunakan underscore: nomor_kartu.",
         'column_name_invalid_pattern' => "Kolom #:index: Nama kolom ':name' hanya boleh huruf, angka, dan underscore. Tidak boleh dimulai dengan angka.",
@@ -1215,6 +1215,17 @@ return [
         'column_set_required' => "Kolom #:index: SET wajib memiliki minimal satu opsi di field 'Options'. Contoh: option_1,option_2",
         'column_enum_duplicate' => "Kolom #:index: Nilai ENUM/SET tidak boleh duplikat. Nilai duplikat: ':values'",
         'column_name_prefix' => "Kolom ':column':",
+
+        // ENUM/SET editor
+        'enum_editor_btn' => 'Buka Editor',
+        'enum_editor_title' => 'ENUM/SET Value Editor',
+        'enum_editor_subtitle' => 'Kelola nilai opsi dengan mudah, tanpa masalah spasi.',
+        'enum_editor_help' => 'Tekan Enter pada input untuk menambahkan baris baru. Gunakan tombol panah ↑↓ untuk memindahkan posisi.',
+        'enum_editor_add' => 'Tambah Nilai',
+        'enum_editor_value_placeholder' => 'Ketik nilai di sini...',
+        'enum_editor_move_up' => 'Pindah ke atas',
+        'enum_editor_move_down' => 'Pindah ke bawah',
+        'enum_editor_remove' => 'Hapus',
 
         // MySQL error code mapped messages
         'mysql_1064' => 'Sintaks SQL tidak valid. Periksa kombinasi tipe, panjang, unsigned, nullability, dan default value.',
