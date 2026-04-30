@@ -298,9 +298,9 @@ function setView(view) {
     currentView = view;
     
     if (view === 'front') currentRotationY = 0;
-    else if (view === 'left') currentRotationY = 90;
+    else if (view === 'left') currentRotationY = -90;
     else if (view === 'back') currentRotationY = 180;
-    else if (view === 'right') currentRotationY = -90;
+    else if (view === 'right') currentRotationY = 90;
 
     currentRotationX = 0; // Reset look up/down
 
