@@ -95,7 +95,7 @@ async function deleteMediaItem(id, btnEl) {
             const listItem = btnEl.closest('.media-list-item');
             if (listItem) listItem.remove();
             filterMediaList(); // Re-filter to update count and empty message
-            showToast('Media berhasil dihapus.');
+            showToast((window.v3dConfig?.labels?.messages?.deleteSuccess) || 'Media deleted.');
         }
     } catch (error) {
         console.error(error);
@@ -116,9 +116,9 @@ function addMediaToList(media) {
         </div>
         <div class="flex-1 min-w-0">
             <p class="text-xs font-medium text-gray-800 truncate">${media.type.charAt(0).toUpperCase() + media.type.slice(1)} #${media.id}</p>
-            <p class="text-xs text-gray-500">Dinding: ${media.wall.charAt(0).toUpperCase() + media.wall.slice(1)}</p>
+            <p class="text-xs text-gray-500">${(window.v3dConfig?.labels?.wall?.[media.wall]?.preview) || media.wall.charAt(0).toUpperCase() + media.wall.slice(1)}</p>
         </div>
-        <button type="button" onclick="deleteMediaItem(${media.id}, this)" class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Hapus">
+        <button type="button" onclick="deleteMediaItem(${media.id}, this)" class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="${(window.v3dConfig?.labels?.messages?.deleteBtn) || 'Delete'}">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </button>
     </div>`;

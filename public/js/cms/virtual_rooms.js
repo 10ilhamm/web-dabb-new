@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
         row.className = 'border border-gray-200 rounded-lg p-4 bg-gray-50 relative group transition-all cursor-pointer';
         row.dataset.index = index;
 
-        let roomOpts = '<option value="">-- Pilih --</option>';
+        const L = window.hotspotLabels || {};
+        let roomOpts = '<option value="">' + (L.select_placeholder || '-- Pilih --') + '</option>';
         if (window.allRoomsData) {
             window.allRoomsData.forEach(r => {
                 roomOpts += `<option value="${r.id}" ${parseInt(targetId) === r.id ? 'selected' : ''}>${r.name}</option>`;
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="flex items-center justify-center w-5 h-5 rounded-full bg-gray-800 text-white text-xs font-bold leading-none">${index + 1}</span>
-                    <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Hotspot ${index + 1}</h4>
+                    <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">${L.hotspot_index?.replace(':number', index + 1) || 'Hotspot ' + (index + 1)}</h4>
                 </div>
                 <button type="button" class="text-gray-400 hover:text-red-500 transition-colors btn-remove">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -74,11 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Teks Tooltip <span class="text-red-500">*</span></label>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">${L.tooltip_label || 'Teks Tooltip'} <span class="text-red-500">*</span></label>
                     <input type="text" name="hotspots[${index}][text_tooltip]" value="${tooltip}" class="input-text w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500" required>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Target Ruangan <span class="text-red-500">*</span></label>
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">${L.target_label || 'Target Ruangan'} <span class="text-red-500">*</span></label>
                     <select name="hotspots[${index}][target_room_id]" class="w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500" required>
                         ${roomOpts}
                     </select>
@@ -95,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         row.querySelector('.btn-remove').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (confirm('Hapus hotspot ini?')) {
+            if (confirm(L.delete_confirm || 'Hapus hotspot ini?')) {
                 row.remove();
                 if (activeHotspotIndex === index) activeHotspotIndex = null;
                 if (hContainer.children.length === 0) noMsg.style.display = 'block';

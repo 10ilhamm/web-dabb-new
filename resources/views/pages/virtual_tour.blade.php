@@ -52,12 +52,12 @@
                 @foreach($virtualRooms as $room)
                 <div class="vt-room-card"
                      data-room-id="{{ $room->id }}"
-                     data-room-name="{{ addslashes($room->name) }}"
+                     data-room-name="{{ addslashes($room->translated_name) }}"
                      data-room-image="{{ $room->image_360_path ? asset('storage/'.$room->image_360_path) : '' }}"
                      onclick="openTour(this.dataset.roomId, this.dataset.roomName, this.dataset.roomImage)">
                     <div class="vt-room-thumb">
                         @if($room->thumbnail_path)
-                            <img src="{{ asset('storage/'.$room->thumbnail_path) }}" alt="{{ $room->name }}" loading="lazy">
+                            <img src="{{ asset('storage/'.$room->thumbnail_path) }}" alt="{{ $room->translated_name }}" loading="lazy">
                         @else
                             <div class="vt-room-thumb-placeholder">🏛️</div>
                         @endif
@@ -68,9 +68,9 @@
                         </div>
                     </div>
                     <div class="vt-room-info">
-                        <h3 class="vt-room-name">{{ $room->name }}</h3>
+                        <h3 class="vt-room-name">{{ $room->translated_name }}</h3>
                         @if($room->description)
-                            <p class="vt-room-desc">{{ $room->description }}</p>
+                            <p class="vt-room-desc">{{ $room->translated_description }}</p>
                         @endif
                     </div>
                 </div>
@@ -109,13 +109,13 @@
     $virtualRooms->keyBy('id')->map(function($room) {
         return [
             'id'       => (string) $room->id,
-            'name'     => $room->name,
+            'name'     => $room->translated_name,
             'imageUrl' => $room->image_360_path ? asset('storage/'.$room->image_360_path) : '',
             'hotspots' => $room->hotspots->map(function($h) {
                 return [
                     'pitch'          => (float) $h->pitch,
                     'yaw'            => (float) $h->yaw,
-                    'text_tooltip'   => $h->text_tooltip,
+                    'text_tooltip'   => $h->translated_text_tooltip,
                     'target_room_id' => (string) $h->target_room_id,
                 ];
             })->values(),

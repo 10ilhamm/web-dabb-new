@@ -27,7 +27,11 @@
       "Bash(rm \"2026_03_11_000004_add_book_id_to_virtual_book_pages_table.php\")",
       "Bash(rm \"2026_03_11_000005_add_cover_position_to_books_table.php\")",
       "Read(//usr/**)",
-      "Read(//usr/local/**)"
+      "Read(//usr/local/**)",
+      "Bash(cd /d \"C:\\\\laragon\\\\www\\\\ANRI\\\\web-dabb-new\")",
+      "Bash(del /f test_flatten.php test_langsync.php test_translations.php)",
+      "Bash(dir C:\\\\laragon\\\\www\\\\ANRI\\\\web-dabb-new\\\\lang *)",
+      "Bash(composer dump-autoload *)"
     ]
   }
 }

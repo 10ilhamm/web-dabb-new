@@ -43,4 +43,20 @@ class Book extends Model
     {
         return $this->hasMany(VirtualBookPage::class, 'book_id')->orderBy('order');
     }
+
+    /**
+     * Get the translated title based on current locale.
+     * Uses AutoLangService to auto-register and translate via Google Translate.
+     */
+    public function getTranslatedTitleAttribute(): string
+    {
+        $title = $this->title ?? '';
+        if (!$title) return $title;
+
+        if (app()->getLocale() === 'en') {
+            $key = preg_replace('/[^a-zA-Z0-9]+/', '_', trim($title));
+            return \App\Services\AutoLangService::ensureKey($key, $title);
+        }
+        return $title;
+    }
 }

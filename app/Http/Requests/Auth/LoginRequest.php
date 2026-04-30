@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -41,9 +42,32 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        $email = $this->input('email');
+        $password = $this->input('password');
 
+        // First check if email exists
+        $user = \App\Models\User::where('email', $email)->first();
+
+        if (!$user) {
+            // Email not found
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'email' => trans('auth.login_error_email_not_found'),
+            ]);
+        }
+
+        // Email exists, check password
+        if (!Hash::check($password, $user->password)) {
+            // Password is wrong
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'password' => trans('auth.login_error_password_wrong'),
+            ]);
+        }
+
+        // Both correct, attempt login
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);

@@ -41,6 +41,10 @@ return [
         'activities' => 'Kegiatan Kearsipan',
         'related' => 'Link Terkait',
         'gallery' => 'Pameran Arsip',
+        'gallery_fallback_type' => 'Pameran',
+        'gallery_fallback_1' => 'Pameran 1',
+        'gallery_fallback_2' => 'Pameran 2',
+        'gallery_fallback_3' => 'Pameran 3',
         'stats' => 'Statistik Pengunjung Website',
         'youtube' => 'Youtube',
         'instagram' => 'Instagram Feed',
@@ -156,6 +160,13 @@ Disclaimer | #',
         'hotspot_count' => ':count hotspot',
         'room_title' => 'Ruangan',
     ],
+
+    // Instagram section (used in welcome.blade.php)
+    'ig_username' => 'arsipnasionalri',
+    'ig_name' => 'Arsip Nasional Republik Indonesia',
+    'ig_stats' => 'postingan · pengikut · mengikuti',
+    'ig_follow_btn' => 'Ikuti Kami',
+
     'virtual_slideshow' => [
         'hero_desc' => 'Jelajahi pameran arsip virtual dengan berbagai konten interaktif',
         'select_exhibition' => 'Pilih Pameran',

@@ -77,4 +77,27 @@ class Feature extends Model
         return $this->hasMany(VirtualSlideshowSlide::class, 'feature_id')->orderBy('order');
     }
 
+    /**
+     * Get the translated name based on current locale.
+     */
+    public function getTranslatedNameAttribute(): string
+    {
+        if (app()->getLocale() === 'en' && $this->name_en) {
+            return $this->name_en;
+        }
+        return $this->name;
+    }
+
+    /**
+     * Get the translated parent name based on current locale.
+     */
+    public function getTranslatedParentNameAttribute(): ?string
+    {
+        $parent = $this->parent;
+        if (!$parent) return null;
+        if (app()->getLocale() === 'en' && $parent->name_en) {
+            return $parent->name_en;
+        }
+        return $parent->name;
+    }
 }

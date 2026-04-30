@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('role', 50)->default('umum'); // string: admin, pegawai, umum, pelajar_mahasiswa, instansi_swasta
-            $table->string('username', 100)->nullable()->unique();
+            $table->string('username', 100)->unique();
             $table->string('google_id')->nullable();
             $table->binary('photo')->nullable();
             $table->timestamp('email_verified_at')->nullable();

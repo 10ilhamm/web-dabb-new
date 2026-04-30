@@ -325,6 +325,10 @@ return [
         'hotspot_add' => 'Add',
         'hotspot_rooms_available' => 'Available rooms: :count',
         'hotspot_empty' => "Empty. Click 'Add'",
+        'hotspot_label_index' => 'Hotspot :number',
+        'label_tooltip' => 'Tooltip Text',
+        'label_target_room' => 'Target Room',
+        'label_delete_confirm' => 'Delete this hotspot?',
 
         'preview_title' => '360° Panorama Preview',
         'preview_desc' => 'Click a target point on the panorama to get Yaw/Pitch, or drag to look around',
@@ -333,6 +337,13 @@ return [
 
         'btn_cancel' => 'Cancel',
         'btn_save' => 'Save Changes',
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Virtual room created successfully.',
+            'updated' => 'Virtual room updated successfully.',
+            'deleted' => 'Virtual room deleted.',
+        ],
     ],
 
     /*
@@ -375,6 +386,13 @@ return [
 
         // Edit form
         'form_title_edit' => 'Edit Room: :name',
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Virtual 3D room created successfully. You can now add media to the walls.',
+            'updated' => 'Virtual 3D room updated successfully.',
+            'deleted' => 'Virtual 3D room deleted.',
+        ],
         'form_desc_edit' => 'Set up room information, colors, wall media, and navigation hotspots',
 
         // Shared form
@@ -421,6 +439,13 @@ return [
         'media_empty' => 'No media yet. Upload a file above.',
         'media_upload_success' => 'Media uploaded successfully!',
         'media_upload_choose' => 'Select a file to upload!',
+        'media_upload_failed' => 'Upload failed.',
+        'media_save_success' => 'Position & size saved!',
+        'media_save_failed' => 'Failed to save position.',
+        'media_delete_confirm' => 'Delete this media from the wall?',
+        'media_delete_success' => 'Media deleted.',
+        'media_delete_failed' => 'Failed to delete media.',
+        'media_count' => 'items',
 
         'preview_title' => '3D Room Preview',
         'preview_desc' => 'Live 3D room preview based on your color settings',
@@ -446,6 +471,10 @@ return [
         'editor_wall_right' => 'Right Wall',
         'editor_wall_back' => 'Back Wall',
         'editor_wall_title_front' => 'FRONT WALL',
+        'editor_wall_title_left'  => 'LEFT WALL',
+        'editor_wall_title_right' => 'RIGHT WALL',
+        'editor_wall_title_back'  => 'BACK WALL',
+        'editor_door_settings_for' => 'Door settings for',
         'editor_props_title' => 'Selected Media Properties',
         'editor_props_delete' => 'Delete',
         'editor_props_save' => 'Save Position',
@@ -542,6 +571,13 @@ return [
         'zoom_in' => 'Zoom In',
         'reset_position' => 'Reset Position',
         'drag_hint' => 'Drag elements to adjust position | Scroll on image to resize',
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Book created successfully.',
+            'updated' => 'Book updated successfully.',
+            'deleted' => 'Book deleted.',
+        ],
 
         // Buttons
         'btn_cancel' => 'Cancel',
@@ -650,6 +686,13 @@ return [
             'generate_btn' => 'Generate from Preview',
             'preview_not_found' => 'Book preview not found',
             'upload_cover_first' => 'Please upload a book cover first',
+        ],
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Book page created successfully.',
+            'updated' => 'Book page updated successfully.',
+            'deleted' => 'Book page deleted.',
         ],
     ],
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ app()->getLocale() === 'en' && $book->title_en ? $book->title_en : $book->title }} — {{ config('app.name') }}</title>
+    <title>{{ $book->translated_title }} — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body, html {
@@ -167,7 +167,7 @@
             {{ app()->getLocale() === 'en' ? 'Back to Exhibition' : 'Kembali ke Pameran' }}
         </a>
         <div class="viewer-title">
-            {{ app()->getLocale() === 'en' && $book->title_en ? $book->title_en : $book->title }}
+            {{ $book->translated_title }}
         </div>
         <div class="viewer-spacer" style="display:flex; justify-content:flex-end;">
             <div class="vb-view-toggle" role="group" aria-label="Zoom mode">
@@ -209,7 +209,7 @@
                             </div>
                             @endif
                             <div class="cover-title" style="transform: translate({{ $titleTx }}px, {{ $titleTy }}px);">
-                                {{ app()->getLocale() === 'en' && $book->title_en ? $book->title_en : $book->title }}
+                                {{ $book->translated_title }}
                             </div>
                             @if(count($coverTexts) > 0)
                             <div class="cover-extra-texts">
@@ -241,7 +241,7 @@
                     <div class="page {{ $fitMode === 'fullbleed' ? 'fullbleed-page' : '' }}">
                         <div class="page-content {{ $fitMode === 'fullbleed' ? 'fullbleed' : '' }}">
                             @if($page->title)
-                            <h2 class="page-header">{{ app()->getLocale() === 'en' && $page->title_en ? $page->title_en : $page->title }}</h2>
+                            <h2 class="page-header">{{ $page->translated_title }}</h2>
                             @endif
                             <div class="page-inner">
                                 @if(count($images) > 0)
@@ -252,7 +252,7 @@
                                 @endif
                                 @if($page->content)
                                 <div class="page-text" style="left: {{ $textPos['x'] ?? 0 }}%; top: {{ $textPos['y'] ?? 0 }}%; width: {{ $textPos['width'] ?? 45 }}%; height: {{ $textPos['height'] ?? 30 }}%;">
-                                    {!! nl2br(e(app()->getLocale() === 'en' && $page->content_en ? $page->content_en : $page->content)) !!}
+                                    {!! nl2br(e($page->translated_content)) !!}
                                 </div>
                                 @endif
                             </div>

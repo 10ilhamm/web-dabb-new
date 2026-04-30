@@ -36,25 +36,9 @@ Route::get('/halaman/{feature}/{pageNum?}', [FeaturePageController::class, 'publ
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [RoleDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/dashboard/admin', [RoleDashboardController::class, 'admin'])
-        ->middleware('role:admin')
-        ->name('dashboard.admin');
-
-    Route::get('/dashboard/pegawai', [RoleDashboardController::class, 'pegawai'])
-        ->middleware('role:pegawai')
-        ->name('dashboard.pegawai');
-
-    Route::get('/dashboard/umum', [RoleDashboardController::class, 'umum'])
-        ->middleware('role:umum')
-        ->name('dashboard.umum');
-
-    Route::get('/dashboard/pelajar-mahasiswa', [RoleDashboardController::class, 'pelajar'])
-        ->middleware('role:pelajar_mahasiswa')
-        ->name('dashboard.pelajar');
-
-    Route::get('/dashboard/instansi-swasta', [RoleDashboardController::class, 'instansi'])
-        ->middleware('role:instansi_swasta')
-        ->name('dashboard.instansi');
+    // Dynamic dashboard routes — registered from roles table at boot time
+    Route::get('/dashboard/{slug}', [RoleDashboardController::class, 'show'])
+        ->name('dashboard.role');
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');

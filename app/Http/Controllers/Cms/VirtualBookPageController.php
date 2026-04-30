@@ -99,7 +99,7 @@ class VirtualBookPageController extends Controller
         VirtualBookPage::create($validated);
 
         return redirect()->route('cms.features.virtual_books.pages.index', [$feature, $book])
-            ->with('success', 'Halaman buku berhasil ditambahkan');
+            ->with('success', __('cms.virtual_book_pages.flash.created'));
     }
 
     /**
@@ -225,7 +225,7 @@ class VirtualBookPageController extends Controller
         $virtualBookPage->update($validated);
 
         return redirect()->route('cms.features.virtual_books.pages.index', [$feature, $book])
-            ->with('success', 'Halaman buku berhasil diperbarui');
+            ->with('success', __('cms.virtual_book_pages.flash.updated'));
     }
 
     /**
@@ -247,6 +247,6 @@ class VirtualBookPageController extends Controller
         $this->deleteAndShiftOrder($virtualBookPage, ['book_id' => $virtualBookPage->book_id]);
 
         return redirect()->route('cms.features.virtual_books.pages.index', [$feature, $book])
-            ->with('success', 'Halaman buku berhasil dihapus');
+            ->with('success', __('cms.virtual_book_pages.flash.deleted'));
     }
 }

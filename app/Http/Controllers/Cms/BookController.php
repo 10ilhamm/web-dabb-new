@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Http\Controllers\Controller;
 use App\Models\Feature;
 use App\Models\Book;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,7 +37,7 @@ class BookController extends Controller
     /**
      * Store a newly created book.
      */
-    public function store(Request $request, Feature $feature)
+    public function store(Request $request, Feature $feature, TranslationService $translationService)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -124,10 +125,15 @@ class BookController extends Controller
             }
         }
 
-        Book::create($validated);
+        $book = Book::create($validated);
+
+        // Translate and save title_en for public display
+        if (!empty($validated['title'])) {
+            $book->update(['title_en' => $translationService->translate($validated['title'])]);
+        }
 
         return redirect()->route('cms.features.virtual_books.index', $feature)
-            ->with('success', 'Buku berhasil ditambahkan');
+            ->with('success', __('cms.virtual_books.flash.created'));
     }
 
     /**
@@ -143,7 +149,7 @@ class BookController extends Controller
     /**
      * Update the book.
      */
-    public function update(Request $request, Feature $feature, Book $book)
+    public function update(Request $request, Feature $feature, Book $book, TranslationService $translationService)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -263,8 +269,13 @@ class BookController extends Controller
         $this->swapOrder($book, (int) $validated['order'], (int) $book->order, ['feature_id' => $book->feature_id]);
         $book->update($validated);
 
+        // Translate and save title_en for public display
+        if (!empty($validated['title'])) {
+            $book->update(['title_en' => $translationService->translate($validated['title'])]);
+        }
+
         return redirect()->route('cms.features.virtual_books.index', $feature)
-            ->with('success', 'Buku berhasil diperbarui');
+            ->with('success', __('cms.virtual_books.flash.updated'));
     }
 
     /**
@@ -299,7 +310,7 @@ class BookController extends Controller
         $this->deleteAndShiftOrder($book, ['feature_id' => $book->feature_id]);
 
         return redirect()->route('cms.features.virtual_books.index', $feature)
-            ->with('success', 'Buku berhasil dihapus');
+            ->with('success', __('cms.virtual_books.flash.deleted'));
     }
 
     /**

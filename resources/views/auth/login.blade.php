@@ -44,18 +44,22 @@
 
                     <!-- Email Address -->
                     <div class="login-form-group">
-                        <label for="email">{{ __('Email') }}</label>
-                        <input id="email" class="login-input" type="email" name="email"
+                        <label for="email">{{ __('auth.email') }}</label>
+                        <input id="email" class="login-input @error('email') login-input-error @enderror" type="email" name="email"
                             value="{{ old('email') }}" required autofocus autocomplete="username" />
-                        <x-input-error :messages="$errors->get('email')" class="mt-2 text-sm text-red-600" />
+                        @error('email')
+                            <p class="login-error-message">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Password -->
                     <div class="login-form-group">
-                        <label for="password">{{ __('Password') }}</label>
-                        <input id="password" class="login-input" type="password" name="password" required
+                        <label for="password">{{ __('auth.field_password') }}</label>
+                        <input id="password" class="login-input @error('password') login-input-error @enderror" type="password" name="password" required
                             autocomplete="current-password" />
-                        <x-input-error :messages="$errors->get('password')" class="mt-2 text-sm text-red-600" />
+                        @error('password')
+                            <p class="login-error-message">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Forgot Password Link -->

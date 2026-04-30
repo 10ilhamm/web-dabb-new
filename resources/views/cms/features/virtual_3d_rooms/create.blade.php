@@ -218,7 +218,7 @@
                     </div>
                 </div>
 
-                <!-- Media Dinding (disabled on create – available after save) -->
+                {{-- {{ __('cms.virtual_3d_rooms.media_title') }} (disabled on create – available after save) --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 opacity-60">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-semibold text-gray-800">{{ __('cms.virtual_3d_rooms.media_title') }}</h3>

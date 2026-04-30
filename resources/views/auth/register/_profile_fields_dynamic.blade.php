@@ -143,18 +143,23 @@
 
 {{-- File fields (spans full grid width) --}}
 @foreach($fileFields as $col)
-    @php $label = isset($colLabel) ? $colLabel($col->column_name) : ($col->column_label ?? str()->headline($col->column_name)); @endphp
+    @php
+        $label = isset($colLabel) ? $colLabel($col->column_name) : ($col->column_label ?? str()->headline($col->column_name));
+        $requiredAttr = !$col->is_nullable ? 'required' : '';
+        $dataRequired = !$col->is_nullable ? 'true' : 'false';
+    @endphp
     <label for="{{ $col->column_name }}" class="{{ !$col->is_nullable ? 'required' : '' }}" id="label-{{ $col->column_name }}" style="grid-column: 1;">{{ $label }}</label>
     <div class="file-upload-wrapper" style="grid-column: 2;">
         <button type="button" class="file-upload-btn"
-            onclick="document.getElementById('{{ $col->column_name }}').click()">{{ __('auth.choose_file') }}</button>
+            onclick="triggerFileUpload(this)">{{ __('auth.choose_file') }}</button>
         <span class="file-upload-text" id="file-name-{{ $col->column_name }}">{{ __('auth.no_file') }}</span>
         <input type="file"
             name="{{ $col->column_name }}"
             id="{{ $col->column_name }}"
             accept=".jpg,.jpeg,.png,.pdf"
-            onchange="var el=document.getElementById('file-name-{{ $col->column_name }}');if(el)el.textContent=this.files[0]?this.files[0].name:'{{ __('auth.no_file') }}';"
-            {{ !$col->is_nullable ? 'required' : '' }}>
+            data-was-required="{{ $dataRequired }}"
+            onchange="onFileSelected(this)"
+            {{ $requiredAttr }}>
     </div>
 @endforeach
 

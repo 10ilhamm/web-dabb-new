@@ -68,7 +68,7 @@
 
                 <!-- Registration Form -->
                 <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data"
-                    id="registration-form" style="display: none;">
+                    id="registration-form" style="display: none;" onsubmit="console.log('Form submitting:', new FormData(this));">
                     @csrf
 
                     <!-- Hidden input to store role for backend -->
@@ -98,7 +98,8 @@
 
                         <!-- Dynamic profile fields loaded per role via JS, rendered via includes -->
                         @foreach($rolesData as $roleKey => $roleInfo)
-                            <div data-reg-role="{{ $roleKey }}" class="reg-profile-fields" style="display: none; grid-column: 1 / -1;">
+                            <div data-reg-role="{{ $roleKey }}" class="reg-profile-fields" style="display: none; grid-column: 1 / -1;"
+                                data-remove-required-on="hidden">
                                 @include('auth.register._profile_fields_dynamic', [
                                     'role' => $roleKey,
                                     'rolesData' => $rolesData,
@@ -127,27 +128,6 @@
 
                         <div style="grid-column: 1 / -1;">
                             <hr>
-                        </div>
-
-                        <!-- Static keperluan fields as fallback - shown via JS when no dynamic data -->
-                        <div id="static-keperluan-fields">
-                            <!-- Jenis Keperluan -->
-                            <label for="jenis_keperluan" class="required">{{ __('auth.purpose_type') }}</label>
-                            <select name="jenis_keperluan" id="jenis_keperluan" class="login-input" required>
-                                <option value="">{{ __('auth.select_purpose') }}</option>
-                                <option value="Hanya Daftar Akun"
-                                    {{ old('jenis_keperluan') == 'Hanya Daftar Akun' ? 'selected' : '' }}>{{ __('auth.purpose_register_only') }}
-                                </option>
-                                <option value="Penelitian" {{ old('jenis_keperluan') == 'Penelitian' ? 'selected' : '' }}>
-                                    {{ __('auth.purpose_research') }}</option>
-                                <option value="Kunjungan" {{ old('jenis_keperluan') == 'Kunjungan' ? 'selected' : '' }}>
-                                    {{ __('auth.purpose_visit') }}</option>
-                            </select>
-
-                            <!-- Judul Keperluan -->
-                            <label for="judul_keperluan" class="required">{{ __('auth.purpose_title') }}</label>
-                            <input type="text" name="judul_keperluan" id="judul_keperluan" class="login-input"
-                                value="{{ old('judul_keperluan') }}" required>
                         </div>
 
                     </div>

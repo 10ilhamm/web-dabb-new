@@ -28,15 +28,13 @@ class AutoSqlDump extends Command
         // 3. Lock tables during dump                         → --skip-lock-tables
         $command = sprintf(
         'mysqldump --no-tablespaces --column-statistics=0 --skip-lock-tables ' .
-        '-h %s -u %s --password=%s %s > %s 2> %s',
+        '-h %s -u %s --password=%s %s --result-file=%s',
         escapeshellarg($host),
         escapeshellarg($username),
         escapeshellarg($password),
         escapeshellarg($database),
-        escapeshellarg($path),
-        escapeshellarg($path . '.log') // simpan error/warning ke file log terpisah
+        escapeshellarg($path)
         );
-
 
         $output = shell_exec($command);
 

@@ -54,6 +54,28 @@ if (document.readyState === 'loading') {
     initWallEditor();
 }
 
+// Read translations from Blade-injected v3dConfig (edit page) or fallback defaults
+var V3D = typeof window.v3dConfig === 'object' ? window.v3dConfig : {};
+var wallLabels = (V3D.labels && V3D.labels.wall) || {
+    front: { big: 'FRONT WALL',  small: 'Front Wall',  preview: 'FRONT'    },
+    left:  { big: 'LEFT WALL',   small: 'Left Wall',   preview: 'LEFT'     },
+    right: { big: 'RIGHT WALL',  small: 'Right Wall',  preview: 'RIGHT'    },
+    back:  { big: 'BACK WALL',    small: 'Back Wall',   preview: 'BACK'     },
+};
+var messages = V3D.labels && V3D.labels.messages || {
+    mediaEmpty:    'No media on this wall yet',
+    selectFile:    'Select a file to upload!',
+    uploadSuccess: 'Media uploaded successfully!',
+    uploadFailed:  'Upload failed.',
+    saveSuccess:   'Position saved!',
+    saveFailed:    'Failed to save position.',
+    deleteConfirm: 'Delete this media from the wall?',
+    deleteSuccess: 'Media deleted.',
+    deleteFailed:  'Failed to delete media.',
+    doorLabel:     'Door Label',
+};
+var badgeSuffix = V3D.labels && V3D.labels.badgeSuffix || 'item';
+
 // --- Wall View Switching ---
 
 function switchWallView(wall) {
@@ -64,11 +86,11 @@ function switchWallView(wall) {
         btn.classList.toggle('active', btn.dataset.wall === wall);
     });
 
-    // Update title label
-    const labels = { front: 'DINDING DEPAN', left: 'DINDING KIRI', right: 'DINDING KANAN', back: 'DINDING BELAKANG' };
-    const friendlyLabels = { front: 'Dinding Depan', left: 'Dinding Kiri', right: 'Dinding Kanan', back: 'Dinding Belakang' };
+    // Update title label using translated strings
     const titleEl = document.getElementById('wallTitleLabel');
-    if (titleEl) titleEl.innerText = labels[wall] || wall;
+    if (titleEl && wallLabels[wall]) {
+        titleEl.innerText = wallLabels[wall].big;
+    }
 
     // Show/hide door on the wall it belongs to
     const doorEl = document.getElementById('doorRender');
@@ -81,7 +103,9 @@ function switchWallView(wall) {
     const uploadWallEl = document.getElementById('uploadWall');
     if (uploadWallEl) uploadWallEl.value = wall;
     const uploadWallLabel = document.getElementById('uploadWallLabel');
-    if (uploadWallLabel) uploadWallLabel.textContent = friendlyLabels[wall] || wall;
+    if (uploadWallLabel && wallLabels[wall]) {
+        uploadWallLabel.textContent = wallLabels[wall].small;
+    }
 
     deselectItem();
     renderWallItems();
@@ -112,7 +136,7 @@ function updateWallEditorDoors() {
     if (isActive) {
         const labelEl = doorEl.querySelector('.text-xs');
         if (labelEl) {
-            labelEl.textContent = wallConfig.label || 'Tujuan Tautan';
+            labelEl.textContent = wallConfig.label || (messages.doorLabel || 'Door Label');
         }
     }
 }
@@ -136,7 +160,7 @@ function filterMediaList() {
     // Update count badge
     var badge = document.getElementById('mediaCountBadge');
     if (badge) {
-        badge.textContent = visibleCount + ' item';
+        badge.textContent = visibleCount + ' ' + (badgeSuffix || 'item');
     }
 
     // Show/hide empty message
@@ -150,7 +174,7 @@ function filterMediaList() {
             var emptyDiv = document.createElement('div');
             emptyDiv.id = 'noMediaMsg';
             emptyDiv.className = 'text-center py-4 text-sm text-gray-400 border-2 border-dashed border-gray-100 rounded-lg';
-            emptyDiv.textContent = 'Belum ada media di dinding ini';
+            emptyDiv.textContent = messages.mediaEmpty || 'No media on this wall yet';
             list.appendChild(emptyDiv);
         }
     }
@@ -215,7 +239,6 @@ function renderWallItems() {
 function update3dPreviewMedia() {
     const walls = ['front', 'left', 'right', 'back'];
     const wallIdMap = { front: 'pv-wall-front', left: 'pv-wall-left', right: 'pv-wall-right', back: 'pv-wall-back' };
-    const wallLabelMap = { front: 'DEPAN', left: 'KIRI', right: 'KANAN', back: 'BELAKANG' };
 
     walls.forEach(wall => {
         const faceEl = document.getElementById(wallIdMap[wall]);
@@ -261,17 +284,17 @@ function update3dPreviewMedia() {
 
             // Clear the text label if there are media items
             const textNodes = Array.from(faceEl.childNodes).filter(n => n.nodeType === 3);
-            textNodes.forEach(n => { if (n.textContent.trim() === wallLabelMap[wall]) n.textContent = ''; });
+            textNodes.forEach(n => { if (n.textContent.trim() === wallLabels[wall].preview) n.textContent = ''; });
         } else {
             // Restore the wall label text if no media
-            const hasLabel = faceEl.textContent.trim().includes(wallLabelMap[wall]);
+            const hasLabel = faceEl.textContent.trim().includes(wallLabels[wall].preview);
             if (!hasLabel) {
                 // Check if we need to restore the text node
                 const existingText = Array.from(faceEl.childNodes).filter(n => n.nodeType === 3).join('');
                 if (!existingText.trim()) {
                     // Only add text if the face doesn't have the door element
                     if (wall !== 'back') {
-                        faceEl.insertBefore(document.createTextNode(wallLabelMap[wall]), faceEl.firstChild);
+                        faceEl.insertBefore(document.createTextNode(wallLabels[wall].preview), faceEl.firstChild);
                     }
                 }
             }
@@ -422,7 +445,7 @@ async function uploadNewMedia() {
     const form = document.getElementById('uploadMediaForm');
     const fileInput = form.querySelector('input[name="file"]');
     if (!fileInput || !fileInput.files.length) {
-        alert('Pilih file untuk diunggah!');
+        alert(messages.selectFile || 'Select a file to upload!');
         return;
     }
 
@@ -442,13 +465,13 @@ async function uploadNewMedia() {
             selectItem(data.media.id);
             form.reset();
             document.getElementById('uploadWall').value = currentWall;
-            showToast('Media berhasil diunggah!');
+            showToast(messages.uploadSuccess || 'Media uploaded successfully!');
         } else {
-            alert('Upload gagal.');
+            alert(messages.uploadFailed || 'Upload failed.');
         }
     } catch (error) {
         console.error(error);
-        alert('Error uploading media.');
+        alert(messages.uploadFailed || 'Upload failed.');
     }
 }
 
@@ -475,17 +498,17 @@ async function saveActiveMedia() {
 
         const data = await response.json();
         if (data.success) {
-            showToast('Posisi & ukuran berhasil disimpan!');
+            showToast(messages.saveSuccess || 'Position & size saved!');
         }
     } catch (error) {
         console.error(error);
-        alert('Gagal menyimpan posisi.');
+        showToast(messages.saveFailed || 'Failed to save position.');
     }
 }
 
 async function deleteActiveMedia() {
     if (!activeMediaId || !activeItem) return;
-    if (!confirm('Yakin hapus media ini dari dinding?')) return;
+    if (!confirm(messages.deleteConfirm || 'Delete this media from the wall?')) return;
 
     const url = window.v3dRoutes.deleteMedia.replace('__MEDIA_ID__', activeItem.id);
 
@@ -500,11 +523,11 @@ async function deleteActiveMedia() {
             mediaItems = mediaItems.filter(m => m.id !== activeMediaId);
             deselectItem();
             renderWallItems();
-            showToast('Media berhasil dihapus.');
+            showToast(messages.deleteSuccess || 'Media deleted.');
         }
     } catch (error) {
         console.error(error);
-        alert('Gagal menghapus media.');
+        showToast(messages.deleteFailed || 'Failed to delete media.');
     }
 }
 

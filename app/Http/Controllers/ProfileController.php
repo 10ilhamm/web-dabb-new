@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\LangSyncService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,11 +24,116 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $profileColumns = User::roleProfileColumns($user->role);
+        $profileData = self::buildProfileData($user->profile, $profileColumns->all());
 
         return view('profile.show', [
-            'user' => $user,
-            'profileColumns' => $profileColumns,
+            'user'          => $user,
+            'profileColumns'=> $profileColumns,
+            'profileData'   => $profileData,
         ]);
+    }
+
+    /**
+     * Build translated profile data array for the view.
+     * Translates ALL column values:
+     *  - Enum/set columns via LangSyncService
+     *  - Text/varchar columns via __() lookup (if value matches a lang key)
+     *  - Address field: translate Indonesian admin terms → English equivalents
+     */
+    public static function buildProfileData($profile, array $profileColumns): array
+    {
+        $result = [];
+
+        foreach ($profileColumns as $col) {
+            $name  = $col->column_name;
+            $type  = $col->column_type;
+            $value = $profile?->{$name};
+
+            if ($value === null || $value === '') {
+                $result[$name] = ['value' => null, 'type' => $type];
+                continue;
+            }
+
+            if (in_array($type, ['date', 'datetime', 'timestamp'])) {
+                try {
+                    $result[$name] = [
+                        'value' => \Carbon\Carbon::parse($value)->translatedFormat('d F Y'),
+                        'type'  => $type,
+                    ];
+                } catch (\Throwable) {
+                    $result[$name] = ['value' => $value, 'type' => $type];
+                }
+                continue;
+            }
+
+            if ($type === 'blob') {
+                $result[$name] = ['value' => $value, 'type' => $type];
+                continue;
+            }
+
+            // LangSyncService handles ALL column types — enum, varchar, text, etc.
+            // translateEnum() now includes translateRawValue() internally.
+            $translated = LangSyncService::translateEnum($name, (string) $value);
+
+            // Address term translation: ONLY translate ID→EN when locale=EN
+            if (app()->getLocale() === 'en' && (in_array($name, ['alamat']) || str_contains($name, 'alamat'))) {
+                $translated = self::translateAddressTerms($translated);
+            }
+
+            $result[$name] = [
+                'value' => $translated,
+                'type'  => $type,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Translate Indonesian address terms to English equivalents.
+     * Handles patterns like "Kabupaten Garut", "Kota Bandung", "Provinsi Jawa Barat"
+     */
+    private static function translateAddressTerms(string $value): string
+    {
+        $terms = [
+            // Admin levels (trim leading space — these appear at word-start or after "di", "ke", etc.)
+            'Kabupaten'  => 'Regency of',
+            'Kota'        => 'City of',
+            'Provinsi'    => 'Province of',
+            'Kecamatan'  => 'District of',
+            'Kelurahan'   => 'Village of',
+            'Desa'        => 'Village of',
+            'RT'          => 'RT ',
+            'RW'          => ' RW ',
+            'Jalan'       => 'Jl. ',
+            'No.'         => 'No. ',
+            'Gedung'      => 'Building ',
+            'Lantai'      => 'Floor ',
+        ];
+
+        foreach ($terms as $id => $en) {
+            $value = preg_replace('/\b' . preg_quote($id, '/') . '\b/ui', $en, $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get column label: use dashboard.lang keys first, then DB label, then headline.
+     */
+    public static function colLabel(string $col, ?string $dbLabel): string
+    {
+        // Try dashboard.php keys (dashboard.profile.col_X)
+        $key = 'dashboard.profile.col_' . $col;
+        $trans = __($key);
+        if ($trans !== $key) return $trans;
+
+        // Try auth.php keys (auth.col_X)
+        $authKey = 'auth.col_' . $col;
+        $authTrans = __($authKey);
+        if ($authTrans !== $authKey) return $authTrans;
+
+        return $dbLabel ?? \Illuminate\Support\Str::headline($col);
     }
 
     /**
@@ -44,11 +150,9 @@ class ProfileController extends Controller
         if ($role) {
             foreach ($profileColumns as $col) {
                 if (in_array($col->column_type, ['enum', 'set'])) {
-                    // Try to get options from role_columns first
                     if (!empty($col->options)) {
                         $enumOptions[$col->column_name] = $col->options;
                     } else {
-                        // Fall back to actual DB enum values
                         $tableName = $role->table_name;
                         $enumOptions[$col->column_name] = User::getEnumValues($tableName, $col->column_name);
                     }
@@ -56,10 +160,19 @@ class ProfileController extends Controller
             }
         }
 
+        // Translate enum option labels for display in select
+        $translatedEnumOptions = [];
+        foreach ($enumOptions as $colName => $options) {
+            foreach ($options as $opt) {
+                $translatedEnumOptions[$colName][$opt] = LangSyncService::translateEnum($colName, $opt);
+            }
+        }
+
         return view('profile.edit', [
             'user' => $user,
             'profileColumns' => $profileColumns,
             'enumOptions' => $enumOptions,
+            'translatedEnumOptions' => $translatedEnumOptions,
         ]);
     }
 
@@ -165,6 +278,52 @@ class ProfileController extends Controller
     }
 
     /**
+     * Translate a value BACK to Indonesian — used before saving to DB
+     * when user is in EN locale, so DB always stores ID values.
+     */
+    public static function reverseTranslate(string $val, string $colName = ''): string
+    {
+        if (!$val) return $val;
+
+        // Address term replacement: EN → ID (always — old() may hold EN values from any locale)
+        $isAddress = $colName === 'alamat' || str_contains($colName, 'alamat');
+        if ($isAddress) {
+            $terms = [
+                'Regency of'  => 'Kabupaten',
+                'City of'     => 'Kota',
+                'Province of'  => 'Provinsi',
+                'District of'  => 'Kecamatan',
+                'Village of'  => 'Kelurahan',
+                'RT '         => 'RT',
+                ' RW '        => ' RW',
+                'Jl. '        => 'Jalan ',
+                'No. '        => 'No. ',
+                'Building '   => 'Gedung ',
+                'Floor '      => 'Lantai ',
+            ];
+            foreach ($terms as $en => $id) {
+                $val = str_replace($en, $id, $val);
+            }
+        }
+
+        // Reverse-lookup via lang files: EN value → ID value
+        // NO locale guard — handles old() values submitted from EN locale
+        $authEn = require resource_path('lang/en/auth.php');
+        $authId = require resource_path('lang/id/auth.php');
+
+        foreach ($authEn as $key => $enVal) {
+            if (!isset($authId[$key])) continue;
+            $idVal = $authId[$key];
+            if ($idVal === $enVal) continue;
+
+            if ($val === $enVal) return $idVal;
+            if (preg_replace('/\s+/', '', $val) === preg_replace('/\s+/', '', $enVal)) return $idVal;
+        }
+
+        return $val;
+    }
+
+    /**
      * Update the user's profile information.
      * Dynamically handles all fields defined in role_columns.
      */
@@ -179,6 +338,11 @@ class ProfileController extends Controller
                 'name' => $data['name'] ?? $user->name,
                 'email' => $data['email'] ?? $user->email,
             ];
+
+            // Update username
+            if (isset($data['username'])) {
+                $userData['username'] = $data['username'];
+            }
 
             if ($request->hasFile('photo')) {
                 if ($user->photo) {
@@ -200,21 +364,34 @@ class ProfileController extends Controller
             if ($role) {
                 $profileColumns = $role->profileColumns();
                 $profileColumnNames = $profileColumns->pluck('column_name')->toArray();
+                $fileColumns = $profileColumns->filter(fn($c) => $c->column_type === 'blob');
 
-                // Collect only fields that exist in role_columns
+                // Collect only fields that exist in role_columns (skip file fields for now)
+                // Reverse-translate text/textarea values from EN→ID so DB always stores ID
+                $textTypes = ['varchar', 'char', 'text', 'longtext', 'mediumtext'];
                 $profileData = [];
                 foreach ($profileColumnNames as $field) {
+                    if (in_array($field, ['kartu_identitas'])) continue;
                     if (array_key_exists($field, $data)) {
-                        $profileData[$field] = $data[$field];
+                        $col = $profileColumns->firstWhere('column_name', $field);
+                        $isText = $col && in_array($col->column_type, $textTypes);
+                        $profileData[$field] = $isText
+                            ? self::reverseTranslate($data[$field], $field)
+                            : $data[$field];
                     }
                 }
 
-                // Handle kartu_identitas file upload
-                if ($request->hasFile('kartu_identitas')) {
-                    if ($user->profile && $user->profile->kartu_identitas) {
-                        Storage::disk('public')->delete($user->profile->kartu_identitas);
+                // Handle blob/file columns: store file to disk and save path string in blob column
+                foreach ($fileColumns as $col) {
+                    $fieldName = $col->column_name;
+                    if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
+                        // Delete old file if exists
+                        if ($user->profile && $user->profile->{$fieldName}) {
+                            Storage::disk('public')->delete($user->profile->{$fieldName});
+                        }
+                        $profileData[$fieldName] = $request->file($fieldName)->store('kartu-identitas', 'public');
                     }
-                    $profileData['kartu_identitas'] = $request->file('kartu_identitas')->store('kartu-identitas', 'public');
+                    // If no new file uploaded → do NOT overwrite existing value
                 }
 
                 if (!empty($profileData)) {

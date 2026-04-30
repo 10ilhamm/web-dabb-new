@@ -249,7 +249,7 @@
                         }
                     @endphp
                     @if($thumbUrl)
-                        <img src="{{ $thumbUrl }}" alt="{{ $page->title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="{{ $thumbUrl }}" alt="{{ $page->translated_title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="vss-room-thumb-placeholder" style="display:none;">🎞</div>
                     @else
                         <div class="vss-room-thumb-placeholder">🎞</div>
@@ -264,9 +264,9 @@
                     </div>
                 </div>
                 <div class="vss-room-info">
-                    <h3 class="vss-room-name">{{ $locale === 'en' && $page->title_en ? $page->title_en : $page->title }}</h3>
+                    <h3 class="vss-room-name">{{ $page->translated_title }}</h3>
                     @if($page->description)
-                        <p class="vss-room-desc">{{ Str::limit(strip_tags($page->description), 100) }}</p>
+                        <p class="vss-room-desc">{{ Str::limit(strip_tags($page->translated_description), 100) }}</p>
                     @endif
                 </div>
             </a>

@@ -328,6 +328,10 @@ return [
         'hotspot_add' => 'Tambah',
         'hotspot_rooms_available' => 'Ruangan tersedia: :count',
         'hotspot_empty' => "Kosong. Klik 'Tambah'",
+        'hotspot_label_index' => 'Hotspot :number',
+        'label_tooltip' => 'Teks Tooltip',
+        'label_target_room' => 'Target Ruangan',
+        'label_delete_confirm' => 'Hapus hotspot ini?',
 
         'preview_title' => 'Preview Panorama 360°',
         'preview_desc' => 'Klik titik target di panorama untuk mengambil Yaw/Pitch, atau geser panorama untuk melihat',
@@ -336,6 +340,13 @@ return [
 
         'btn_cancel' => 'Batal',
         'btn_save' => 'Simpan Perubahan',
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Ruangan virtual berhasil ditambahkan.',
+            'updated' => 'Ruangan virtual berhasil diperbarui.',
+            'deleted' => 'Ruangan virtual berhasil dihapus.',
+        ],
     ],
 
     /*
@@ -378,6 +389,13 @@ return [
 
         // Edit form
         'form_title_edit' => 'Edit Ruangan: :name',
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Ruangan Virtual 3D berhasil ditambahkan. Sekarang Anda bisa menambahkan media ke dinding ruangan.',
+            'updated' => 'Ruangan Virtual 3D berhasil diperbarui.',
+            'deleted' => 'Ruangan Virtual 3D berhasil dihapus.',
+        ],
         'form_desc_edit' => 'Atur informasi ruangan, warna, media dinding, dan hotspot navigasi',
 
         // Shared form
@@ -424,6 +442,14 @@ return [
         'media_empty' => 'Belum ada media. Unggah file di atas.',
         'media_upload_success' => 'Media berhasil diunggah!',
         'media_upload_choose' => 'Pilih file untuk diunggah!',
+        'media_upload_failed' => 'Unggah gagal.',
+        'media_save_success' => 'Posisi & ukuran berhasil disimpan!',
+        'media_save_failed' => 'Gagal menyimpan posisi.',
+        'media_delete_confirm' => 'Yakin hapus media ini dari dinding?',
+        'media_delete_success' => 'Media berhasil dihapus.',
+        'media_delete_failed' => 'Gagal menghapus media.',
+        'media_empty_wall' => 'Belum ada media di dinding ini',
+        'media_count' => 'item',
 
         'preview_title' => 'Preview Ruangan 3D',
         'preview_desc' => 'Preview langsung ruangan 3D sesuai pengaturan warna Anda',
@@ -449,6 +475,10 @@ return [
         'editor_wall_right' => 'Dinding Kanan',
         'editor_wall_back' => 'Dinding Belakang',
         'editor_wall_title_front' => 'DINDING DEPAN',
+        'editor_wall_title_left'  => 'DINDING KIRI',
+        'editor_wall_title_right' => 'DINDING KANAN',
+        'editor_wall_title_back'  => 'DINDING BELAKANG',
+        'editor_door_settings_for' => 'Pengaturan pintu untuk',
         'editor_props_title' => 'Properti Media yang Dipilih',
         'editor_props_delete' => 'Hapus',
         'editor_props_save' => 'Simpan Posisi',
@@ -546,10 +576,19 @@ return [
         'reset_position' => 'Reset Posisi',
         'drag_hint' => 'Geser elemen untuk mengatur posisi | Scroll pada gambar untuk ubah ukuran',
 
+        // Flash messages
+        'flash' => [
+            'created' => 'Buku berhasil ditambahkan',
+            'updated' => 'Buku berhasil diperbarui',
+            'deleted' => 'Buku berhasil dihapus',
+        ],
+
         // Buttons
         'btn_cancel' => 'Batal',
-        'btn_save' => 'Simpan Buku',
+        'btn_save' => 'Simpan Halaman',
         'btn_save_changes' => 'Simpan Perubahan',
+
+        // JS messages
     ],
 
     /*
@@ -653,6 +692,13 @@ return [
             'generate_btn' => 'Generate dari Preview',
             'preview_not_found' => 'Preview buku tidak ditemukan',
             'upload_cover_first' => 'Silakan upload cover buku terlebih dahulu',
+        ],
+
+        // Flash messages
+        'flash' => [
+            'created' => 'Halaman buku berhasil ditambahkan',
+            'updated' => 'Halaman buku berhasil diperbarui',
+            'deleted' => 'Halaman buku berhasil dihapus',
         ],
     ],
 

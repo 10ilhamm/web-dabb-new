@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Feature;
 use App\Models\Virtual3dRoom;
 use App\Models\Virtual3dMedia;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -28,7 +29,7 @@ class Virtual3dRoomController extends Controller
         return view('cms.features.virtual_3d_rooms.create', compact('feature', 'allRooms'));
     }
 
-    public function store(Request $request, Feature $feature)
+    public function store(Request $request, Feature $feature, TranslationService $translationService)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -79,7 +80,7 @@ class Virtual3dRoomController extends Controller
         $room->save();
 
         return redirect()->route('cms.features.virtual_3d_rooms.edit', [$feature, $room])
-            ->with('success', 'Ruangan Virtual 3D berhasil ditambahkan. Sekarang Anda bisa menambahkan media ke dinding ruangan.');
+            ->with('success', __('cms.virtual_3d_rooms.flash.created'));
     }
 
     public function edit(Feature $feature, Virtual3dRoom $room)
@@ -143,7 +144,7 @@ class Virtual3dRoomController extends Controller
         $room->save();
 
         return redirect()->route('cms.features.virtual_3d_rooms.index', $feature)
-            ->with('success', 'Ruangan Virtual 3D berhasil diperbarui.');
+            ->with('success', __('cms.virtual_3d_rooms.flash.updated'));
     }
 
     /**
@@ -274,7 +275,7 @@ class Virtual3dRoomController extends Controller
         $room->delete();
 
         return redirect()->route('cms.features.virtual_3d_rooms.index', $feature)
-            ->with('success', 'Ruangan Virtual 3D berhasil dihapus.');
+            ->with('success', __('cms.virtual_3d_rooms.flash.deleted'));
     }
 
     // Media Management

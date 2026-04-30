@@ -41,7 +41,7 @@
                 {{-- Email --}}
                 <div style="margin-bottom:0.85rem;">
                     <label for="lrm_email"
-                        style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">{{ __('Email') }}</label>
+                        style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">{{ __('auth.email') }}</label>
                     <input id="lrm_email" type="email" name="email" value="{{ old('email') }}" required autofocus
                         autocomplete="username"
                         style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:0.85rem;box-sizing:border-box;font-family:inherit;transition:border-color 0.2s,box-shadow 0.2s;outline:none;"
@@ -55,7 +55,7 @@
                 {{-- Password --}}
                 <div style="margin-bottom:0.6rem;">
                     <label for="lrm_password"
-                        style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">{{ __('Password') }}</label>
+                        style="display:block;font-size:0.8rem;font-weight:600;color:#374151;margin-bottom:0.3rem;">{{ __('auth.field_password') }}</label>
                     <input id="lrm_password" type="password" name="password" required autocomplete="current-password"
                         style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:0.85rem;box-sizing:border-box;font-family:inherit;transition:border-color 0.2s,box-shadow 0.2s;outline:none;"
                         onfocus="this.style.borderColor='#0579cb';this.style.boxShadow='0 0 0 3px rgba(5,121,203,0.12)';"
@@ -128,7 +128,7 @@
                     foreach ($rawPreviews as $key => $val) {
                         if (!empty(trim($val))) {
                             $validPreviews[] = $val;
-                            $validNames[] = $rawNames[$key] ?? 'Preview';
+                            $validNames[] = $rawNames[$key] ?? __('auth.preview');
                         }
                     }
                 }
@@ -136,6 +136,9 @@
                 $allPreviews = array_values($validPreviews);
                 $allNames = array_values($validNames);
                 $slideCount = count($allPreviews);
+
+                // Translate all names for display (transRoomName auto-registers new keys via lang)
+                $allNames = array_map(fn($n) => transRoomName($n), $allNames);
             @endphp
 
             @if ($slideCount > 0)
@@ -143,7 +146,7 @@
                     @foreach ($allPreviews as $i => $preview)
                         <div class="lrm-slide"
                             style="position:absolute; inset:0; opacity: {{ $i === 0 ? '1' : '0' }}; transition: opacity 0.6s ease-in-out; z-index: {{ $i === 0 ? '2' : '1' }};">
-                            <img src="{{ $preview }}" alt="Preview {{ $i }}"
+                            <img src="{{ $preview }}" alt="{{ __('auth.preview') }} {{ $i }}"
                                 style="width:100%; height:100%; object-fit:cover;">
                         </div>
                     @endforeach
@@ -171,11 +174,11 @@
                 <div style="color:#fff;">
                     <div
                         style="display:inline-block;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.25);border-radius:999px;font-size:11px;font-weight:600;padding:4px 12px;margin-bottom:0.5rem;letter-spacing:0.04em;text-transform:uppercase;">
-                        {{ $feature->parent?->name ?? 'Pameran Arsip' }}
+                        {{ $feature->translated_parent_name ?? __('auth.pameran_arsip_virtual_default') }}
                     </div>
                     <h4
                         style="font-size:1.15rem;font-weight:800;margin:0 0 0.3rem;text-shadow:0 2px 4px rgba(0,0,0,0.5);">
-                        {{ $feature->name }}
+                        {{ $feature->translated_name }}
                     </h4>
 
                     @if ($slideCount > 0)
@@ -187,7 +190,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.361a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
                                 </svg>
-                                <span id="lrm-current-name">{{ $allNames[0] ?? 'Preview' }}</span>
+                                <span id="lrm-current-name">{{ transRoomName($allNames[0] ?? __('auth.preview')) }}</span>
                             </p>
                             @if ($slideCount > 1)
                                 <div style="display:flex;gap:4px;">
@@ -225,7 +228,7 @@
                             </div>
                         @endif
                     @else
-                        <p style="font-size:0.8rem;opacity:0.8;margin:0;">Masuk untuk menjelajahi ruangan virtual 360°
+                        <p style="font-size:0.8rem;opacity:0.8;margin:0;">{{ __('auth.virtual_room_login_prompt') }}
                         </p>
                     @endif
                 </div>

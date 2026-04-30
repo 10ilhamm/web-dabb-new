@@ -161,8 +161,8 @@
                     }
                 }">
                     <h3 class="text-sm font-semibold text-gray-800 mb-2">{{ __('cms.virtual_3d_rooms.door_title') }}</h3>
-                    <p class="text-xs text-gray-500 mb-4">Pengaturan pintu untuk <span class="font-bold text-blue-600"
-                            x-text="currentWall === 'front' ? 'Dinding Depan' : (currentWall === 'back' ? 'Dinding Belakang' : (currentWall === 'left' ? 'Dinding Kiri' : 'Dinding Kanan'))"></span>
+                    <p class="text-xs text-gray-500 mb-4">{{ __('cms.virtual_3d_rooms.editor_door_settings_for') }} <span class="font-bold text-blue-600"
+                            x-text="currentWall === 'front' ? '{{ __('cms.virtual_3d_rooms.editor_wall_title_front') }}' : (currentWall === 'back' ? '{{ __('cms.virtual_3d_rooms.editor_wall_title_back') }}' : (currentWall === 'left' ? '{{ __('cms.virtual_3d_rooms.editor_wall_title_left') }}' : '{{ __('cms.virtual_3d_rooms.editor_wall_title_right') }}'))"></span>
                     </p>
 
                     <div class="space-y-4">
@@ -217,7 +217,7 @@
                     </div>
                 </div>
 
-                <!-- Media Dinding -->
+                <!-- {{ __('cms.virtual_3d_rooms.media_title') }} -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-semibold text-gray-800">{{ __('cms.virtual_3d_rooms.media_title') }}</h3>
@@ -474,7 +474,7 @@
 
 @push('scripts')
     {{-- Blade data passed as JSON (not linted as JS by IDE) --}}
-    <script type="application/json" id="v3dConfig">{"csrf":"{{ csrf_token() }}","routes":{"upload":"{{ route('cms.features.virtual_3d_rooms.media.store', [$feature, $room]) }}","updateMedia":"{{ route('cms.features.virtual_3d_rooms.media.update', [$feature, $room, '__MEDIA_ID__']) }}","deleteMedia":"{{ route('cms.features.virtual_3d_rooms.media.destroy', [$feature, $room, '__MEDIA_ID__']) }}"},"translations":{"uploadChoose":"{{ __('cms.virtual_3d_rooms.media_upload_choose') }}","uploadSuccess":"{{ __('cms.virtual_3d_rooms.media_upload_success') }}"},"wallColor":"{{ $room->wall_color }}"}</script>
+    <script type="application/json" id="v3dConfig">{"csrf":"{{ csrf_token() }}","routes":{"upload":"{{ route('cms.features.virtual_3d_rooms.media.store', [$feature, $room]) }}","updateMedia":"{{ route('cms.features.virtual_3d_rooms.media.update', [$feature, $room, '__MEDIA_ID__']) }}","deleteMedia":"{{ route('cms.features.virtual_3d_rooms.media.destroy', [$feature, $room, '__MEDIA_ID__']) }}"},"translations":{"uploadChoose":"{{ __('cms.virtual_3d_rooms.media_upload_choose') }}","uploadSuccess":"{{ __('cms.virtual_3d_rooms.media_upload_success') }}"},"wallColor":"{{ $room->wall_color }}","labels":{"wall":{"front":{"big":"{{ __('cms.virtual_3d_rooms.editor_wall_title_front') }}","small":"{{ __('cms.virtual_3d_rooms.editor_wall_front') }}","preview":"{{ __('cms.virtual_3d_rooms.editor_wall_front') }}"},"left":{"big":"{{ __('cms.virtual_3d_rooms.editor_wall_title_left') }}","small":"{{ __('cms.virtual_3d_rooms.editor_wall_left') }}","preview":"{{ __('cms.virtual_3d_rooms.editor_wall_left') }}"},"right":{"big":"{{ __('cms.virtual_3d_rooms.editor_wall_title_right') }}","small":"{{ __('cms.virtual_3d_rooms.editor_wall_right') }}","preview":"{{ __('cms.virtual_3d_rooms.editor_wall_right') }}"},"back":{"big":"{{ __('cms.virtual_3d_rooms.editor_wall_title_back') }}","small":"{{ __('cms.virtual_3d_rooms.editor_wall_back') }}","preview":"{{ __('cms.virtual_3d_rooms.editor_wall_back') }}"}}},"messages":{"mediaEmpty":"{{ __('cms.virtual_3d_rooms.media_empty') }}","selectFile":"{{ __('cms.virtual_3d_rooms.media_upload_choose') }}","uploadSuccess":"{{ __('cms.virtual_3d_rooms.media_upload_success') }}","uploadFailed":"{{ __('cms.virtual_3d_rooms.media_upload_failed') }}","saveSuccess":"{{ __('cms.virtual_3d_rooms.media_save_success') }}","saveFailed":"{{ __('cms.virtual_3d_rooms.media_save_failed') }}","deleteConfirm":"{{ __('cms.virtual_3d_rooms.media_delete_confirm') }}","deleteSuccess":"{{ __('cms.virtual_3d_rooms.media_delete_success') }}","deleteFailed":"{{ __('cms.virtual_3d_rooms.media_delete_failed') }}"},"badgeSuffix":"{{ __('cms.virtual_3d_rooms.media_count') }}","doorLabel":"{{ __('cms.virtual_3d_rooms.door_label_placeholder') }}","deleteBtn":"{{ __('cms.virtual_3d_rooms.media_delete') }}"}</script>
     {{-- Load external JS first so functions are available --}}
     <script src="{{ asset('js/cms/virtual_3d_rooms.js') }}"></script>
     <script src="{{ asset('js/cms/virtual_3d_rooms_edit.js') }}"></script>
@@ -484,6 +484,7 @@
             var cfg = JSON.parse(document.getElementById('v3dConfig').textContent);
             window.v3dCsrf = cfg.csrf;
             window.v3dRoutes = cfg.routes;
+            window.v3dConfig = cfg;
 
             var wallEl = document.getElementById('wallEditor');
             if (wallEl) wallEl.style.backgroundColor = cfg.wallColor;

@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', ($locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title) . ' — ' . $feature->name . ' — ' . config('app.name'))
+@section('title', $selectedPage->translated_title . ' — ' . $feature->name . ' — ' . config('app.name'))
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
@@ -49,6 +49,27 @@
             }
         }
         return $url; // direct MP4 or other
+    }
+
+    /**
+     * Recursively translate info_popup text strings for English locale.
+     */
+    function vssTranslatePopup($popup) {
+        if (app()->getLocale() !== 'en' || empty($popup)) return $popup;
+        $result = [];
+        foreach ($popup as $k => $v) {
+            if (in_array($k, ['unified_image_order', 'carousel_video_order'], true)) {
+                $result[$k] = $v;
+            } elseif (is_array($v)) {
+                $result[$k] = vssTranslatePopup($v);
+            } elseif (is_string($v) && trim($v) !== '') {
+                $key = preg_replace('/[^a-zA-Z0-9]+/', '_', trim($v));
+                $result[$k] = \App\Services\AutoLangService::ensureKey($key, $v);
+            } else {
+                $result[$k] = $v;
+            }
+        }
+        return $result;
     }
 
     /**
@@ -147,7 +168,7 @@
         @endif
         <a href="{{ url($feature->path) }}">{{ app()->getLocale() === 'en' && $feature->name_en ? $feature->name_en : $feature->name }}</a>
         <span class="sep">/</span>
-        <span class="current">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</span>
+        <span class="current">{{ $selectedPage->translated_title }}</span>
     </div>
 </div>
 
@@ -170,7 +191,7 @@
             $heroImgSrc = $isHeroUploaded ? asset('storage/'.$heroImg) : vssProcessImageUrl($heroImg);
         @endphp
         <img src="{{ $heroImgSrc }}"
-            alt="{{ $heroSlide->title }}"
+            alt="{{ $heroSlide->translated_title }}"
             style="width:100%;height:100%;object-fit:cover;opacity:0.25;"
             onerror="this.style.display='none';">
     </div>
@@ -178,25 +199,25 @@
 
     <div class="vsshow-hero-content vsshow-hero-anim">
         <div class="vsshow-hero-badge vsshow-enter" data-enter-delay="0">
-            {{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}
+            {{ $selectedPage->translated_title }}
         </div>
         @if($heroSlide->title)
         <h1 class="vsshow-hero-title vsshow-enter" data-enter-delay="1">
-            {{ $locale === 'en' && $heroSlide->title_en ? $heroSlide->title_en : $heroSlide->title }}
+            {{ $heroSlide->translated_title }}
         </h1>
         @else
         <h1 class="vsshow-hero-title vsshow-enter" data-enter-delay="1">
-            {{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}
+            {{ $selectedPage->translated_title }}
         </h1>
         @endif
         @if($heroSlide->subtitle)
         <p class="vsshow-hero-subtitle vsshow-enter" data-enter-delay="2">
-            {{ $locale === 'en' && $heroSlide->subtitle_en ? $heroSlide->subtitle_en : $heroSlide->subtitle }}
+            {{ $heroSlide->translated_subtitle }}
         </p>
         @endif
         @if($heroSlide->description)
         <p class="vsshow-hero-subtitle vsshow-enter" data-enter-delay="3" style="font-size:1rem;opacity:0.7;">
-            {!! $locale === 'en' && $heroSlide->description_en ? $heroSlide->description_en : $heroSlide->description !!}
+            {!! $heroSlide->translated_description !!}
         </p>
         @endif
     </div>
@@ -211,12 +232,12 @@
 <section class="vsshow-hero">
     <div id="vss-particles" class="vsshow-hero-particles"></div>
     <div class="vsshow-hero-content vsshow-hero-anim">
-        <div class="vsshow-hero-badge vsshow-enter" data-enter-delay="0">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</div>
+        <div class="vsshow-hero-badge vsshow-enter" data-enter-delay="0">{{ $selectedPage->translated_title }}</div>
         <h1 class="vsshow-hero-title vsshow-enter" data-enter-delay="1">
-            {{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}
+            {{ $selectedPage->translated_title }}
         </h1>
         @if($selectedPage->description)
-        <p class="vsshow-hero-subtitle vsshow-enter" data-enter-delay="2">{!! Str::limit(strip_tags($locale === 'en' && $selectedPage->description_en ? $selectedPage->description_en : $selectedPage->description), 200) !!}</p>
+        <p class="vsshow-hero-subtitle vsshow-enter" data-enter-delay="2">{!! Str::limit(strip_tags($selectedPage->translated_description), 200) !!}</p>
         @endif
     </div>
     <div class="vsshow-hero-scroll-hint vsshow-enter" data-enter-delay="5">
@@ -229,13 +250,13 @@
 {{-- ======== CONTENT SLIDES ======== --}}
 @foreach($contentSlides as $slideIndex => $slide)
 @php
-    $title = $locale === 'en' && $slide->title_en ? $slide->title_en : $slide->title;
-    $subtitle = $locale === 'en' && $slide->subtitle_en ? $slide->subtitle_en : $slide->subtitle;
-    $desc = $locale === 'en' && $slide->description_en ? $slide->description_en : $slide->description;
+    $title = $slide->translated_title;
+    $subtitle = $slide->translated_subtitle;
+    $desc = $slide->translated_description;
     $images = $slide->images ?? [];
     $imageUrls = $slide->image_urls ?? [];
     $allImages = array_merge($images, $imageUrls);
-    $popup = $slide->info_popup ?? [];
+    $popup = $slide->translated_info_popup;
     $bgStyle = ($slide->bg_color && $slide->bg_color !== '#ffffff') ? "background-color: {$slide->bg_color};" : '';
     $embedUrl = vssYouTubeEmbed($slide->video_url);
     $isYoutube = $slide->video_url && strpos($slide->video_url, 'youtube') !== false || strpos($slide->video_url, 'youtu.be') !== false;
@@ -248,7 +269,7 @@
         @if($slide->slide_type === 'text')
         <div class="vsshow-text-section">
             @if($title)
-                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</div>
+                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $selectedPage->translated_title }}</div>
                 <h2 class="vsshow-section-title vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="1">{{ $title }}</h2>
                 <div class="vsshow-divider vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="2"></div>
             @endif
@@ -265,7 +286,7 @@
         <div>
             @if($title)
             <div class="vsshow-text-section" style="margin-bottom:2.5rem;">
-                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</div>
+                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $selectedPage->translated_title }}</div>
                 <h2 class="vsshow-section-title vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="1">{{ $title }}</h2>
                 <div class="vsshow-divider vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="2"></div>
             </div>
@@ -370,7 +391,7 @@
         <div>
             @if($title)
             <div class="vsshow-text-section" style="margin-bottom:2.5rem;">
-                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</div>
+                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $selectedPage->translated_title }}</div>
                 <h2 class="vsshow-section-title vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="1">{{ $title }}</h2>
                 <div class="vsshow-divider vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="2"></div>
                 @if($subtitle)<p class="vsshow-section-subtitle vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="3">{{ $subtitle }}</p>@endif
@@ -447,7 +468,7 @@
             {{-- Text --}}
             <div class="vsshow-split-text">
                 @if($title)
-                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $locale === 'en' && $selectedPage->title_en ? $selectedPage->title_en : $selectedPage->title }}</div>
+                <div class="vsshow-section-tag vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="0">{{ $selectedPage->translated_title }}</div>
                 <h2 class="vsshow-section-title vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="1" style="text-align:left;">{{ $title }}</h2>
                 <div class="vsshow-divider vsshow-enter" data-swipe="{{ $slideIndex % 2 === 0 ? 'left' : 'right' }}" data-enter-delay="2"></div>
                 @endif

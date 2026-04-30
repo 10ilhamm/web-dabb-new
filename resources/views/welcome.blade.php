@@ -300,7 +300,7 @@
                 foreach (\App\Models\VirtualRoom::with('feature')->orderBy('id', 'desc')->limit(8)->get() as $room) {
                     if (!$room->feature || !$room->feature->path) continue;
                     $previews->push([
-                        'name'  => $pickTitle($room) ?? 'Pameran 360°',
+                        'name'  => $room->translated_name ?? $pickTitle($room) ?? '360° Virtual',
                         'image' => $storageImg($room->thumbnail_path ?: $room->image_360_path),
                         'link'  => url($room->feature->path),
                         'type'  => '360° Virtual',
@@ -311,7 +311,7 @@
                 foreach (\App\Models\Virtual3dRoom::with('feature')->orderBy('id', 'desc')->limit(8)->get() as $room) {
                     if (!$room->feature || !$room->feature->path) continue;
                     $previews->push([
-                        'name'  => $pickTitle($room) ?? 'Pameran 3D',
+                        'name'  => $room->translated_name ?? $pickTitle($room) ?? '3D Virtual',
                         'image' => $storageImg($room->thumbnail_path),
                         'link'  => url($room->feature->path),
                         'type'  => '3D Virtual',
@@ -322,7 +322,7 @@
                 foreach (\App\Models\Book::with('feature')->orderBy('id', 'desc')->limit(8)->get() as $book) {
                     if (!$book->feature || !$book->feature->path) continue;
                     $previews->push([
-                        'name'  => $pickTitle($book, ['title', 'name']) ?? 'Buku Virtual',
+                        'name'  => $book->translated_title ?? $pickTitle($book, ['title', 'name']) ?? 'Virtual Book',
                         'image' => $storageImg($book->thumbnail ?: $book->cover_image),
                         'link'  => url($book->feature->path),
                         'type'  => 'Buku Virtual',
@@ -370,7 +370,7 @@
                     }
 
                     $previews->push([
-                        'name'  => $pickTitle($slidePage, ['title', 'name']) ?? 'Slideshow Virtual',
+                        'name'  => $slidePage->translated_title ?? $pickTitle($slidePage, ['title', 'name']) ?? 'Virtual Slideshow',
                         'image' => $thumbUrl ?: $fallbackImg,
                         'link'  => url($slidePage->feature->path) . '?page=' . ($slidePage->order ?? 1),
                         'type'  => 'Slideshow Virtual',
@@ -384,11 +384,11 @@
                     ->unique(fn ($p) => strtolower(trim(($p['type'] ?? '') . '|' . ($p['name'] ?? ''))))
                     ->values();
 
-                // Fallback kosong jika blm ada data sama sekali
+                // Fallback empty state (only shown when no exhibitions exist yet)
                 if ($previews->isEmpty()) {
-                    $previews->push(['name' => 'Pameran 1', 'image' => asset('image/pameran1.png'), 'link' => '#', 'type' => 'Pameran']);
-                    $previews->push(['name' => 'Pameran 2', 'image' => asset('image/desain_dokumentasi.png'), 'link' => '#', 'type' => 'Pameran']);
-                    $previews->push(['name' => 'Pameran 3', 'image' => asset('image/pameran1.png'), 'link' => '#', 'type' => 'Pameran']);
+                    $previews->push(['name' => home('gallery_fallback_1', 'Exhibition 1'), 'image' => asset('image/pameran1.png'), 'link' => '#', 'type' => home('gallery_fallback_type', 'Exhibition')]);
+                    $previews->push(['name' => home('gallery_fallback_2', 'Exhibition 2'), 'image' => asset('image/desain_dokumentasi.png'), 'link' => '#', 'type' => home('gallery_fallback_type', 'Exhibition')]);
+                    $previews->push(['name' => home('gallery_fallback_3', 'Exhibition 3'), 'image' => asset('image/pameran1.png'), 'link' => '#', 'type' => home('gallery_fallback_type', 'Exhibition')]);
                 }
             @endphp
 
@@ -658,14 +658,14 @@
                         <div class="ig-profile-head">
                             <img src="{{ asset('image/logo_anri.png') }}" alt="{{ $igUsername }}" class="ig-avatar">
                             <div>
-                                <div class="ig-username">{{ $igUsername }}</div>
-                                <div class="ig-name">Arsip Nasional RI</div>
-                                <div class="ig-stats">4,106 posts · 119K followers · 91 following</div>
+                                <div class="ig-username">{{ home('ig_username') }}</div>
+                                <div class="ig-name">{{ home('ig_name') }}</div>
+                                <div class="ig-stats">{{ home('ig_stats') }}</div>
                             </div>
                         </div>
                     </a>
                     <a href="https://www.instagram.com/{{ $igUsername }}/?utm_source=ig_web_button_share_sheet"
-                        class="follow-btn" target="_blank" rel="noopener noreferrer">Follow Kami</a>
+                        class="follow-btn" target="_blank" rel="noopener noreferrer">{{ home('ig_follow_btn') }}</a>
                 </div>
                 @if(!empty($igPosts))
                 <div class="right">

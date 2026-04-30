@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AutoLangService;
+use App\Services\LangSyncService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -62,44 +65,21 @@ class RegisteredUserController extends Controller
         if ($translated !== $key) {
             return $translated;
         }
-        $this->ensureLangEntry("id/auth.php", $key, $this->generateLabel($columnName, 'id'));
-        $this->ensureLangEntry("en/auth.php", $key, $this->generateLabel($columnName, 'en'));
-        return $this->generateLabel($columnName, 'id');
+        $idLabel = $this->generateLabel($columnName, 'id');
+        $enLabel = $this->generateLabel($columnName, 'en');
+        AutoLangService::ensureKey("col_{$columnName}", $idLabel);
+        return $idLabel;
     }
 
     /**
-     * Translate a placeholder using lang, auto-registering missing keys.
+     * Translate an enum option value using LangSyncService.
+     * Auto-registers missing keys in both id/en lang files.
      */
     private function transEnumOption(string $option, string $columnName): string
     {
-        // Map enum option values to translation keys
-        $transMap = [
-            'jenis_keperluan' => [
-                'Hanya Daftar Akun' => 'auth.purpose_register_only',
-                'Penelitian' => 'auth.purpose_research',
-                'Kunjungan' => 'auth.purpose_visit',
-            ],
-            'jenis_kelamin' => [
-                'Laki-Laki' => 'auth.male',
-                'Perempuan' => 'auth.female',
-            ],
-            'agama' => [
-                'Islam' => 'religion_islam',
-                'Kristen' => 'religion_christian',
-                'Katolik' => 'religion_catholic',
-                'Hindu' => 'religion_hindu',
-                'Buddha' => 'religion_buddha',
-                'Konghucu' => 'religion_confucian',
-            ],
-        ];
-        if (isset($transMap[$columnName][$option])) {
-            $translated = __($transMap[$columnName][$option]);
-            // Only return translated if it actually exists as a key
-            if ($translated !== $transMap[$columnName][$option]) {
-                return $translated;
-            }
-        }
-        return $option;
+        // Use LangSyncService — it auto-registers missing keys via AutoLangService
+        $translated = LangSyncService::translateEnum($columnName, $option);
+        return $translated !== $option ? $translated : $option;
     }
 
     /**
@@ -112,9 +92,9 @@ class RegisteredUserController extends Controller
         if ($translated !== $key) {
             return $translated;
         }
-        $this->ensureLangEntry("id/auth.php", $key, $this->generatePlaceholder($columnName, 'id'));
-        $this->ensureLangEntry("en/auth.php", $key, $this->generatePlaceholder($columnName, 'en'));
-        return $this->generatePlaceholder($columnName, 'id');
+        $idPlaceholder = $this->generatePlaceholder($columnName, 'id');
+        AutoLangService::ensureKey("placeholder_{$columnName}", $idPlaceholder);
+        return $idPlaceholder;
     }
 
     private function generateLabel(string $columnName, string $locale = 'id'): string
@@ -163,25 +143,6 @@ class RegisteredUserController extends Controller
         return $this->generateLabel($columnName, $locale);
     }
 
-    private function ensureLangEntry(string $filePath, string $key, string $value): void
-    {
-        $fullPath = base_path("resources/lang/{$filePath}");
-        if (!file_exists($fullPath)) {
-            return;
-        }
-        $content = file_get_contents($fullPath);
-        if (strpos($content, "'{$key}'") !== false) {
-            return;
-        }
-        $insertPos = strrpos($content, "];");
-        if ($insertPos === false) {
-            return;
-        }
-        $newEntry = PHP_EOL . "    '{$key}' => '{$value}'," . PHP_EOL;
-        $newContent = substr($content, 0, $insertPos) . $newEntry . substr($content, $insertPos);
-        file_put_contents($fullPath, $newContent);
-    }
-
     /**
      * Handle an incoming registration request.
      *
@@ -189,16 +150,18 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $role = $request->role;
+        $profileColumns = User::roleProfileColumns($role);
+        $profileColumnNames = $profileColumns->pluck('column_name')->toArray();
+        $roleModel = Role::where('name', $role)->first();
+
         // 1. Base validation rules
         $rules = [
             'role' => ['required', 'string', Rule::in(Role::registerable()->pluck('name')->toArray())],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
+            'username' => ['required', 'string', 'max:100', 'unique:users,username'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
-
-        // 2. Dynamic validation based on role_columns
-        $role = $request->role;
-        $profileColumns = User::roleProfileColumns($role);
 
         foreach ($profileColumns as $col) {
             $field = $col->column_name;
@@ -214,11 +177,9 @@ class RegisteredUserController extends Controller
                 continue;
             }
 
-            // File field (kartu_identitas)
+            // File field (blob — kartu_identitas): always nullable, not required
             if ($type === 'blob' || $field === 'kartu_identitas') {
-                $rules[$field] = $isNullable
-                    ? ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048']
-                    : ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
+                $rules[$field] = ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'];
                 continue;
             }
 
@@ -227,11 +188,8 @@ class RegisteredUserController extends Controller
                 $options = [];
                 if (!empty($col->options)) {
                     $options = $col->options;
-                } else {
-                    $roleModel = Role::where('name', $role)->first();
-                    if ($roleModel) {
-                        $options = User::getEnumValues($roleModel->table_name, $field);
-                    }
+                } elseif ($roleModel) {
+                    $options = User::getEnumValues($roleModel->table_name, $field);
                 }
                 $rules[$field] = $isNullable
                     ? ['nullable', Rule::in($options)]
@@ -265,40 +223,40 @@ class RegisteredUserController extends Controller
 
         $request->validate($rules);
 
-        // 3. Upload file fields
+        // 2. Build profile data
         $profileData = [];
-        $roleModel = Role::where('name', $role)->first();
 
-        if ($roleModel) {
-            $fileColumns = $roleModel->profileColumns()->filter(fn($c) => $c->column_type === 'blob');
-            foreach ($fileColumns as $col) {
-                $fieldName = $col->column_name;
-                if ($request->hasFile($fieldName)) {
-                    $profileData[$fieldName] = $request->file($fieldName)->store('kartu_identitas', 'public');
-                }
+        // 2a. Handle blob/file columns: store file to disk and save path string in blob column
+        $fileColumns = $profileColumns->filter(fn($c) => $c->column_type === 'blob');
+        foreach ($fileColumns as $col) {
+            $fieldName = $col->column_name;
+            if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
+                $profileData[$fieldName] = $request->file($fieldName)->store('kartu-identitas', 'public');
             }
+            // If no file uploaded and column is nullable → skip (null is fine)
+        }
 
-            // 4. Collect profile data from role_columns
-            $profileColumnNames = $profileColumns->pluck('column_name')->toArray();
-            foreach ($profileColumnNames as $field) {
-                if (in_array($field, ['name', 'email', 'password', 'photo', 'kartu_identitas'])) {
-                    continue;
-                }
-                if ($request->has($field)) {
-                    $profileData[$field] = $request->input($field);
-                }
+        // 2b. Collect all non-user-table, non-file fields from profile columns
+        $skipFields = ['name', 'email', 'username', 'password', 'password_confirmation',
+                      'photo', 'role', '_token'];
+        foreach ($profileColumnNames as $field) {
+            if (in_array($field, $skipFields)) continue;
+            if ($fileColumns->contains('column_name', $field)) continue;
+            if ($request->filled($field)) {
+                $profileData[$field] = $request->input($field);
             }
         }
 
-        // 5. Create user
+        // 3. Create user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'username' => $request->username,
             'role' => $role,
             'password' => Hash::make($request->password),
         ]);
 
-        // 6. Create profile dynamically
+        // 4. Create profile dynamically
         if ($roleModel && $roleModel->relation_name) {
             $relation = $roleModel->relation_name;
             if (method_exists($user, $relation)) {
@@ -310,6 +268,9 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Redirect to role-specific dashboard dynamically
+        $slug = Str::slug($role, '-');
+
+        return redirect()->route('dashboard.role', ['slug' => $slug]);
     }
 }

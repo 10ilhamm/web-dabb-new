@@ -77,7 +77,7 @@
                 <div class="vt-room-card" data-room-id="{{ $room->id }}" onclick="openRoom3D(+this.dataset.roomId)">
                     <div class="vt-room-thumb">
                         @if($room->thumbnail_path)
-                            <img src="{{ asset('storage/'.$room->thumbnail_path) }}" alt="{{ $room->name }}" loading="lazy">
+                            <img src="{{ asset('storage/'.$room->thumbnail_path) }}" alt="{{ $room->translated_name }}" loading="lazy">
                         @else
                             <div class="vt-room-thumb-placeholder vt3d-placeholder">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:48px;height:48px;opacity:0.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -92,14 +92,14 @@
                         </div>
                     </div>
                     <div class="vt-room-info">
-                        <h3 class="vt-room-name">{{ $room->name }}</h3>
+                        <h3 class="vt-room-name">{{ $room->translated_name }}</h3>
                         @if($room->description)
-                            <p class="vt-room-desc">{{ Str::limit($room->description, 80) }}</p>
+                            <p class="vt-room-desc">{{ Str::limit($room->translated_description, 80) }}</p>
                         @endif
                         <div class="vt-room-meta">
                             <span>{{ __('home.virtual_3d_tour.media_on_wall', ['count' => count($room->media) ?? 0]) }}</span>
                             @if($room->door_link_type !== 'none')
-                                <span>• {{ __('home.virtual_3d_tour.door_label', ['label' => $room->door_label ?: __('home.virtual_3d_tour.door_active')]) }}</span>
+                                <span>• {{ __('home.virtual_3d_tour.door_label', ['label' => $room->translated_door_label ?: __('home.virtual_3d_tour.door_active')]) }}</span>
                             @endif
                         </div>
                     </div>
@@ -266,11 +266,17 @@
 <script type="application/json" id="virtualRooms3DData">{!! json_encode($virtual3dRooms->map(function($r) {
         return [
             'id'             => $r->id,
-            'name'           => $r->name,
+            'name'           => $r->translated_name,
             'wall_color'     => $r->wall_color,
             'floor_color'    => $r->floor_color,
             'ceiling_color'  => $r->ceiling_color,
             'doors'          => $r->doors,
+            'door_labels'   => [
+                'front' => $r->getTranslatedDoorLabelForWall('front'),
+                'back'  => $r->getTranslatedDoorLabelForWall('back'),
+                'left'  => $r->getTranslatedDoorLabelForWall('left'),
+                'right' => $r->getTranslatedDoorLabelForWall('right'),
+            ],
             'thumbnail_url'  => $r->thumbnail_path ? asset('storage/' . $r->thumbnail_path) : null,
             'media'          => $r->media->map(function($m) {
                 return [

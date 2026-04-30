@@ -62,7 +62,7 @@ class ProfileController extends Controller
         $this->insertAndShiftOrder(Feature::class, $insertOrder, ['parent_id' => $feature->id], $data);
 
         return redirect()->route('cms.features.show', $feature)
-            ->with('success', 'Sub menu berhasil ditambahkan.');
+            ->with('success', __('cms.features.flash.sub_added'));
     }
 
     /**
@@ -87,7 +87,7 @@ class ProfileController extends Controller
         $sub->update($data);
 
         return redirect()->route('cms.features.show', $feature)
-            ->with('success', 'Sub menu berhasil diperbarui.');
+            ->with('success', __('cms.features.flash.sub_updated'));
     }
 
     /**
@@ -105,7 +105,7 @@ class ProfileController extends Controller
         $this->deleteAndShiftOrder($sub, ['parent_id' => $feature->id]);
 
         return redirect()->route('cms.features.show', $feature)
-            ->with('success', 'Sub menu berhasil dihapus.');
+            ->with('success', __('cms.features.flash.sub_deleted'));
     }
 
     /**

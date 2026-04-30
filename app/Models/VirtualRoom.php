@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Feature;
-use App\Models\VirtualHotspot;
 
 class VirtualRoom extends Model
 {
@@ -24,5 +22,38 @@ class VirtualRoom extends Model
     public function hotspots()
     {
         return $this->hasMany(VirtualHotspot::class, 'virtual_room_id');
+    }
+
+    /**
+     * Get the translated description based on current locale.
+     * Uses AutoLangService to auto-register and translate via Google Translate.
+     */
+    public function getTranslatedDescriptionAttribute(): string
+    {
+        $desc = $this->description ?? '';
+        if (!$desc) return $desc;
+
+        if (app()->getLocale() === 'en') {
+            $key = preg_replace('/[^a-zA-Z0-9]+/', '_', trim($desc));
+            return \App\Services\AutoLangService::ensureKey($key, $desc);
+        }
+        return $desc;
+    }
+
+    /**
+     * Get the translated name based on current locale.
+     * Uses stored name_en if available, otherwise auto-translate via transRoomName.
+     */
+    public function getTranslatedNameAttribute(): string
+    {
+        if (app()->getLocale() === 'en') {
+            if ($this->name_en) return $this->name_en;
+            $name = $this->name;
+            if ($name) {
+                $translated = transRoomName($name);
+                if ($translated !== $name) return $translated;
+            }
+        }
+        return $this->name;
     }
 }

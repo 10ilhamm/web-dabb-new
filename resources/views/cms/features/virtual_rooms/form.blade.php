@@ -192,12 +192,20 @@
         </div>
     </form>
 
-    <!-- Data for JS -->
+    <!-- Data for JS (with translations) -->
     <script type="application/json" id="allRoomsJson">{!! json_encode($allRooms->map(fn($r) => ['id' => $r->id, 'name' => $r->name])) !!}</script>
     <script type="application/json" id="existingHotspotsJson">{!! json_encode($isEdit ? $room->hotspots : []) !!}</script>
+    <script type="application/json" id="hotspotLabelsJson">{
+        "select_placeholder": "{{ __('cms.virtual_rooms.label_target_room') }}",
+        "hotspot_index": "{{ __('cms.virtual_rooms.hotspot_label_index') }}",
+        "tooltip_label": "{{ __('cms.virtual_rooms.label_tooltip') }}",
+        "target_label": "{{ __('cms.virtual_rooms.label_target_room') }}",
+        "delete_confirm": "{{ __('cms.virtual_rooms.label_delete_confirm') }}"
+    }</script>
     <script>
         window.allRoomsData = JSON.parse(document.getElementById('allRoomsJson').textContent);
         window.existingHotspots = JSON.parse(document.getElementById('existingHotspotsJson').textContent);
+        window.hotspotLabels = JSON.parse(document.getElementById('hotspotLabelsJson').textContent);
     </script>
 @endsection
 

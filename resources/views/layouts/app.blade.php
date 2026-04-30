@@ -281,7 +281,7 @@
                                 <span
                                     class="text-[13px] font-semibold text-gray-800">{{ auth()->user()->name ?? __('dashboard.profile.default_name') }}</span>
                                 <span
-                                    class="text-[11px] text-gray-500">{{ is_null(auth()->user()->password) ? 'Belum Diatur' : App\Models\User::roleLabels()[auth()->user()->role ?? 'umum'] ?? __('dashboard.profile.default_role') }}</span>
+                                    class="text-[11px] text-gray-500">{{ is_null(auth()->user()->password) ? __('dashboard.profile.password_not_set') : __("dashboard.roles." . auth()->user()->role) }}</span>
                             </div>
                             <div
                                 class="ml-4 p-1 rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 focus:outline-none">
@@ -442,9 +442,9 @@
                 </div>
 
                 <div class="text-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('Lengkapi Akun Anda') }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('dashboard.set_password.title') }}</h3>
                     <p class="text-[13px] text-gray-500">
-                        {{ __('Silahkan pilih jenis akun Anda dan atur kata sandi untuk keamanan serta kemudahan login di masa mendatang.') }}
+                        {{ __('dashboard.set_password.description') }}
                     </p>
                 </div>
 
@@ -455,14 +455,14 @@
                         <!-- Role Selector -->
                         <div>
                             <label for="role"
-                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('Pilih Jenis Akun') }}
+                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('dashboard.set_password.select_role') }}
                                 <span class="text-red-500">*</span></label>
                             <select id="role" name="role" required
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]">
-                                <option value="" disabled selected>{{ __('Pilih...') }}</option>
-                                <option value="umum">{{ __('Umum') }}</option>
-                                <option value="pelajar_mahasiswa">{{ __('Pelajar / Mahasiswa') }}</option>
-                                <option value="instansi_swasta">{{ __('Instansi / Swasta') }}</option>
+                                <option value="" disabled selected>{{ __('dashboard.set_password.select_placeholder') }}</option>
+                                <option value="umum">{{ __('dashboard.roles.umum') }}</option>
+                                <option value="pelajar_mahasiswa">{{ __('dashboard.roles.pelajar_mahasiswa') }}</option>
+                                <option value="instansi_swasta">{{ __('dashboard.roles.instansi_swasta') }}</option>
                             </select>
                             @error('role', 'setPassword')
                                 <p class="text-red-500 text-[12px] mt-1">{{ $message }}</p>
@@ -472,14 +472,14 @@
                         <!-- Jenis Keperluan -->
                         <div>
                             <label for="jenis_keperluan"
-                                class="block text-[13px] font-medium text-gray-700 mb-1">Jenis Keperluan <span
+                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('dashboard.profile.col_jenis_keperluan') }} <span
                                     class="text-red-500">*</span></label>
                             <select id="jenis_keperluan" name="jenis_keperluan" required
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]">
-                                <option value="" disabled selected>Pilih...</option>
-                                <option value="Hanya Daftar Akun">Hanya Daftar Akun</option>
-                                <option value="Penelitian">Penelitian / Riset</option>
-                                <option value="Kunjungan">Kunjungan / Konsultasi</option>
+                                <option value="" disabled selected>{{ __('dashboard.set_password.select_placeholder') }}</option>
+                                <option value="Hanya Daftar Akun">{{ __('dashboard.profile.purpose_register_only') }}</option>
+                                <option value="Penelitian">{{ __('dashboard.profile.purpose_research') }}</option>
+                                <option value="Kunjungan">{{ __('dashboard.profile.purpose_visit') }}</option>
                             </select>
                             @error('jenis_keperluan', 'setPassword')
                                 <p class="text-red-500 text-[12px] mt-1">{{ $message }}</p>
@@ -489,10 +489,11 @@
                         <!-- Judul Keperluan -->
                         <div>
                             <label for="judul_keperluan"
-                                class="block text-[13px] font-medium text-gray-700 mb-1">Judul Keperluan (Keterangan)
+                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('dashboard.profile.col_judul_keperluan') }}
                                 <span class="text-red-500">*</span></label>
                             <input id="judul_keperluan" type="text" name="judul_keperluan" required
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]">
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]"
+                                placeholder="{{ __('dashboard.set_password.judul_placeholder') }}">
                             @error('judul_keperluan', 'setPassword')
                                 <p class="text-red-500 text-[12px] mt-1">{{ $message }}</p>
                             @enderror
@@ -501,11 +502,11 @@
                         <!-- Password Input -->
                         <div>
                             <label for="password"
-                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('New Password') }}
+                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('dashboard.set_password.new_password') }}
                                 <span class="text-red-500">*</span></label>
                             <input id="password" type="password" name="password" required
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]"
-                                placeholder="Min. 10 characters">
+                                placeholder="{{ __('dashboard.set_password.password_placeholder') }}">
                             @error('password', 'setPassword')
                                 <p class="text-red-500 text-[12px] mt-1">{{ $message }}</p>
                             @enderror
@@ -514,18 +515,18 @@
                         <!-- Confirm Password Input -->
                         <div>
                             <label for="password_confirmation"
-                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('Confirm Password') }}
+                                class="block text-[13px] font-medium text-gray-700 mb-1">{{ __('dashboard.set_password.confirm_password') }}
                                 <span class="text-red-500">*</span></label>
                             <input id="password_confirmation" type="password" name="password_confirmation" required
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#174E93] focus:border-[#174E93] text-[14px]"
-                                placeholder="Min. 10 characters">
+                                placeholder="{{ __('dashboard.set_password.password_placeholder') }}">
                         </div>
                     </div>
 
                     <div class="mt-8 flex items-center justify-end gap-3">
                         <button type="submit"
                             class="w-full px-5 py-2.5 text-sm font-semibold text-white bg-[#174E93] hover:bg-blue-800 rounded-lg transition-colors">
-                            {{ __('Simpan & Lanjutkan') }}
+                            {{ __('dashboard.set_password.submit') }}
                         </button>
                     </div>
                 </form>

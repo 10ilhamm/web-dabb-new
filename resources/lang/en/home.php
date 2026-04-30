@@ -41,6 +41,10 @@ return [
         'activities' => 'Archive Activities',
         'related' => 'Related Links',
         'gallery' => 'Archive Exhibition',
+        'gallery_fallback_type' => 'Exhibition',
+        'gallery_fallback_1' => 'Exhibition 1',
+        'gallery_fallback_2' => 'Exhibition 2',
+        'gallery_fallback_3' => 'Exhibition 3',
         'stats' => 'Website Visitor Statistics',
         'youtube' => 'YouTube',
         'instagram' => 'Instagram Feeds',
@@ -156,6 +160,13 @@ Disclaimer | #',
         'hotspot_count' => ':count hotspots',
         'room_title' => 'Room',
     ],
+
+    // Instagram section (used in welcome.blade.php)
+    'ig_username' => 'RI National Archives',
+    'ig_name' => 'National Archives of the Republic of Indonesia',
+    'ig_stats' => 'posts · followers · following',
+    'ig_follow_btn' => 'Follow Us',
+
     'virtual_slideshow' => [
         'hero_desc' => 'Explore virtual archive exhibitions with a variety of interactive content',
         'select_exhibition' => 'Select Exhibition',

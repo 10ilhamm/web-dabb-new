@@ -502,7 +502,7 @@ class FeaturePageController extends Controller
                         $imgPath = $room->thumbnail_path ?? null;
                         if ($imgPath) {
                             $loginModalPreviews[] = asset('storage/'.$imgPath);
-                            $loginModalRoomNames[] = $room->name;
+                            $loginModalRoomNames[] = $room->translated_name;
                         }
                     }
                 }
@@ -523,7 +523,7 @@ class FeaturePageController extends Controller
                         $imgPath = $room->thumbnail_path ?? $room->image_360_path ?? null;
                         if ($imgPath) {
                             $loginModalPreviews[] = asset('storage/'.$imgPath);
-                            $loginModalRoomNames[] = $room->name;
+                            $loginModalRoomNames[] = $room->translated_name;
                         }
                     }
                     $loginModalRoomName = $loginModalRoomNames[0] ?? null;

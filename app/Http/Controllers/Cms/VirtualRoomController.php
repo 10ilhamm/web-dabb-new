@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Http\Controllers\Controller;
 use App\Models\Feature;
 use App\Models\VirtualRoom;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -64,7 +65,7 @@ class VirtualRoomController extends Controller
         }
 
         return redirect()->route('cms.features.virtual_rooms.index', $feature)
-            ->with('success', 'Ruangan virtual berhasil ditambahkan.');
+            ->with('success', __('cms.virtual_rooms.flash.created'));
     }
 
     public function edit(Feature $feature, VirtualRoom $room)
@@ -129,7 +130,7 @@ class VirtualRoomController extends Controller
         }
 
         return redirect()->route('cms.features.virtual_rooms.index', $feature)
-            ->with('success', 'Ruangan virtual berhasil diperbarui.');
+            ->with('success', __('cms.virtual_rooms.flash.updated'));
     }
 
     public function destroy(Feature $feature, VirtualRoom $room)
@@ -144,6 +145,6 @@ class VirtualRoomController extends Controller
         $room->delete();
 
         return redirect()->route('cms.features.virtual_rooms.index', $feature)
-            ->with('success', 'Ruangan virtual berhasil dihapus.');
+            ->with('success', __('cms.virtual_rooms.flash.deleted'));
     }
 }

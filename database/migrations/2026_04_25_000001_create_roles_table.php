@@ -19,8 +19,36 @@ return new class extends Migration
             $table->boolean('is_registerable')->default(false);
             $table->string('badge_color', 50)->nullable();
             $table->text('description')->nullable();
+            $table->string('dashboard_route', 100)->nullable();
+            $table->string('dashboard_view', 150)->nullable();
             $table->timestamps();
         });
+
+        // Set default dashboard routes for existing roles
+        $defaults = [
+            'admin' => 'dashboard.admin',
+            'pegawai' => 'dashboard.pegawai',
+            'umum' => 'dashboard.umum',
+            'pelajar_mahasiswa' => 'dashboard.pelajar',
+            'instansi_swasta' => 'dashboard.instansi',
+        ];
+
+        foreach ($defaults as $name => $route) {
+            DB::table('roles')->where('name', $name)->update(['dashboard_route' => $route]);
+        }
+
+        // All roles now use a single dynamic dashboard: dashboards.index
+        $defaults = [
+            'admin' => 'dashboards.index',
+            'pegawai' => 'dashboards.index',
+            'umum' => 'dashboards.index',
+            'pelajar_mahasiswa' => 'dashboards.index',
+            'instansi_swasta' => 'dashboards.index',
+        ];
+
+        foreach ($defaults as $name => $view) {
+            DB::table('roles')->where('name', $name)->update(['dashboard_view' => $view]);
+        }
 
         // Seed default roles
         $now = now();

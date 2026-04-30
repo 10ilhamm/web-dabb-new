@@ -193,7 +193,11 @@ function openRoom3D(roomId) {
         if (config && config.link_type && config.link_type !== 'none') {
             slot.style.display = 'block';
             const doorLabel = slot.querySelector('.vt3d-door-label');
-            if (doorLabel) doorLabel.innerText = config.label || 'KELUAR';
+            if (doorLabel) {
+                doorLabel.innerText = currentRoom.door_labels
+                    ? (currentRoom.door_labels[wall] || config.label || '')
+                    : (currentRoom.door_label || config.label || '');
+            }
             
             // Setup Peek/Portal effect for door
             const doorPortal = slot.querySelector('.vt3d-door-portal');

@@ -329,9 +329,9 @@ window.onerror = function(msg, url, line, col, error) {
                 <a href="?read={{ $book->id }}" class="vt-room-card" style="text-decoration:none; color:inherit;">
                     <div class="vt-room-thumb">
                         @if($book->thumbnail)
-                            <img src="{{ asset('storage/'.$book->thumbnail) }}" alt="{{ $book->title }}" loading="lazy">
+                            <img src="{{ asset('storage/'.$book->thumbnail) }}" alt="{{ $book->translated_title }}" loading="lazy">
                         @elseif($book->cover_image)
-                            <img src="{{ asset('storage/'.$book->cover_image) }}" alt="{{ $book->title }}" loading="lazy">
+                            <img src="{{ asset('storage/'.$book->cover_image) }}" alt="{{ $book->translated_title }}" loading="lazy">
                         @else
                             <div class="vt-room-thumb-placeholder" style="background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100%; font-size:3rem;">📚</div>
                         @endif
@@ -342,7 +342,7 @@ window.onerror = function(msg, url, line, col, error) {
                         </div>
                     </div>
                     <div class="vt-room-info">
-                        <h3 class="vt-room-name">{{ app()->getLocale() === 'en' && $book->title_en ? $book->title_en : $book->title }}</h3>
+                        <h3 class="vt-room-name">{{ $book->translated_title }}</h3>
                     </div>
                 </a>
                 @endforeach

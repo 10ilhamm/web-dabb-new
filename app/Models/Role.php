@@ -15,6 +15,8 @@ class Role extends Model
         'is_registerable',
         'badge_color',
         'description',
+        'dashboard_route',
+        'dashboard_view',
     ];
 
     protected $casts = [

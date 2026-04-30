@@ -76,4 +76,42 @@ class VirtualBookPage extends Model
         $images = $this->page_images;
         return $images[0] ?? null;
     }
+
+    /**
+     * Get the translated title based on current locale.
+     * Uses AutoLangService to auto-register and translate via Google Translate.
+     */
+    public function getTranslatedTitleAttribute(): string
+    {
+        $title = $this->title ?? '';
+        if (!$title) return $title;
+
+        if (app()->getLocale() === 'en') {
+            $key = preg_replace('/[^a-zA-Z0-9]+/', '_', trim($title));
+            return \App\Services\AutoLangService::ensureKey($key, $title);
+        }
+        return $title;
+    }
+
+    /**
+     * Get the translated content based on current locale.
+     * Uses AutoLangService to auto-register and translate via Google Translate.
+     */
+    public function getTranslatedContentAttribute(): string
+    {
+        $content = $this->content ?? '';
+        if (!$content) return $content;
+
+        if (app()->getLocale() === 'en') {
+            // For long content, use Google Translate directly
+            try {
+                $ts = app(\App\Services\TranslationService::class);
+                $translated = $ts->translate($content);
+                if ($translated !== $content && strpos($translated, 'TODO') === false) {
+                    return $translated;
+                }
+            } catch (\Throwable $e) {}
+        }
+        return $content;
+    }
 }

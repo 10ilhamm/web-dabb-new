@@ -196,8 +196,14 @@ return [
     */
 
     'attributes' => [
-        'password' => 'kata sandi',
-        'current_password' => 'kata sandi saat ini',
+        'password' => 'sandi',
+        'current_password' => 'sandi saat ini',
+        'name' => 'nama lengkap',
+        'username' => 'username',
+        'email' => 'email',
+        'jenis_keperluan' => 'jenis keperluan',
+        'judul_keperluan' => 'judul keperluan',
+        'password_confirmation' => 'konfirmasi sandi',
     ],
 
 ];
