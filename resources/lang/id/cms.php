@@ -1294,6 +1294,22 @@ return [
 
         // Empty
         'empty' => 'Belum ada peran.',
+
+        // DataTables (i18n)
+        'datatable_info' => 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+        'datatable_info_empty' => 'Tidak ada data',
+        'datatable_info_filtered' => '(difilter dari _MAX_ total data)',
+        'datatable_zero_records' => 'Tidak ada data ditemukan',
+        'datatable_search_placeholder' => 'Cari...',
+
+        // Role labels (i18n)
+        'labels' => [
+            'administrator' => 'Administrator',
+            'pegawai' => 'Pegawai',
+            'umum' => 'Umum',
+            'pelajar_mahasiswa' => 'Pelajar / Mahasiswa',
+            'instansi_swasta' => 'Instansi / Swasta',
+        ],
     ],
 
 ];

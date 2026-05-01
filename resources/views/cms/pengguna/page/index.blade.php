@@ -315,7 +315,7 @@
                 <div
                     class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start justify-between gap-2">
                     <div>
-                        <p class="text-sm text-gray-500">{{ $role->label }}</p>
+                        <p class="text-sm text-gray-500">{{ $role->i18nLabel() }}</p>
                         <p class="text-2xl font-bold text-gray-800 mt-1">{{ $count }}</p>
                     </div>
                     <div class="w-11 h-11 rounded-lg {{ $colorClass }} flex items-center justify-center">
@@ -340,7 +340,7 @@
                     <select id="filter-role">
                         <option value="">{{ __('cms.pengguna.filter_role') }}</option>
                         @foreach ($allRoles as $role)
-                            <option value="{{ $role->label }}">{{ $role->label }}</option>
+                            <option value="{{ $role->label }}">{{ $role->i18nLabel() }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -373,7 +373,8 @@
                     <tbody>
                         @forelse ($users as $index => $user)
                             @php
-                                $roleLabel = $allRoles->firstWhere('name', $user->role)?->label ?? $user->role;
+                                $roleModel = $allRoles->firstWhere('name', $user->role);
+                                $roleLabel = $roleModel ? $roleModel->i18nLabel() : $user->role;
                                 $isVerified = !is_null($user->email_verified_at);
                                 $initials = collect(explode(' ', trim($user->name)))
                                     ->map(fn($p) => mb_substr($p, 0, 1))
@@ -402,7 +403,7 @@
                                                 {{ strtoupper($initials ?: 'U') }}
                                             </div>
                                         @endif
-                                        <div class="min-w-0">
+                                        <div class="min-w-0" data-user-info data-name="{{ $user->name }}" data-email="{{ $user->email }}">
                                             <div class="font-semibold text-gray-800 truncate">{{ $user->name }}</div>
                                             <div class="text-xs text-gray-500 truncate">{{ $user->email }}</div>
                                         </div>
@@ -605,6 +606,22 @@
                 btnPrint: @json(__('cms.pengguna.btn_print')),
                 btnAddUser: @json(__('cms.pengguna.add_button')),
                 urlCreate: @json(route('cms.pengguna.create')),
+            };
+        </script>
+        @php
+            $dtInfo = __('cms.roles.datatable_info');
+            $dtInfoEmpty = __('cms.roles.datatable_info_empty');
+            $dtInfoFiltered = __('cms.roles.datatable_info_filtered');
+            $dtZeroRecords = __('cms.roles.datatable_zero_records');
+            $dtSearchPlaceholder = __('cms.roles.search_placeholder');
+        @endphp
+        <script>
+            window.LaravelDT = {
+                dtInfo: @json($dtInfo),
+                dtInfoEmpty: @json($dtInfoEmpty),
+                dtInfoFiltered: @json($dtInfoFiltered),
+                dtZeroRecords: @json($dtZeroRecords),
+                dtSearchPlaceholder: @json($dtSearchPlaceholder),
             };
         </script>
         <script src="{{ asset('js/cms/features/pengguna/index.js') }}"></script>

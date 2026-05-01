@@ -1,5 +1,29 @@
 /* global $, jQuery */
 
+// Extract clean name + email from the user cell (ignores avatar/initial div)
+// Must be defined BEFORE DataTable init so it's available in exportData.body closures
+function getUserCellText($cell) {
+    const $info = $cell.find('[data-user-info]');
+    if ($info.length) {
+        return $info.data('name') + '\n' + $info.data('email');
+    }
+    // fallback: get text from 2nd child div (the text content div, not the avatar)
+    const $divs = $cell.find('div');
+    if ($divs.length >= 2) {
+        return ($divs.eq(1).text() || '').trim();
+    }
+    return $cell.clone().find('img,div').remove().end().text().trim();
+}
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function penggunaManager() {
     return {
         deleteModal: { open: false, id: null, name: '' },
@@ -52,6 +76,21 @@ $(function () {
             { orderable: false, targets: [0, 6] }
         ],
         order: [[5, 'desc']],
+        language: {
+            search: '',
+            searchPlaceholder: window.LaravelDT?.dtSearchPlaceholder || i18n.dtSearchPlaceholder || '',
+            lengthMenu: '_MENU_',
+            info: window.LaravelDT?.dtInfo || 'Showing _START_ to _END_ of _TOTAL_ entries',
+            infoEmpty: window.LaravelDT?.dtInfoEmpty || 'No entries',
+            infoFiltered: window.LaravelDT?.dtInfoFiltered || '(filtered from _MAX_ total entries)',
+            zeroRecords: window.LaravelDT?.dtZeroRecords || 'No matching records found',
+            paginate: {
+                first: '&laquo;',
+                previous: '&lsaquo;',
+                next: '&rsaquo;',
+                last: '&raquo;',
+            },
+        },
         dom:
             '<"dt-top-row"<"dataTables_length"l><"dt-top-right"fB>>' +
             't' +
@@ -65,19 +104,34 @@ $(function () {
                     {
                         extend: 'copyHtml5',
                         text: i18n.btnCopy || 'Copy',
-                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                        action: function (e, dt, node, config) {
+                            cleanCellsForExport(dt);
+                            $.fn.dataTable.ext.buttons.copyHtml5.action.call(this, e, dt, node, config);
+                            restoreCellsAfterExport(dt);
+                        }
                     },
                     {
                         extend: 'csvHtml5',
                         text: i18n.btnCsv || 'CSV',
                         filename: 'pengguna',
-                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                        action: function (e, dt, node, config) {
+                            cleanCellsForExport(dt);
+                            $.fn.dataTable.ext.buttons.csvHtml5.action.call(this, e, dt, node, config);
+                            restoreCellsAfterExport(dt);
+                        }
                     },
                     {
                         extend: 'excelHtml5',
                         text: i18n.btnExcel || 'Excel',
                         filename: 'pengguna',
-                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                        action: function (e, dt, node, config) {
+                            cleanCellsForExport(dt);
+                            $.fn.dataTable.ext.buttons.excelHtml5.action.call(this, e, dt, node, config);
+                            restoreCellsAfterExport(dt);
+                        }
                     },
                     {
                         text: i18n.btnWord || 'Word',
@@ -92,12 +146,22 @@ $(function () {
                         filename: 'pengguna',
                         orientation: 'landscape',
                         pageSize: 'A4',
-                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                        action: function (e, dt, node, config) {
+                            cleanCellsForExport(dt);
+                            $.fn.dataTable.ext.buttons.pdfHtml5.action.call(this, e, dt, node, config);
+                            restoreCellsAfterExport(dt);
+                        }
                     },
                     {
                         extend: 'print',
                         text: i18n.btnPrint || 'Print',
-                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                        action: function (e, dt, node, config) {
+                            cleanCellsForExport(dt);
+                            $.fn.dataTable.ext.buttons.print.action.call(this, e, dt, node, config);
+                            restoreCellsAfterExport(dt);
+                        }
                     }
                 ]
             }
@@ -131,11 +195,10 @@ $(function () {
 function exportToWord(dt) {
     const header =
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
-        'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+        '<xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
         '<head><meta charset="utf-8"><title>Pengguna</title></head><body>';
     const footer = '</body></html>';
 
-    // Rebuild a simple HTML table from DT data (exclude Action column = index 6)
     let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;">';
     const cols = [0, 1, 2, 3, 4, 5];
     const headers = dt.columns(cols).header().toArray();
@@ -148,7 +211,12 @@ function exportToWord(dt) {
         const $node = $(dt.row(this).node());
         html += '<tr>';
         cols.forEach(function (c) {
-            const cellText = $node.find('td').eq(c).text().trim();
+            let cellText;
+            if (c === 1) {
+                cellText = getUserCellText($node.find('td').eq(c));
+            } else {
+                cellText = $node.find('td').eq(c).text().trim();
+            }
             html += '<td>' + escapeHtml(cellText) + '</td>';
         });
         html += '</tr>';
@@ -167,11 +235,24 @@ function exportToWord(dt) {
     URL.revokeObjectURL(url);
 }
 
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+// Temporarily replace user cell HTML before export, restore after
+function cleanCellsForExport(dt) {
+    dt.rows({ search: 'applied' }).every(function () {
+        const $node = $(dt.row(this).node());
+        const $cell = $node.find('td').eq(1);
+        $cell.data('_orig_html', $cell.html());
+        const text = getUserCellText($cell);
+        $cell.html('<span>' + escapeHtml(text) + '</span>');
+    });
+}
+
+function restoreCellsAfterExport(dt) {
+    setTimeout(function () {
+        dt.rows().every(function () {
+            const $node = $(dt.row(this).node());
+            const $cell = $node.find('td').eq(1);
+            const orig = $cell.data('_orig_html');
+            if (orig !== undefined) $cell.html(orig);
+        });
+    }, 50);
 }

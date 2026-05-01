@@ -110,4 +110,16 @@ class Role extends Model
     {
         return ! $this->is_system;
     }
+
+    /**
+     * Get the localised label for this role.
+     * Falls back to $this->label if no translation key exists.
+     */
+    public function i18nLabel(): string
+    {
+        $key = "cms.roles.labels.{$this->name}";
+        $translated = __($key);
+        // If translation returns the key itself (no match), fall back to DB label
+        return $translated === $key ? $this->label : $translated;
+    }
 }

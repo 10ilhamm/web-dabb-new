@@ -1288,6 +1288,22 @@ return [
 
         // Empty
         'empty' => 'No roles yet.',
+
+        // DataTables (i18n) — shared, accessed as cms.roles.datatable_info
+        'datatable_info' => 'Showing _START_ to _END_ of _TOTAL_ entries',
+        'datatable_info_empty' => 'No entries',
+        'datatable_info_filtered' => '(filtered from _MAX_ total entries)',
+        'datatable_zero_records' => 'No matching records found',
+        'datatable_search_placeholder' => 'Search...',
+
+        // Role labels (i18n)
+        'labels' => [
+            'administrator' => 'Administrator',
+            'pegawai' => 'Staff',
+            'umum' => 'General Public',
+            'pelajar_mahasiswa' => 'Student',
+            'instansi_swasta' => 'Private Sector',
+        ],
     ],
 
 ];
