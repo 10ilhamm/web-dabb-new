@@ -128,7 +128,9 @@
             margin: 0;
         }
 
-        div.dt-buttons .dt-button {
+        div.dt-buttons > .dt-button,
+        div.dt-buttons > button.dt-button,
+        div.dt-buttons > a.dt-button {
             background: #fff !important;
             border: 1px solid #e5e7eb !important;
             color: #374151 !important;
@@ -138,15 +140,27 @@
             font-weight: 500 !important;
             box-shadow: none !important;
             margin: 0 !important;
-            display: inline-flex;
-            align-items: center;
-            gap: .375rem;
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: .375rem !important;
+            white-space: nowrap !important;
         }
 
-        div.dt-buttons .dt-button:hover {
+        div.dt-buttons > .dt-button:hover {
             background: #f9fafb !important;
             border-color: #d1d5db !important;
             color: #111827 !important;
+        }
+
+        /* Ensure SVG icon stays beside text (not stacked) */
+        div.dt-buttons .dt-button svg,
+        div.dt-buttons > .dt-button svg {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            width: 1rem !important;
+            height: 1rem !important;
+            flex-shrink: 0 !important;
         }
 
         /* Remove dark overlay behind export dropdown */
@@ -393,17 +407,17 @@
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-6 py-4 text-gray-500 font-medium">{{ $index + 1 }}</td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-3 user-cell-wrap" data-user-name="{{ $user->name }}" data-user-email="{{ $user->email }}">
                                         @if ($user->photo)
                                             <img src="{{ asset('storage/' . $user->photo) }}" alt=""
-                                                class="w-9 h-9 rounded-full object-cover shrink-0">
+                                                class="w-9 h-9 rounded-full object-cover shrink-0 user-avatar">
                                         @else
                                             <div
-                                                class="w-9 h-9 rounded-full {{ $color }} flex items-center justify-center text-xs font-semibold shrink-0">
+                                                class="w-9 h-9 rounded-full {{ $color }} flex items-center justify-center text-xs font-semibold shrink-0 user-avatar">
                                                 {{ strtoupper($initials ?: 'U') }}
                                             </div>
                                         @endif
-                                        <div class="min-w-0" data-user-info data-name="{{ $user->name }}" data-email="{{ $user->email }}">
+                                        <div class="min-w-0">
                                             <div class="font-semibold text-gray-800 truncate">{{ $user->name }}</div>
                                             <div class="text-xs text-gray-500 truncate">{{ $user->email }}</div>
                                         </div>
@@ -589,11 +603,12 @@
     @push('scripts')
         {{-- DataTables Buttons (export) --}}
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js"></script>
 
         <script>
             window.penggunaI18n = {
@@ -625,6 +640,21 @@
             };
         </script>
         <script src="{{ asset('js/cms/features/pengguna/index.js') }}"></script>
+
+        <script>
+            /* Alpine component for user management page */
+            function penggunaManager() {
+                return {
+                    deleteModal: { open: false, id: null, name: '' },
+                    openDeleteModal(id, name) {
+                        this.deleteModal = { open: true, id: id, name: name };
+                    },
+                    closeDeleteModal() {
+                        this.deleteModal = { open: false, id: null, name: '' };
+                    },
+                };
+            }
+        </script>
 
         @if (session('success'))
             <script>

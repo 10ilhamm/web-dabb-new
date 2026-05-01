@@ -321,5 +321,16 @@ table.dataTable tbody.divide-y > * + * {
     border-color: #dee2e6 !important;
 }
 
+/* ── Buttons ──────────────────────────────────────── */
+div.dataTables_wrapper .dt-buttons .dt-button,
+div.dataTables_wrapper .dt-buttons button.dt-button,
+div.dataTables_wrapper .dt-buttons a.dt-button {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: .4rem !important;
+    white-space: nowrap !important;
+}
+
 /* Misc */
 table.dataTable.no-footer { border-bottom: 1px solid #dee2e6 !important; }

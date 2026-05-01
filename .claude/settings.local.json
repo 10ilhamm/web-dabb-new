@@ -31,7 +31,25 @@
       "Bash(cd /d \"C:\\\\laragon\\\\www\\\\ANRI\\\\web-dabb-new\")",
       "Bash(del /f test_flatten.php test_langsync.php test_translations.php)",
       "Bash(dir C:\\\\laragon\\\\www\\\\ANRI\\\\web-dabb-new\\\\lang *)",
-      "Bash(composer dump-autoload *)"
+      "Bash(composer dump-autoload *)",
+      "WebFetch(domain:docs.sheetjs.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep -oP 'sheet_add_image[^;]{0,300}')",
+      "Bash(grep -oP 'sheet_add[^;]{0,200}')",
+      "Bash(grep -oP 'sheet_add_image[^;]{0,50}')",
+      "Bash(grep -oP 'XLSX\\\\.writeFile[^}]{0,150}')",
+      "Bash(grep -oP 'writeFile=V[^;]{0,300}')",
+      "Bash(grep -oP 'var writeFile[^;]{0,500}')",
+      "Bash(grep -oP 'saveAs[^;]{0,100}')",
+      "Bash(grep -oP 'typeof saveAs[^\\)]{0,80}')",
+      "Bash(grep -oP 'write.*?bookType[^;]{0,200}')",
+      "Bash(grep -oP 'cellStyles[^,;]{0,80}')",
+      "Bash(grep -oP 'function bp\\\\\\(e,r\\\\\\).{0,400}')",
+      "Bash(grep -oP 'function Ow\\\\\\([^\\)]*\\\\\\)\\\\{.{0,400}')",
+      "Bash(grep -oP 'book_append_sheet[^;]{0,500}')",
+      "Bash(grep -oP 'function Dw\\\\\\([^\\)]*\\\\\\).{0,300}')",
+      "Bash(grep -oP 'function Nw\\\\\\([^\\)]*\\\\\\).{0,300}')",
+      "Bash(grep -oP 'function Jb\\\\\\([^\\)]*\\\\\\).{0,200}')"
     ]
   }
 }
