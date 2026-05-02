@@ -89,11 +89,15 @@
 
         .table-roles-filter-row select {
             width: 100%;
-            padding: .625rem .875rem;
+            padding: .625rem 2.25rem .625rem .875rem;
             border: 1px solid #e5e7eb;
             border-radius: .5rem;
             font-size: .8125rem;
             background-color: white;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .625rem center;
+            background-size: 1rem 1rem;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -111,13 +115,14 @@
             box-shadow: 0 0 0 2px #3b82f6;
         }
 
+        /* Export dropdown button */
         div.dt-buttons {
             display: inline-flex;
             gap: .5rem;
             margin: 0;
         }
 
-        div.dt-buttons .dt-button {
+        div.dt-buttons > .dt-button {
             background: #fff !important;
             border: 1px solid #e5e7eb !important;
             color: #374151 !important;
@@ -128,12 +133,21 @@
             box-shadow: none !important;
             margin: 0 !important;
             display: inline-flex !important;
+            flex-direction: row !important;
             align-items: center !important;
             gap: .375rem !important;
-            vertical-align: middle !important;
+            white-space: nowrap !important;
         }
 
-        div.dt-buttons .dt-button svg {
+        div.dt-buttons > .dt-button:hover {
+            background: #f9fafb !important;
+            border-color: #d1d5db !important;
+            color: #111827 !important;
+        }
+
+        /* Ensure SVG icon stays beside text (not stacked) */
+        div.dt-buttons .dt-button svg,
+        div.dt-buttons > .dt-button svg {
             display: inline-block !important;
             vertical-align: middle !important;
             width: 1rem !important;
@@ -141,15 +155,15 @@
             flex-shrink: 0 !important;
         }
 
-        div.dt-buttons .dt-button:hover {
-            background: #f9fafb !important;
-            border-color: #d1d5db !important;
-            color: #111827 !important;
+        /* Remove dark overlay behind export dropdown */
+        div.dt-button-background,
+        .dt-button-background {
+            display: none !important;
+            background: transparent !important;
+            opacity: 0 !important;
         }
 
-        div.dt-button-background,
-        .dt-button-background { display: none !important; background: transparent !important; opacity: 0 !important; }
-
+        /* Collection dropdown menu */
         div.dt-button-collection {
             background: white;
             border: 1px solid #e5e7eb;
@@ -169,7 +183,9 @@
             padding: .5rem .75rem !important;
         }
 
-        div.dt-button-collection .dt-button:hover { background: #f3f4f6 !important; }
+        div.dt-button-collection .dt-button:hover {
+            background: #f3f4f6 !important;
+        }
 
         .btn-add-role {
             display: inline-flex;
@@ -183,9 +199,12 @@
             border-radius: .5rem;
             transition: background-color .15s ease;
             text-decoration: none;
+            white-space: nowrap;
         }
 
-        .btn-add-role:hover { background: #1e40af; }
+        .btn-add-role:hover {
+            background: #1e40af;
+        }
 
         #tableRoles_wrapper .dt-bottom-row {
             display: flex;
@@ -420,256 +439,69 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <script>
-        const i18n = {
-            btnExport: '{{ __('cms.pengguna.btn_export') }}',
-            btnCopy: '{{ __('cms.pengguna.btn_copy') }}',
-            btnCsv: '{{ __('cms.pengguna.btn_csv') }}',
-            btnExcel: '{{ __('cms.pengguna.btn_excel') }}',
-            btnPdf: '{{ __('cms.pengguna.btn_pdf') }}',
-            btnPrint: '{{ __('cms.pengguna.btn_print') }}',
-            btnAddRole: '{{ __('cms.roles.add_button') }}',
-            typeSystem: '{{ __('cms.roles.type_system') }}',
-            typeCustom: '{{ __('cms.roles.type_custom') }}',
-            columnsCount: '{{ __('cms.roles.columns_count') }}',
-            filterColumnsNone: '{{ __('cms.roles.filter_columns_none') }}',
-            filterColumnsHas: '{{ __('cms.roles.filter_columns_has') }}',
-            urlCreate: '{{ route('cms.pengguna.roles.create') }}',
-            searchPlaceholder: '{{ __('cms.roles.search_placeholder') }}',
-            tableStructure: '{{ __('cms.roles.table_structure') }}',
-            noColumns: '{{ __('cms.roles.no_columns') }}',
+        window.rolesI18n = {
+            btnExport: @json(__('cms.pengguna.btn_export')),
+            btnCopy: @json(__('cms.pengguna.btn_copy')),
+            btnCsv: @json(__('cms.pengguna.btn_csv')),
+            btnExcel: @json(__('cms.pengguna.btn_excel')),
+            btnPdf: @json(__('cms.pengguna.btn_pdf')),
+            btnPrint: @json(__('cms.pengguna.btn_print')),
+            btnAddRole: @json(__('cms.roles.add_button')),
+            typeSystem: @json(__('cms.roles.type_system')),
+            typeCustom: @json(__('cms.roles.type_custom')),
+            columnsCount: @json(__('cms.roles.columns_count')),
+            filterColumnsNone: @json(__('cms.roles.filter_columns_none')),
+            filterColumnsHas: @json(__('cms.roles.filter_columns_has')),
+            urlCreate: @json(route('cms.pengguna.roles.create')),
+            csrfToken: @json(csrf_token()),
+            urlBaseEdit: @json(route('cms.pengguna.roles.edit', ':id')),
+            urlBaseDelete: @json(route('cms.pengguna.roles.destroy', ':id')),
+            dtSearchPlaceholder: @json(__('cms.roles.search_placeholder')),
+            dtInfo: @json(__('cms.roles.datatable_info')),
+            dtInfoEmpty: @json(__('cms.roles.datatable_info_empty')),
+            dtInfoFiltered: @json(__('cms.roles.datatable_info_filtered')),
+            dtZeroRecords: @json(__('cms.roles.datatable_zero_records')),
+            tableStructure: @json(__('cms.roles.table_structure')),
+            noColumns: @json(__('cms.roles.no_columns')),
         };
-
-        function formatColumns(columnsData) {
+    </script>
+    <script src="{{ asset('js/cms/features/pengguna/roles/index.js') }}"></script>
+    <script>
+        /* Format expandable row columns detail — must be defined before roles/index.js runs */
+        function formatRolesColumns(columnsData) {
             if (!columnsData || columnsData.length === 0) {
-                return `<div class="role-columns-detail"><p class="text-sm text-gray-400 italic">${i18n.noColumns}</p></div>`;
+                return '<div class="role-columns-detail"><p class="text-sm text-gray-400 italic">' + (window.rolesI18n.noColumns || 'No columns') + '</p></div>';
             }
-
-            let html = `<div class="role-columns-detail">
-                <h4>${i18n.tableStructure}</h4>
-                <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Column</th>
-                            <th>Type</th>
-                            <th>Label</th>
-                            <th>Attributes</th>
-                            <th>Foreign Key</th>
-                            <th>Options</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-            columnsData.forEach(function(col) {
-                let attrs = '';
-                if (col.is_primary) attrs += `<span class="detail-attr-badge" style="background:#fef3c7;color:#92400e;">Primary</span>`;
-                if (col.is_unique) attrs += `<span class="detail-attr-badge" style="background:#dbeafe;color:#1e40af;">Unique</span>`;
-                if (col.is_nullable) attrs += `<span class="detail-attr-badge" style="background:#d1fae5;color:#065f46;">Nullable</span>`;
-                if (col.is_unsigned) attrs += `<span class="detail-attr-badge" style="background:#ede9fe;color:#5b21b6;">Unsigned</span>`;
-                if (col.is_auto_increment) attrs += `<span class="detail-attr-badge" style="background:#fed7aa;color:#9a3412;">Auto Inc</span>`;
+            var html = '<div class="role-columns-detail"><h4>' + (window.rolesI18n.tableStructure || 'Table Structure') + '</h4><div class="overflow-x-auto"><table><thead><tr><th>Column</th><th>Type</th><th>Label</th><th>Attributes</th><th>Foreign Key</th><th>Options</th></tr></thead><tbody>';
+            for (var i = 0; i < columnsData.length; i++) {
+                var col = columnsData[i];
+                var attrs = '';
+                if (col.is_primary) attrs += '<span class="detail-attr-badge" style="background:#fef3c7;color:#92400e;">Primary</span>';
+                if (col.is_unique) attrs += '<span class="detail-attr-badge" style="background:#dbeafe;color:#1e40af;">Unique</span>';
+                if (col.is_nullable) attrs += '<span class="detail-attr-badge" style="background:#d1fae5;color:#065f46;">Nullable</span>';
+                if (col.is_unsigned) attrs += '<span class="detail-attr-badge" style="background:#ede9fe;color:#5b21b6;">Unsigned</span>';
+                if (col.is_auto_increment) attrs += '<span class="detail-attr-badge" style="background:#fed7aa;color:#9a3412;">Auto Inc</span>';
                 if (!attrs) attrs = '<span class="text-gray-400 text-xs">—</span>';
-
-                let foreignHtml = '—';
+                var foreignHtml = '—';
                 if (col.is_foreign) {
-                    foreignHtml = `<div class="text-xs"><span class="font-mono text-gray-700">${col.references_table}.${col.references_column}</span>`;
+                    foreignHtml = '<div class="text-xs"><span class="font-mono text-gray-700">' + (col.references_table || '') + '.' + (col.references_column || '') + '</span>';
                     if (col.on_delete || col.on_update) {
-                        foreignHtml += `<div class="text-gray-400">`;
-                        if (col.on_delete) foreignHtml += `<span class="mr-1">on delete: <span class="font-mono text-gray-600">${col.on_delete}</span></span>`;
-                        if (col.on_update) foreignHtml += `<span>on update: <span class="font-mono text-gray-600">${col.on_update}</span></span>`;
-                        foreignHtml += `</div>`;
+                        foreignHtml += '<div class="text-gray-400">';
+                        if (col.on_delete) foreignHtml += '<span class="mr-1">on delete: <span class="font-mono text-gray-600">' + col.on_delete + '</span></span>';
+                        if (col.on_update) foreignHtml += '<span>on update: <span class="font-mono text-gray-600">' + col.on_update + '</span></span>';
+                        foreignHtml += '</div>';
                     }
-                    foreignHtml += `</div>`;
+                    foreignHtml += '</div>';
                 }
-
-                let optionsHtml = '—';
-                if (col.options) {
-                    optionsHtml = `<span class="text-xs font-mono text-gray-600">${col.options}</span>`;
-                }
-
-                html += `<tr>
-                    <td><span class="detail-column-name">${col.column_name}</span></td>
-                    <td><span class="detail-type-badge">${col.column_type}${col.column_length ? '(' + col.column_length + ')' : ''}</span></td>
-                    <td class="text-gray-600">${col.column_label}</td>
-                    <td><div style="display:flex;flex-wrap:wrap;gap:2px;">${attrs}</div></td>
-                    <td>${foreignHtml}</td>
-                    <td>${optionsHtml}</td>
-                </tr>`;
-            });
-
-            html += `</tbody></table></div></div>`;
+                var optionsHtml = '—';
+                if (col.options) optionsHtml = '<span class="text-xs font-mono text-gray-600">' + col.options + '</span>';
+                var colType = col.column_type + (col.column_length ? '(' + col.column_length + ')' : '');
+                html += '<tr><td><span class="detail-column-name">' + col.column_name + '</span></td><td><span class="detail-type-badge">' + colType + '</span></td><td class="text-gray-600">' + (col.column_label || '') + '</td><td><div style="display:flex;flex-wrap:wrap;gap:2px;">' + attrs + '</div></td><td>' + foreignHtml + '</td><td>' + optionsHtml + '</td></tr>';
+            }
+            html += '</tbody></table></div></div>';
             return html;
         }
-
-        $(document).ready(function() {
-            const table = $('#tableRoles').DataTable({
-                processing: true,
-                serverSide: false,
-                ajax: {
-                    url: window.location.href,
-                    dataSrc: 'data',
-                },
-                dom: `
-                    <"dt-top-row"l<"dt-top-right"Bf>>
-                    rt
-                    <"dt-bottom-row"ip>
-                `,
-                buttons: [{
-                    extend: 'collection',
-                    text: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> ${i18n.btnExport}`,
-                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
-                    className: 'btn-export-group',
-                }],
-                columnDefs: [
-                    { orderable: false, targets: [0, 8] },
-                    { className: 'details-control', targets: 0 },
-                    { targets: 1, orderSequence: ['asc', 'desc'] },
-                ],
-                columns: [
-                    {
-                        data: null,
-                        defaultContent: `<span class="arrow-icon"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span>`,
-                    },
-                    {
-                        data: null,
-                        render: function(data, type, row, meta) {
-                            return meta.row + 1;
-                        }
-                    },
-                    {
-                        data: 'name',
-                        render: function(data) {
-                            return `<code class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">${data}</code>`;
-                        }
-                    },
-                    { data: 'label' },
-                    {
-                        data: 'table_name',
-                        render: function(data) {
-                            if (!data) return '<span class="text-gray-400">—</span>';
-                            return `<code class="font-mono bg-gray-50 px-1.5 py-0.5 rounded text-xs">${data}</code>`;
-                        }
-                    },
-                    {
-                        data: 'columns_count',
-                        render: function(data) {
-                            return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">${data} ${i18n.columnsCount}</span>`;
-                        }
-                    },
-                    {
-                        data: 'is_system',
-                        render: function(data) {
-                            if (data) {
-                                return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-600 border border-red-100">${i18n.typeSystem}</span>`;
-                            }
-                            return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-600 border border-green-100">${i18n.typeCustom}</span>`;
-                        }
-                    },
-                    { data: 'users_count', defaultContent: '0' },
-                    {
-                        data: null,
-                        className: 'text-center',
-                        orderable: false,
-                        render: function(data) {
-                            const editUrl = `{{ route('cms.pengguna.roles.edit', ':id') }}`.replace(':id', data.id);
-                            const deleteUrl = `{{ route('cms.pengguna.roles.destroy', ':id') }}`.replace(':id', data.id);
-                            let html = `<div class="flex items-center justify-center gap-2">
-                                <a href="${editUrl}" class="inline-flex items-center justify-center w-8 h-8 bg-yellow-400 hover:bg-yellow-500 text-white rounded-md transition-colors" title="Edit">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </a>`;
-                            if (!data.is_system) {
-                                html += `<form action="${deleteUrl}" method="POST" class="inline" onsubmit="return confirm('Hapus role ${data.label}?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors" title="Hapus">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                    </button>
-                                </form>`;
-                            }
-                            html += `</div>`;
-                            return html;
-                        }
-                    }
-                ],
-                order: [[1, 'asc']],
-                language: {
-                    search: '',
-                    searchPlaceholder: i18n.searchPlaceholder,
-                    lengthMenu: '_MENU_',
-                    info: '{{ __('cms.roles.datatable_info') }}',
-                    infoEmpty: '{{ __('cms.roles.datatable_info_empty') }}',
-                    infoFiltered: '{{ __('cms.roles.datatable_info_filtered') }}',
-                    zeroRecords: '{{ __('cms.roles.datatable_zero_records') }}',
-                    paginate: {
-                        first: '&laquo;',
-                        previous: '&lsaquo;',
-                        next: '&rsaquo;',
-                        last: '&raquo;',
-                    },
-                },
-                initComplete: function() {
-                    const topRight = $('#tableRoles_wrapper .dt-top-right');
-                    topRight.append(
-                        `<a href="${i18n.urlCreate}" class="btn-add-role">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            ${i18n.btnAddRole}
-                        </a>`
-                    );
-                },
-            });
-
-            // Expandable row details (child row)
-            $('#tableRoles tbody').on('click', 'td.details-control', function() {
-                const tr = $(this).closest('tr');
-                const row = table.row(tr);
-
-                if (row.child.isShown()) {
-                    row.child.hide();
-                    tr.removeClass('shown');
-                } else {
-                    const data = row.data();
-                    row.child(formatColumns(data.columns_data)).show();
-                    tr.addClass('shown');
-                }
-            });
-
-            // Filter by type
-            $('#filter-type').on('change', function() {
-                const val = this.value;
-                if (val === 'system') {
-                    table.column(6).search('System').draw();
-                } else if (val === 'custom') {
-                    table.column(6).search('Custom').draw();
-                } else {
-                    table.column(6).search('').draw();
-                }
-            });
-
-            // Filter by columns count
-            $('#filter-columns').on('change', function() {
-                const val = this.value;
-                if (!val) {
-                    table.column(5).search('').draw();
-                } else if (val === '0') {
-                    table.column(5).search('0 ' + i18n.columnsCount).draw();
-                } else {
-                    table.column(5).search('').draw();
-                    $.fn.dataTable.ext.search.push(
-                        function(settings, data, dataIndex) {
-                            const count = parseInt($(table.row(dataIndex).node()).find('td:eq(5)').text()) || 0;
-                            return count > 0;
-                        }
-                    );
-                    table.draw();
-                    $.fn.dataTable.ext.search.pop();
-                }
-            });
-        });
+        window.formatRolesColumns = formatRolesColumns;
     </script>
 
     @if (session('success'))
