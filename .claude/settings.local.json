@@ -58,7 +58,9 @@
       "Bash(composer update *)",
       "Bash(python *)",
       "Bash(where magick *)",
-      "Bash(where python *)"
+      "Bash(where python *)",
+      "Bash(powershell *)",
+      "Bash(findstr *)"
     ]
   }
 }

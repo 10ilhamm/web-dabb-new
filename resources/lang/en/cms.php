@@ -1244,6 +1244,25 @@ return [
         'error_column_prefix' => "Column ':column' (MySQL :code): :message",
         'error_mysql_prefix' => "MySQL Error :code: :message",
 
+        // MySQL type rules — attribute visibility (shown as help text in form)
+        'rule_no_length' => "Type ':type' does not support length/character attribute.",
+        'rule_no_unique' => "Type ':type' does not support UNIQUE (BLOB/TEXT/JSON).",
+        'rule_no_unsigned' => "Type ':type' does not support UNSIGNED.",
+        'rule_no_auto_increment' => "Type ':type' does not support AUTO_INCREMENT (integer types only).",
+        'rule_no_foreign' => "Type ':type' does not support FOREIGN KEY (integer/varchar/char only).",
+        'rule_no_primary' => "Type ':type' does not support PRIMARY KEY (integer types only).",
+
+        // MySQL type constraints (explained for users)
+        'type_constraint_year' => "YEAR: 2-digit values (00-69→2000-2069, 70-99→1970-1999) or 4-digit (1901-2155).",
+        'type_constraint_json' => "JSON: stores validated JSON data. Does not support character length.",
+        'type_constraint_spatial' => "Spatial types (GEOMETRY/POINT/POLYGON, etc.): no length/unsigned/unique/auto_increment. Requires SRID (default 0).",
+        'type_constraint_bit' => "BIT: format BIT(M) with M=1-64. Example: BIT(8) for 1 byte.",
+        'type_constraint_boolean' => "BOOLEAN: stored as TINYINT(1). Value 0=FALSE, 1=TRUE.",
+        'type_constraint_binary' => "BINARY/VARBINARY: stores binary data (files, images, etc.). Length optional for BINARY, required for VARBINARY.",
+        'type_constraint_real' => "REAL: synonym for DOUBLE(53) in MySQL. Precision ~15 decimal digits.",
+        'type_constraint_enum' => "ENUM: max 65,535 values. Values cannot be empty or duplicate. Order matters (ordinal).",
+        'type_constraint_set' => "SET: similar to ENUM but can store SEVERAL values at once (max 64 members).",
+
         // Column pre-validation errors (store / update)
         'column_enum_space_empty' => 'Column #:index: ENUM/SET values must be comma-separated WITHOUT spaces. Use format: IV,IB,VIP (no spaces).',
         'column_enum_space_in_value' => "Column #:index: ENUM/SET values must not contain spaces. Change ':part' to ':clean'. Example: IV,IB,VIP",

@@ -87,7 +87,7 @@ class RoleController extends Controller
             })->values();
         })->toJson();
         $unsignedTypes = $this->supportsUnsignedTypes();
-        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
+        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'bit'];
         return view('cms.pengguna.roles.create', compact('columnTypes', 'templatesJson', 'menuPermissions', 'unsignedTypes', 'integerTypes'));
     }
 
@@ -198,7 +198,7 @@ class RoleController extends Controller
         $columnTypes = $this->getColumnTypes();
         $menuPermissions = $this->getMenuDefinitions();
         $unsignedTypes = $this->supportsUnsignedTypes();
-        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
+        $integerTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'bit'];
 
         $role->load('columns', 'permissions');
 
@@ -722,30 +722,54 @@ class RoleController extends Controller
     private function getColumnTypes(): array
     {
         return [
-            'varchar'    => 'VARCHAR',
-            'char'       => 'CHAR',
-            'text'       => 'TEXT',
-            'longtext'   => 'LONGTEXT',
-            'mediumtext' => 'MEDIUMTEXT',
-            'tinytext'   => 'TINYTEXT',
-            'int'        => 'INT',
-            'bigint'     => 'BIGINT',
-            'smallint'   => 'SMALLINT',
-            'tinyint'    => 'TINYINT',
-            'mediumint'  => 'MEDIUMINT',
-            'decimal'    => 'DECIMAL',
-            'float'      => 'FLOAT',
-            'double'     => 'DOUBLE',
-            'date'       => 'DATE',
-            'datetime'   => 'DATETIME',
-            'timestamp'  => 'TIMESTAMP',
-            'time'       => 'TIME',
-            'enum'       => 'ENUM',
-            'set'        => 'SET',
-            'boolean'    => 'BOOLEAN',
-            'blob'       => 'BLOB',
-            'longblob'   => 'LONGBLOB',
-            'mediumblob' => 'MEDIUMBLOB',
+            // String types
+            'varchar'        => 'VARCHAR',
+            'char'           => 'CHAR',
+            'text'           => 'TEXT',
+            'longtext'       => 'LONGTEXT',
+            'mediumtext'     => 'MEDIUMTEXT',
+            'tinytext'       => 'TINYTEXT',
+            // Binary types
+            'binary'         => 'BINARY',
+            'varbinary'      => 'VARBINARY',
+            'blob'           => 'BLOB',
+            'longblob'       => 'LONGBLOB',
+            'mediumblob'     => 'MEDIUMBLOB',
+            'tinyblob'       => 'TINYBLOB',
+            // Integer types
+            'int'            => 'INT',
+            'bigint'         => 'BIGINT',
+            'smallint'       => 'SMALLINT',
+            'tinyint'        => 'TINYINT',
+            'mediumint'      => 'MEDIUMINT',
+            'bit'            => 'BIT',
+            // Decimal / float types
+            'decimal'        => 'DECIMAL',
+            'float'          => 'FLOAT',
+            'double'         => 'DOUBLE',
+            'real'           => 'REAL',
+            // Date / time types
+            'date'           => 'DATE',
+            'datetime'       => 'DATETIME',
+            'timestamp'      => 'TIMESTAMP',
+            'time'           => 'TIME',
+            'year'           => 'YEAR',
+            // Enum / set
+            'enum'           => 'ENUM',
+            'set'            => 'SET',
+            // Boolean
+            'boolean'        => 'BOOLEAN',
+            // JSON
+            'json'           => 'JSON',
+            // Spatial types
+            'geometry'       => 'GEOMETRY',
+            'point'          => 'POINT',
+            'linestring'     => 'LINESTRING',
+            'polygon'        => 'POLYGON',
+            'multipoint'     => 'MULTIPOINT',
+            'multilinestring'=> 'MULTILINESTRING',
+            'multipolygon'   => 'MULTIPOLYGON',
+            'geometrycollection' => 'GEOMETRYCOLLECTION',
         ];
     }
 
@@ -1371,44 +1395,72 @@ class RoleController extends Controller
         $unsigned = $this->supportsUnsigned($type) && $column->is_unsigned ? ' UNSIGNED' : '';
 
         return match ($type) {
-            'varchar'    => "VARCHAR(" . ($length ?: 255) . ")",
-            'char'       => "CHAR(" . ($length ?: 255) . ")",
-            'text'       => "TEXT",
-            'longtext'   => "LONGTEXT",
+            // String types
+            'varchar'  => "VARCHAR(" . ($length ?: 255) . ")",
+            'char'     => "CHAR(" . ($length ?: 255) . ")",
+            'text'     => "TEXT",
+            'longtext' => "LONGTEXT",
             'mediumtext' => "MEDIUMTEXT",
-            'tinytext'   => "TINYTEXT",
+            'tinytext' => "TINYTEXT",
+            // Binary types
+            'binary'   => "BINARY" . ($length ? "({$length})" : ""),
+            'varbinary'=> "VARBINARY(" . ($length ?: 255) . ")",
+            'blob'     => "BLOB",
+            'longblob' => "LONGBLOB",
+            'mediumblob' => "MEDIUMBLOB",
+            'tinyblob' => "TINYBLOB",
+            // Integer types
             'int', 'integer' => "INT" . ($length ? "({$length})" : "") . $unsigned,
-            'bigint'     => "BIGINT" . ($length ? "({$length})" : "") . $unsigned,
-            'smallint'   => "SMALLINT" . ($length ? "({$length})" : "") . $unsigned,
-            'tinyint'    => "TINYINT" . ($length ? "({$length})" : "") . $unsigned,
-            'mediumint'  => "MEDIUMINT" . ($length ? "({$length})" : "") . $unsigned,
-            'decimal'    => "DECIMAL(" . ($length ?: 10) . ",2)" . $unsigned,
-            'float'      => "FLOAT" . $unsigned,
-            'double'     => "DOUBLE" . $unsigned,
-            'date'       => "DATE",
-            'datetime'   => "DATETIME",
-            'timestamp'  => "TIMESTAMP",
-            'time'       => "TIME",
-            'enum'       => $column->options
+            'bigint'   => "BIGINT" . ($length ? "({$length})" : "") . $unsigned,
+            'smallint' => "SMALLINT" . ($length ? "({$length})" : "") . $unsigned,
+            'tinyint'  => "TINYINT" . ($length ? "({$length})" : "") . $unsigned,
+            'mediumint'=> "MEDIUMINT" . ($length ? "({$length})" : "") . $unsigned,
+            'bit'      => "BIT(" . ($length ?: 1) . ")" . $unsigned,
+            // Decimal / float types
+            'decimal'  => "DECIMAL(" . ($length ?: 10) . ",2)" . $unsigned,
+            'float'    => "FLOAT" . $unsigned,
+            'double'   => "DOUBLE" . $unsigned,
+            'real'     => "REAL" . $unsigned,
+            // Date / time types
+            'date'     => "DATE",
+            'datetime' => "DATETIME",
+            'timestamp'=> "TIMESTAMP",
+            'time'     => "TIME",
+            'year'     => "YEAR",
+            // Enum / set
+            'enum'     => $column->options
                 ? "ENUM(" . implode(',', array_map(fn($o) => "'" . str_replace("'", "\\'", (string) $o) . "'", $column->options)) . ")"
                 : "ENUM('option_1')",
-            'set'        => $column->options
+            'set'      => $column->options
                 ? "SET(" . implode(',', array_map(fn($o) => "'" . str_replace("'", "\\'", (string) $o) . "'", $column->options)) . ")"
                 : "SET('option_1')",
-            'boolean'    => "TINYINT(1)" . ($column->is_unsigned ? " UNSIGNED" : ""),
-            'blob'       => "BLOB",
-            'longblob'   => "LONGBLOB",
-            'mediumblob' => "MEDIUMBLOB",
+            // Boolean
+            'boolean'  => "TINYINT(1)" . ($column->is_unsigned ? " UNSIGNED" : ""),
+            // JSON
+            'json'     => "JSON",
+            // Spatial types (no length, no unsigned in standard MySQL)
+            'geometry' => "GEOMETRY",
+            'point'    => "POINT",
+            'linestring' => "LINESTRING",
+            'polygon'  => "POLYGON",
+            'multipoint' => "MULTIPOINT",
+            'multilinestring' => "MULTILINESTRING",
+            'multipolygon' => "MULTIPOLYGON",
+            'geometrycollection' => "GEOMETRYCOLLECTION",
             // Backwards compatibility
-            'string'     => "VARCHAR(" . ($length ?: 255) . ")",
-            'file'       => "VARCHAR(255)",
-            default      => "VARCHAR(255)",
+            'string'   => "VARCHAR(" . ($length ?: 255) . ")",
+            'file'     => "VARCHAR(255)",
+            default    => "VARCHAR(255)",
         };
     }
 
     private function supportsUnsignedTypes(): array
     {
-        return ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'float', 'double', 'boolean'];
+        return [
+            'tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint',
+            'decimal', 'float', 'double', 'real', 'boolean',
+            'bit',
+        ];
     }
 
     private function supportsUnsigned(string $type): bool

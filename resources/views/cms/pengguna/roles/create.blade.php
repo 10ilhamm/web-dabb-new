@@ -271,6 +271,25 @@
         const unsignedTypes = @json($unsignedTypes);
         const integerTypes = @json($integerTypes);
 
+        // Group type helpers (mirrors MySQL rules)
+        const noLengthTypes = [
+            'text','longtext','mediumtext','tinytext',
+            'blob','longblob','mediumblob','tinyblob',
+            'json','enum','set',
+            'geometry','point','linestring','polygon',
+            'multipoint','multilinestring','multipolygon','geometrycollection',
+            'date','datetime','timestamp','time','year',
+            'int','bigint','smallint','tinyint','mediumint','bit',
+            'float','double','real','boolean',
+            'binary','varbinary',
+        ];
+        const noIndexTypes = [
+            'text','longtext','mediumtext','tinytext',
+            'blob','longblob','mediumblob','tinyblob',
+            'json',
+        ];
+        const fkAllowedTypes = ['int','bigint','smallint','tinyint','mediumint','bit','varchar','char'];
+
         const templates = {!! $templatesJson !!};
 
         let columnIndex = 0;
@@ -489,8 +508,9 @@
             const isInteger      = integerTypes.includes(type);
             const isDecimal      = type === 'decimal';
             const isUnsignedable = unsignedTypes.includes(type);
-            const isUnindexable  = ['text','longtext','mediumtext','tinytext','blob','longblob','mediumblob'].includes(type);
-            const canHaveLength  = ['varchar','char'].includes(type) || isDecimal;
+            const isNoLength     = noLengthTypes.includes(type);
+            const isUnindexable  = noIndexTypes.includes(type);
+            const canHaveLength  = !isNoLength && type !== 'binary' && type !== 'varbinary';
 
             // --- Column Length visibility ---
             const lengthRow = colDiv.querySelector(`input[name="columns[${resolvedIndex}][column_length]"]`)?.closest('div');
@@ -532,21 +552,21 @@
                 if (!isInteger) cb.is_auto_increment.checked = false;
             }
 
-            // UNIQUE: all scalar types except BLOB/TEXT
+            // UNIQUE: all scalar types except BLOB/TEXT/JSON and spatial types
             if (cb.is_unique) {
                 cb.is_unique.disabled = isUnindexable;
                 if (isUnindexable) cb.is_unique.checked = false;
             }
 
-            // UNSIGNED: integer + decimal + float + double + boolean
+            // UNSIGNED: integer + decimal + float + double + real + boolean + bit
             if (cb.is_unsigned) {
                 cb.is_unsigned.disabled = !isUnsignedable;
                 if (!isUnsignedable) cb.is_unsigned.checked = false;
             }
 
-            // FOREIGN KEY: integer + varchar + char
+            // FOREIGN KEY: integer + varchar + char only
             if (cb.is_foreign) {
-                cb.is_foreign.disabled = !isInteger && type !== 'varchar' && type !== 'char';
+                cb.is_foreign.disabled = !fkAllowedTypes.includes(type);
                 if (cb.is_foreign.disabled) {
                     cb.is_foreign.checked = false;
                     const foreignDiv = document.getElementById('foreign-' + resolvedIndex);

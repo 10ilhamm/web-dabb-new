@@ -1250,6 +1250,25 @@ return [
         'error_column_prefix' => "Kolom ':column' (MySQL :code): :message",
         'error_mysql_prefix' => "MySQL Error :code: :message",
 
+        // MySQL type rules — attribute visibility (shown as help text in form)
+        'rule_no_length' => "Tipe ':type' tidak mendukung atribut panjang/karakter.",
+        'rule_no_unique' => "Tipe ':type' tidak mendukung UNIQUE (BLOB/TEXT/JSON).",
+        'rule_no_unsigned' => "Tipe ':type' tidak mendukung UNSIGNED.",
+        'rule_no_auto_increment' => "Tipe ':type' tidak mendukung AUTO_INCREMENT (hanya integer).",
+        'rule_no_foreign' => "Tipe ':type' tidak mendukung FOREIGN KEY (hanya integer/varchar/char).",
+        'rule_no_primary' => "Tipe ':type' tidak mendukung PRIMARY KEY (hanya integer).",
+
+        // MySQL type constraints (explained for users)
+        'type_constraint_year' => "YEAR: nilai 2-digit (00-69→2000-2069, 70-99→1970-1999) atau 4-digit (1901-2155).",
+        'type_constraint_json' => "JSON: menyimpan data JSON yang tervalidasi. Tidak mendukung panjang karakter.",
+        'type_constraint_spatial' => "Spatial types (GEOMETRY/POINT/POLYGON, dll): tidak mendukung panjang/unsigned/unique/auto_increment. Membutuhkan SRID (default 0).",
+        'type_constraint_bit' => "BIT: format BIT(M) dengan M=1-64. Contoh: BIT(8) untuk 1 byte.",
+        'type_constraint_boolean' => "BOOLEAN: disimpan sebagai TINYINT(1). Nilai 0=FALSE, 1=TRUE.",
+        'type_constraint_binary' => "BINARY/VARBINARY: menyimpan data biner (file, gambar, dll). Panjang opsional untuk BINARY, wajib untuk VARBINARY.",
+        'type_constraint_real' => "REAL: sinonim untuk DOUBLE(53) di MySQL. Ketepatan ~15 digit desimal.",
+        'type_constraint_enum' => "ENUM: jumlah nilai maks 65,535. Nilai tidak boleh kosong atau duplikat. Urutan matter (ordinal).",
+        'type_constraint_set' => "SET: mirip ENUM tapi bisa menyimpan BEBERAPA nilai sekaligus (max 64 anggota).",
+
         // Column pre-validation errors (store / update)
         'column_enum_space_empty' => 'Kolom #:index: nilai ENUM/SET harus dipisah koma TANPA spasi. Gunakan format: IV,IB,VIP (tanpa spasi).',
         'column_enum_space_in_value' => "Kolom #:index: nilai ENUM/SET tidak boleh mengandung spasi. Ubah ':part' menjadi ':clean'. Contoh: IV,IB,VIP",
