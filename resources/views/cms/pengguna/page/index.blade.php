@@ -604,7 +604,7 @@
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js"></script>
-
+        
         <script>
             window.penggunaI18n = {
                 btnExport: @json(__('cms.pengguna.btn_export')),

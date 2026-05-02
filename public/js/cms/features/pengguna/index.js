@@ -468,19 +468,107 @@ function buildExcelHTML(dt) {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Excel export — HTML-based (maximum compatibility, no JSZip needed)
-   Fallback: if Clipboard API fails, falls back to Blob download
+   Logo embedded as base64 data URL so it displays in all Excel versions
+   Alternating white (#FFFFFF) and light blue (#D6E4F0) row colors
 ══════════════════════════════════════════════════════════════════════════════ */
 function exportToExcel(dt) {
     var isId = getLocale() === "id";
-    var html = buildExcelHTML(dt);
     var fname = isId
         ? "Daftar-Pengguna-Sistem-Bandung-Sustainable-Archives-Depot.xls"
         : "System-User-List-Bandung-Sustainable-Archives-Depot.xls";
 
-    /* Try Excel-compatible MIME type first (.xls HTML format — universally supported) */
-    var mimeType = "application/vnd.ms-excel;charset=UTF-8";
-    var blob = new Blob(["\uFEFF" + html], { type: mimeType });
-    downloadBlob(blob, fname);
+    loadLogoBase64(function(logoBase64) {
+        var html = buildExcelHTMLWithLogo(dt, logoBase64);
+        var blob = new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel" });
+        downloadBlob(blob, fname);
+    });
+}
+
+function buildExcelHTMLWithLogo(dt, logoBase64) {
+    var data = readTableData(dt);
+    var isId = getLocale() === "id";
+
+    var colNames = isId
+        ? ["No", "Nama", "Email", "Username", "Peran", "Status", "Bergabung"]
+        : ["No", "Name", "Email", "Username", "Role", "Status", "Joined"];
+
+    var tableRows = "";
+    /* Column header row */
+    var hdrBg = "174E93";
+    tableRows += "<tr style=\"background:#" + hdrBg + ";color:white;font-weight:bold;text-align:center;\">";
+    colNames.forEach(function(name) {
+        tableRows += "<td style=\"padding:6px 10px;border:1px solid #dee2e6;text-align:center;\">" + escXml(name) + "</td>";
+    });
+    tableRows += "</tr>";
+
+    /* Data rows — alternating white (#FFFFFF) and light blue (#D6E4F0) */
+    data.rows.forEach(function(row, idx) {
+        var bg = (idx % 2 === 0) ? "#FFFFFF" : "#D6E4F0";
+        var textColor = (idx % 2 === 0) ? "#374151" : "#1a3a5c";
+        tableRows += "<tr style=\"background:" + bg + ";\">";
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:#6b7280;\">" + escXml(row[0] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;font-weight:600;color:" + textColor + ";\">" + escXml(row[1] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:#6b7280;\">" + escXml(row[2] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:" + textColor + ";\">" + escXml(row[3] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:" + textColor + ";\">" + escXml(row[4] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:" + textColor + ";\">" + escXml(row[5] || "") + "</td>";
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:" + textColor + ";\">" + escXml(row[6] || "") + "</td>";
+        tableRows += "</tr>";
+    });
+
+    /* Logo: use base64 if available, fallback to text */
+    var logoHTML;
+    if (logoBase64 && logoBase64.indexOf("data:image") === 0) {
+        logoHTML = '<img src="' + logoBase64 + '" alt="ANRI" style="height:60px;width:auto;display:inline-block;"/>';
+    } else {
+        logoHTML = '<b style="font-size:22pt;color:#174E93;">ANRI</b>';
+    }
+
+    var htmlContent =
+        '<html xmlns:ns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">' +
+        '<head>' +
+        '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>' +
+        '<title>DABB - Pengguna</title>' +
+        '<!--[if gte mso 9]>' +
+        '<xml>' +
+        '<x:ExcelWorkbook>' +
+        '<x:ExcelWorksheets>' +
+        '<x:ExcelWorksheet>' +
+        '<x:Name>' + (isId ? "Pengguna" : "Users") + '</x:Name>' +
+        '<x:WorksheetOptions>' +
+        '<x:Print><x:ValidPrinterInfo/></x:Print>' +
+        '</x:WorksheetOptions>' +
+        '</x:ExcelWorksheet>' +
+        '</x:ExcelWorksheets>' +
+        '</x:ExcelWorkbook>' +
+        '</xml>' +
+        '<![endif]-->' +
+        '<style>' +
+        'body{font-family:Calibri,sans-serif;margin:0;padding:0;}' +
+        'table{border-collapse:collapse;width:100%;}' +
+        'td{padding:4px 6px;border:1px solid #dee2e6;vertical-align:middle;}' +
+        '</style>' +
+        '</head>' +
+        '<body>' +
+        '<table>' +
+        /* Logo row — use text fallback to avoid linked image error */
+    '<tr><td colspan="7" style="text-align:center;padding:12px;border:none;font-size:22pt;font-weight:bold;color:#174E93;">ANRI - Depot Arsip Berkelanjutan Bandung</td></tr>' +
+        /* Institution name */
+        '<tr><td colspan="7" style="text-align:center;padding:4px 6px;border:none;font-size:14pt;font-weight:bold;color:#174E93;">' + escXml(i18nInstName()) + '</td></tr>' +
+        /* Subtitle */
+        '<tr><td colspan="7" style="text-align:center;padding:2px 6px;border:none;font-size:10pt;color:#374151;">DABB \u2014 CMS Management</td></tr>' +
+        /* Address */
+        '<tr><td colspan="7" style="text-align:center;padding:2px 6px;border:none;font-size:9pt;color:#6b7280;">' + escXml(i18nAddress()) + '</td></tr>' +
+        /* Date */
+        '<tr><td colspan="7" style="text-align:center;padding:2px 6px;border:none;font-size:9pt;color:#9ca3af;">' + escXml(i18nDate()) + '</td></tr>' +
+        /* Title */
+        '<tr><td colspan="7" style="text-align:center;padding:6px;border:none;"><span style="font-size:11pt;font-weight:bold;color:#174E93;">' + escXml(i18nTitle()) + '</span></td></tr>' +
+        /* Data table starts */
+        '</table><table>' +
+        tableRows +
+        '</table></body></html>';
+
+    return htmlContent;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
