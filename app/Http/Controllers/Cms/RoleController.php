@@ -333,6 +333,7 @@ class RoleController extends Controller
         ]);
 
         $oldTableName = $role->table_name;
+        $oldRelationName = $role->relation_name;
         $role->update($data);
 
         // Rename table if table_name changed (DDL - outside transaction)
@@ -351,7 +352,15 @@ class RoleController extends Controller
                 ->with('error', $msg);
         }
 
-        // Update model file if relation_name changed
+        // Delete old model file if relation_name changed and file exists
+        if ($oldRelationName !== $data['relation_name']) {
+            $oldModelPath = app_path("Models/" . ucfirst($oldRelationName) . ".php");
+            if (file_exists($oldModelPath)) {
+                unlink($oldModelPath);
+            }
+        }
+
+        // Generate (or regenerate) model file
         $this->generateRoleModel($data['relation_name'], $data['table_name']);
 
         // Sync permissions
