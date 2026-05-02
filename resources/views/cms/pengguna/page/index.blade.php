@@ -1,8 +1,5 @@
 @extends('layouts.app')
 
-@section('breadcrumb_items')
-    <span class="text-gray-400">CMS</span>
-@endsection
 @section('breadcrumb_active', __('cms.pengguna.breadcrumb'))
 
 @push('styles')
@@ -603,8 +600,6 @@
     @push('scripts')
         {{-- DataTables Buttons (export) --}}
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
         <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>

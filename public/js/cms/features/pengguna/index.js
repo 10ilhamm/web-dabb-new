@@ -346,213 +346,141 @@ function exportToCSV(dt) {
 /* ═══════════════════════════════════════════════════════════════════════════
    Excel export — raw Office Open XML (no SheetJS)
    Generates a valid .xlsx as a zip of XML files
+   Features: centered logo + institution header, alternating white/blue rows
+   Uses HTML-based approach for maximum Excel compatibility
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* Helper: escape XML/HTML entities */
+function escXml(str) {
+    return String(str == null ? "" : str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/* Build HTML content for the sheet (with logo + table) */
+function buildExcelHTML(dt) {
+    var data = readTableData(dt);
+    var isId = getLocale() === "id";
+
+    var colNames = isId
+        ? ["No", "Nama", "Email", "Username", "Peran", "Status", "Bergabung"]
+        : ["No", "Name", "Email", "Username", "Role", "Status", "Joined"];
+
+    var tableRows = "";
+    /* Column header row */
+    var hdrBg = "174E93";
+    tableRows += "<tr style=\"background:#" + hdrBg + ";color:white;font-weight:bold;text-align:center;\">";
+    colNames.forEach(function(name) {
+        tableRows += "<td style=\"padding:6px 10px;border:1px solid #dee2e6;text-align:center;\">" + escXml(name) + "</td>";
+    });
+    tableRows += "</tr>";
+
+    /* Data rows — alternating white (#FFFFFF) and light blue (#D6E4F0) */
+    data.rows.forEach(function(row, idx) {
+        var bg = (idx % 2 === 0) ? "#FFFFFF" : "#D6E4F0";
+        var textColor = (idx % 2 === 0) ? "#374151" : "#1a3a5c";
+        tableRows += "<tr style=\"background:" + bg + ";\">";
+        /* No */
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:#6b7280;\">" + escXml(row[0] || "") + "</td>";
+        /* Name */
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;font-weight:600;color:" + textColor + ";\">" + escXml(row[1] || "") + "</td>";
+        /* Email */
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:#6b7280;\">" + escXml(row[2] || "") + "</td>";
+        /* Username */
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:" + textColor + ";\">" + escXml(row[3] || "") + "</td>";
+        /* Role */
+        tableRows += "<td style=\"padding:5px 10px;border:1px solid #dee2e6;color:" + textColor + ";\">" + escXml(row[4] || "") + "</td>";
+        /* Status */
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:" + textColor + ";\">" + escXml(row[5] || "") + "</td>";
+        /* Joined */
+        tableRows += "<td style=\"padding:5px 8px;border:1px solid #dee2e6;text-align:center;color:" + textColor + ";\">" + escXml(row[6] || "") + "</td>";
+        tableRows += "</tr>";
+    });
+
+    var htmlContent =
+        '<html xmlns:ns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">' +
+        '<head>' +
+        '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>' +
+        '<title>DABB - Pengguna</title>' +
+        '<!--[if gte mso 9]>' +
+        '<xml>' +
+        '<x:ExcelWorkbook>' +
+        '<x:ExcelWorksheets>' +
+        '<x:ExcelWorksheet>' +
+        '<x:Name>' + (isId ? "Pengguna" : "Users") + '</x:Name>' +
+        '<x:WorksheetOptions>' +
+        '<x:Print><x:ValidPrinterInfo/></x:Print>' +
+        '</x:WorksheetOptions>' +
+        '</x:ExcelWorksheet>' +
+        '</x:ExcelWorksheets>' +
+        '</x:ExcelWorkbook>' +
+        '</xml>' +
+        '<![endif]-->' +
+        '<style>' +
+        'body{font-family:Calibri,sans-serif;margin:0;padding:0;}' +
+        'table{border-collapse:collapse;width:100%;}' +
+        'td{padding:4px 6px;border:1px solid #dee2e6;vertical-align:middle;}' +
+        'tr:nth-child(even){background:#D6E4F0;}' +
+        'tr:nth-child(odd){background:#FFFFFF;}' +
+        '</style>' +
+        '</head>' +
+        '<body>' +
+        '<table>';
+
+    /* ── Logo + Header block (rendered as header rows before data) ── */
+    /* Row 1: Logo (centered, spanning all columns) */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:12px;border:none;\">" +
+        '<img src="/image/logo_anri.png" alt="ANRI" style="height:60px;width:auto;display:inline-block;"/>' +
+        "</td></tr>";
+
+    /* Row 2: Institution name */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:4px 6px;border:none;font-size:14pt;font-weight:bold;color:#174E93;\">" +
+        escXml(i18nInstName()) + "</td></tr>";
+
+    /* Row 3: Subtitle */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:2px 6px;border:none;font-size:10pt;color:#374151;\">" +
+        escXml(isId ? "DABB \u2014 CMS Management" : "DABB \u2014 CMS Management") + "</td></tr>";
+
+    /* Row 4: Address */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:2px 6px;border:none;font-size:9pt;color:#6b7280;\">" +
+        escXml(i18nAddress()) + "</td></tr>";
+
+    /* Row 5: Date */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:2px 6px;border:none;font-size:9pt;color:#9ca3af;\">" +
+        escXml(i18nDate()) + "</td></tr>";
+
+    /* Row 6: Spacer */
+    htmlContent += "<tr><td colspan=\"7\" style=\"text-align:center;padding:6px;border:none;\">" +
+        "<span style=\"font-size:11pt;font-weight:bold;color:#174E93;\">" +
+        escXml(i18nTitle()) + "</span></td></tr>";
+
+    /* Row 7: Spacer + data table header */
+    htmlContent += "</table><table>";
+
+    htmlContent += tableRows;
+    htmlContent += "</table></body></html>";
+
+    return htmlContent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Excel export — HTML-based (maximum compatibility, no JSZip needed)
+   Fallback: if Clipboard API fails, falls back to Blob download
 ══════════════════════════════════════════════════════════════════════════════ */
 function exportToExcel(dt) {
-    var data = readTableData(dt);
-    var isId = (getLocale() === "id");
+    var isId = getLocale() === "id";
+    var html = buildExcelHTML(dt);
+    var fname = isId
+        ? "Daftar-Pengguna-Sistem-Bandung-Sustainable-Archives-Depot.xls"
+        : "System-User-List-Bandung-Sustainable-Archives-Depot.xls";
 
-    var colLetters = ["A","B","C","D","E","F","G"];
-    var colWidths  = [9, 28, 38, 22, 18, 14, 20]; /* character widths in Excel units */
-    var hdrNames   = isId
-        ? ["No","Nama","Email","Username","Peran","Status","Bergabung"]
-        : ["No","Name","Email","Username","Role","Status","Joined"];
-
-    var totalRows = 1 + data.rows.length;
-
-    /* ── [Content_Types].xml ───────────────────────────────────────────── */
-    var ct = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">',
-        '  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>',
-        '  <Default Extension="xml"  ContentType="application/xml"/>',
-        '  <Override PartName="/xl/workbook.xml"             ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>',
-        '  <Override PartName="/xl/sheet1.xml"              ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>',
-        '  <Override PartName="/xl/styles.xml"              ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>',
-        '  <Override PartName="/xl/sharedStrings.xml"       ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>',
-        '</Types>'
-    ].join("\n");
-
-    /* ── _rels/.rels ───────────────────────────────────────────────────── */
-    var rels = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
-        '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>',
-        '</Relationships>'
-    ].join("\n");
-
-    /* ── xl/_rels/workbook.xml.rels ─────────────────────────────────────── */
-    var wbrels = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
-        '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="sheet1.xml"/>',
-        '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"    Target="styles.xml"/>',
-        '  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>',
-        '</Relationships>'
-    ].join("\n");
-
-    /* ── xl/workbook.xml ───────────────────────────────────────────────── */
-    var sheetName = isId ? "Pengguna" : "Users";
-    var wb = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',
-        '          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
-        '  <sheets>',
-        '    <sheet name="' + sheetName + '" sheetId="1" r:id="rId1"/>',
-        '  </sheets>',
-        '</workbook>'
-    ].join("\n");
-
-    /* ── xl/styles.xml ─────────────────────────────────────────────────── */
-    var styles = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
-        '  <fonts count="2">',
-        '    <font><sz val="10"/><name val="Calibri"/></font>',
-        '    <font><b/><sz val="11"/><color rgb="FFFFFF"/><name val="Calibri"/></font>',
-        '  </fonts>',
-        '  <fills count="5">',
-        '    <fill><patternFill patternType="none"/></fill>',
-        '    <fill><patternFill patternType="gray125"/></fill>',
-        '    <fill><patternFill patternType="solid"><fgColor rgb="174E93"/></patternFill></fill>',
-        '    <fill><patternFill patternType="solid"><fgColor rgb="F3F6F9"/></patternFill></fill>',
-        '  </fills>',
-        '  <borders count="3">',
-        '    <border><top/><bottom/><left/><right/></border>',
-        '    <border>',
-        '      <top style="thin"><color rgb="174E93"/></top>',
-        '      <bottom style="thin"><color rgb="174E93"/></bottom>',
-        '      <left style="thin"><color rgb="174E93"/></left>',
-        '      <right style="thin"><color rgb="174E93"/></right>',
-        '    </border>',
-        '    <border>',
-        '      <top style="thin"><color rgb="D1D5DB"/></top>',
-        '      <bottom style="thin"><color rgb="D1D5DB"/></bottom>',
-        '      <left style="thin"><color rgb="D1D5DB"/></left>',
-        '      <right style="thin"><color rgb="D1D5DB"/></right>',
-        '    </border>',
-        '  </borders>',
-        '  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>',
-        '  <cellXfs count="5">',
-        '    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>',
-        '    <xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>',
-        '    <xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>',
-        '    <xf numFmtId="0" fontId="0" fillId="3" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>',
-        '    <xf numFmtId="0" fontId="0" fillId="3" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>',
-        '  </cellXfs>',
-        '</styleSheet>'
-    ].join("\n");
-
-    /* ── xl/sharedStrings.xml ──────────────────────────────────────────── */
-    var ssList = [];
-    var ssMap  = {};
-
-    function getSS(text) {
-        text = String(text == null ? "" : text);
-        if (ssMap[text] !== undefined) return ssMap[text];
-        var idx = ssList.length;
-        ssList.push(text);
-        ssMap[text] = idx;
-        return idx;
-    }
-
-    /* Pre-load headers into shared strings */
-    for (var hi = 0; hi < hdrNames.length; hi++) getSS(hdrNames[hi]);
-
-    /* Pre-load data values */
-    for (var ri = 0; ri < data.rows.length; ri++) {
-        var row = data.rows[ri];
-        for (var cc = 0; cc < 7; cc++) getSS(row[cc] != null ? row[cc] : "");
-    }
-
-    var ssCount  = ssList.length;
-    var ssUnique = ssList.length;
-    var ssXml    = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' + ssCount + '" uniqueCount="' + ssUnique + '">'
-    ];
-    for (var si = 0; si < ssList.length; si++) {
-        ssXml.push('  <si><t xml:space="preserve">' + escXml(ssList[si]) + '</t></si>');
-    }
-    ssXml.push('</sst>');
-    var sharedStrings = ssXml.join("\n");
-
-    /* ── xl/sheet1.xml ─────────────────────────────────────────────────── */
-    var colWXml = "";
-    for (var wi = 0; wi < 7; wi++) {
-        colWXml += '<col min="' + (wi+1) + '" max="' + (wi+1) + '" width="' + colWidths[wi] + '" customWidth="1"/>';
-    }
-
-    var sheetXml = [
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
-        '  <sheetViews><sheetView workbookViewId="0"/></sheetViews>',
-        '  <cols>' + colWXml + '</cols>',
-        '  <sheetData>',
-    ].join("\n");
-
-    /* Row 1: header */
-    sheetXml += '<row r="1" spans="1:7">';
-    for (var ci = 0; ci < 7; ci++) {
-        sheetXml += '<c r="' + colLetters[ci] + '1" s="0" t="s"><v>' + getSS(hdrNames[ci]) + '</v></c>';
-    }
-    sheetXml += '</row>';
-
-    /* Rows 2+: data */
-    for (var ri2 = 0; ri2 < data.rows.length; ri2++) {
-        var rowNum = ri2 + 2;
-        var row    = data.rows[ri2];
-        var isEven = (ri2 % 2 === 1);
-        var sLeft  = isEven ? "3" : "1";  /* even=row3=gray, odd=row2=white */
-        var sCtr   = isEven ? "4" : "2";
-
-        sheetXml += '<row r="' + rowNum + '" spans="1:7">';
-        for (var cc2 = 0; cc2 < 7; cc2++) {
-            var sv    = (row[cc2] != null ? row[cc2] : "");
-            var style = (cc2 === 0 || cc2 === 5 || cc2 === 6) ? sCtr : sLeft;
-            sheetXml += '<c r="' + colLetters[cc2] + rowNum + '" s="' + style + '" t="s"><v>' + getSS(sv) + '</v></c>';
-        }
-        sheetXml += '</row>';
-    }
-
-    sheetXml += [
-        '  </sheetData>',
-        '</worksheet>'
-    ].join("\n");
-
-    /* ── Assemble ZIP ────────────────────────────────────────────────────── */
-    function escXml(str) {
-        return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;");
-    }
-
-    /* Use JSZip if available (loaded in page), otherwise use manual DEFLATE */
-    var entries = {
-        "[Content_Types].xml":                        ct,
-        "_rels/.rels":                               rels,
-        "xl/workbook.xml":                           wb,
-        "xl/_rels/workbook.xml.rels":               wbrels,
-        "xl/styles.xml":                            styles,
-        "xl/sharedStrings.xml":                      sharedStrings,
-        "xl/sheet1.xml":                             sheetXml,
-    };
-
-    if (typeof JSZip !== "undefined") {
-        var zip = new JSZip();
-        for (var k in entries) zip.file(k, entries[k]);
-        zip.generateAsync({ type: "blob", mimeType: "application/octet-stream", compression: "DEFLATE" })
-            .then(function(blob) {
-                var fname = isId
-                    ? "Daftar-Pengguna-Sistem-Bandung-Sustainable-Archives-Depot.xlsx"
-                    : "System-User-List-Bandung-Sustainable-Archives-Depot.xlsx";
-                downloadBlob(blob, fname);
-            })
-            .catch(function(e) { alert("ZIP error: " + e.message); });
-    } else {
-        alert("JSZip library not loaded. Please refresh the page.");
-    }
+    /* Try Excel-compatible MIME type first (.xls HTML format — universally supported) */
+    var mimeType = "application/vnd.ms-excel;charset=UTF-8";
+    var blob = new Blob(["\uFEFF" + html], { type: mimeType });
+    downloadBlob(blob, fname);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

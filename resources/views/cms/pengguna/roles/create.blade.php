@@ -1,8 +1,6 @@
 @extends('layouts.app')
 
 @section('breadcrumb_items')
-    <span class="text-gray-400">CMS</span>
-    <span class="mx-2 text-gray-300">/</span>
     <a href="{{ route('cms.pengguna.index') }}"
         class="text-gray-500 hover:text-gray-700">{{ __('cms.pengguna.breadcrumb') }}</a>
     <span class="mx-2 text-gray-300">/</span>
