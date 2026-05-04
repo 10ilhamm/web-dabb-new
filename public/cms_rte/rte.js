@@ -1,0 +1,1610 @@
+/**
+ * CMS RichTextEditor - Self-built, free, MIT-style.
+ * Vanilla JS + contenteditable. No external dependencies.
+ *
+ * Public API (compatible with the commercial richtexteditor.com bindings
+ * already used across this project):
+ *
+ *   var editor = new RichTextEditor(selector, config);
+ *   editor.getHTMLCode();
+ *   editor.setHTMLCode(html);
+ *   editor.getHTML();          // alias
+ *   editor.setHTML(html);      // alias
+ *   editor.insertHTML(html);
+ *   editor.insertImageByUrl(url);
+ *   editor.focus();
+ *   editor.destroy();
+ *
+ * Config:
+ *   {
+ *     base_url: '/cms_rte',
+ *     toolbar: 'default' | 'basic' | Array<row[]>,    // arrays accepted for compatibility
+ *     editorBodyCssClass: 'rte-content-body',
+ *     file_upload_handler: function(file, callback) { ... callback(url) ... },
+ *     readOnly: false,
+ *     height: '320px',
+ *   }
+ */
+(function (global) {
+    'use strict';
+
+    if (global.RichTextEditor) return;
+
+    // ---------------------------------------------------------------------
+    // Utilities
+    // ---------------------------------------------------------------------
+    var uid = 0;
+    function nextId() { return 'rte_' + (++uid) + '_' + Date.now().toString(36); }
+
+    function el(tag, attrs, children) {
+        var e = document.createElement(tag);
+        if (attrs) {
+            for (var k in attrs) {
+                if (!Object.prototype.hasOwnProperty.call(attrs, k)) continue;
+                var v = attrs[k];
+                if (k === 'class') e.className = v;
+                else if (k === 'style' && typeof v === 'object') {
+                    for (var s in v) e.style[s] = v[s];
+                } else if (k === 'html') e.innerHTML = v;
+                else if (k === 'text') e.textContent = v;
+                else if (k.indexOf('on') === 0 && typeof v === 'function') {
+                    e.addEventListener(k.substring(2), v);
+                } else if (v === true) e.setAttribute(k, '');
+                else if (v !== false && v != null) e.setAttribute(k, v);
+            }
+        }
+        if (children) {
+            if (!Array.isArray(children)) children = [children];
+            for (var i = 0; i < children.length; i++) {
+                var c = children[i];
+                if (c == null) continue;
+                e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+            }
+        }
+        return e;
+    }
+
+    function resolveTarget(selector) {
+        if (!selector) return null;
+        if (typeof selector === 'string') return document.querySelector(selector);
+        return selector;
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // SVG icons (inline, monochrome — colored via CSS currentColor)
+    var ICON = {
+        bold: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></svg>',
+        italic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',
+        underline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
+        strike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6a4 4 0 0 0-4-2c-2.5 0-4 1.5-4 3.5S9.5 11 12 11"/><path d="M8 17c1 2 2.5 3 4 3 2.5 0 4-1.5 4-3.5"/></svg>',
+        sub: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
+        sup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 10 10 10 4"/><polyline points="20 14 14 14 14 20"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>',
+        ul: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/></svg>',
+        ol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="10" y1="18" x2="20" y2="18"/><path d="M3 5.5c0-.83 1-1.5 2-1.5S7 4 7 4v1c0 .5-.5 1-1 1S5 5.5 5 6s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/><path d="M3 11.5c0-.83 1-1.5 2-1.5S7 10 7 10v1c0 .5-.5 1-1 1S5 11.5 5 12s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/><path d="M3 17.5c0-.83 1-1.5 2-1.5S7 16 7 16v1c0 .5-.5 1-1 1S5 17 5 17.5s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/></svg>',
+        indent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/><polyline points="3,10 7,12 3,14"/></svg>',
+        outdent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/><polyline points="7,10 3,12 7,14"/></svg>',
+        alignLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>',
+        alignCenter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>',
+        alignRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>',
+        alignJustify: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+        link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>',
+        unlink: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-2 2"/><path d="M6 18l2-2"/><path d="M11 14a4 4 0 0 0 5.66 0l2-2"/><path d="M13 10a4 4 0 0 0-5.66 0l-2 2"/><line x1="3" y1="3" x2="21" y2="21"/></svg>',
+        image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+        table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',
+        hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>',
+        quote: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7H5c-1 0-2 1-2 2v4c0 1 1 2 2 2h2v1c0 2-2 3-2 3l1 1s4-1 4-5V9c0-1-.4-2-1-2zm10 0h-4c-1 0-2 1-2 2v4c0 1 1 2 2 2h2v1c0 2-2 3-2 3l1 1s4-1 4-5V9c0-1-.4-2-1-2z"/></svg>',
+        code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        clean: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 17l7-13 7 13"/><line x1="3" y1="3" x2="21" y2="21"/></svg>',
+        undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 3 13 9 13"/><path d="M3.5 13a9 9 0 1 0 2.6-7.5L3 9"/></svg>',
+        redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 7 21 13 15 13"/><path d="M20.5 13a9 9 0 1 1-2.6-7.5L21 9"/></svg>',
+        source: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 2 12 6 15"/><polyline points="18 9 22 12 18 15"/><line x1="14" y1="6" x2="10" y2="18"/></svg>',
+        fullscreen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6"/><path d="M21 9V3h-6"/><path d="M3 15v6h6"/><path d="M21 15v6h-6"/></svg>',
+        chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+        paint: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+        textcolor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M7 17l5-12 5 12"/><line x1="9" y1="13" x2="15" y2="13"/></svg>',
+        copyformat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4l-2-2z"/><line x1="9" y1="3" x2="9" y2="3"/><path d="M9 3v4"/><path d="M15 3v4"/></svg>',
+        pasteformat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v2m0 4v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h4l2-3"/><path d="M9 14l2 2 4-4"/></svg>',
+        find: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        replace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+        template: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+        tableEdit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',
+        imageEdit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+        emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.8" fill="currentColor"/><circle cx="15" cy="10" r="0.8" fill="currentColor"/><path d="M8 14.5c1 1.5 2.5 2.2 4 2.2s3-.7 4-2.2"/></svg>',
+    };
+
+    // ---------------------------------------------------------------------
+    // Color palettes
+    // ---------------------------------------------------------------------
+    var COLORS = [
+        '#000000', '#424242', '#636363', '#9C9C9C', '#CFCFCF', '#EFEFEF', '#F3F3F3', '#FFFFFF',
+        '#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF',
+        '#F4CCCC', '#FCE5CD', '#FFF2CC', '#D9EAD3', '#D0E0E3', '#CFE2F3', '#D9D2E9', '#EAD1DC',
+        '#EA9999', '#F9CB9C', '#FFE599', '#B6D7A8', '#A2C4C9', '#9FC5E8', '#B4A7D6', '#D5A6BD',
+        '#E06666', '#F6B26B', '#FFD966', '#93C47D', '#76A5AF', '#6FA8DC', '#8E7CC3', '#C27BA0',
+        '#CC0000', '#E69138', '#F1C232', '#6AA84F', '#45818E', '#3D85C6', '#674EA7', '#A64D79',
+        '#990000', '#B45F06', '#BF9000', '#38761D', '#134F5C', '#0B5394', '#351C75', '#741B47',
+        '#660000', '#783F04', '#7F6000', '#274E13', '#0C343D', '#073763', '#20124D', '#4C1130'
+    ];
+
+    var FONT_FAMILIES = [
+        { label: 'Default', value: '' },
+        { label: 'Arial', value: 'Arial, sans-serif' },
+        { label: 'Calibri', value: 'Calibri, sans-serif' },
+        { label: 'Comic Sans MS', value: '"Comic Sans MS", cursive' },
+        { label: 'Courier New', value: '"Courier New", monospace' },
+        { label: 'Georgia', value: 'Georgia, serif' },
+        { label: 'Helvetica', value: 'Helvetica, Arial, sans-serif' },
+        { label: 'Impact', value: 'Impact, sans-serif' },
+        { label: 'Lucida Console', value: '"Lucida Console", monospace' },
+        { label: 'Tahoma', value: 'Tahoma, sans-serif' },
+        { label: 'Times New Roman', value: '"Times New Roman", Times, serif' },
+        { label: 'Trebuchet MS', value: '"Trebuchet MS", sans-serif' },
+        { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+    ];
+
+    var FONT_SIZES = [
+        { label: '8',  value: '1' },
+        { label: '10', value: '2' },
+        { label: '12', value: '3' },
+        { label: '14', value: '4' },
+        { label: '18', value: '5' },
+        { label: '24', value: '6' },
+        { label: '36', value: '7' },
+    ];
+
+    var BLOCK_FORMATS = [
+        { label: 'Paragraph',  value: 'p' },
+        { label: 'Heading 1',  value: 'h1' },
+        { label: 'Heading 2',  value: 'h2' },
+        { label: 'Heading 3',  value: 'h3' },
+        { label: 'Heading 4',  value: 'h4' },
+        { label: 'Heading 5',  value: 'h5' },
+        { label: 'Heading 6',  value: 'h6' },
+        { label: 'Quote',      value: 'blockquote' },
+        { label: 'Code',       value: 'pre' },
+    ];
+
+    // ---------------------------------------------------------------------
+    // Default toolbar layout (rows of groups; each group is array of buttons)
+    // ---------------------------------------------------------------------
+    var DEFAULT_TOOLBAR = [
+        [
+            { kind: 'dropdown', name: 'paragraph', label: 'Paragraph', items: BLOCK_FORMATS, action: 'block' },
+            { kind: 'dropdown', name: 'font', label: 'Font', items: FONT_FAMILIES, action: 'fontName' },
+            { kind: 'dropdown', name: 'size', label: 'Size', items: FONT_SIZES, action: 'fontSize' },
+        ],
+        [
+            { kind: 'btn', name: 'bold', icon: ICON.bold, title: 'Bold (Ctrl+B)', cmd: 'bold' },
+            { kind: 'btn', name: 'italic', icon: ICON.italic, title: 'Italic (Ctrl+I)', cmd: 'italic' },
+            { kind: 'btn', name: 'underline', icon: ICON.underline, title: 'Underline (Ctrl+U)', cmd: 'underline' },
+            { kind: 'btn', name: 'strike', icon: ICON.strike, title: 'Strikethrough', cmd: 'strikeThrough' },
+            { kind: 'btn', name: 'sub', icon: ICON.sub, title: 'Subscript', cmd: 'subscript' },
+            { kind: 'btn', name: 'sup', icon: ICON.sup, title: 'Superscript', cmd: 'superscript' },
+        ],
+        [
+            { kind: 'color', name: 'forecolor', icon: ICON.textcolor, title: 'Text color', cmd: 'foreColor' },
+            { kind: 'color', name: 'backcolor', icon: ICON.paint, title: 'Highlight', cmd: 'hiliteColor' },
+            { kind: 'btn', name: 'copyformat', icon: ICON.copyformat, title: 'Copy Format', custom: 'copyformat' },
+            { kind: 'btn', name: 'removeformat', icon: ICON.clean, title: 'Remove Format', cmd: 'removeFormat' },
+        ],
+        [
+            { kind: 'btn', name: 'alignleft', icon: ICON.alignLeft, title: 'Align left', cmd: 'justifyLeft' },
+            { kind: 'btn', name: 'aligncenter', icon: ICON.alignCenter, title: 'Align center', cmd: 'justifyCenter' },
+            { kind: 'btn', name: 'alignright', icon: ICON.alignRight, title: 'Align right', cmd: 'justifyRight' },
+            { kind: 'btn', name: 'alignjustify', icon: ICON.alignJustify, title: 'Justify', cmd: 'justifyFull' },
+            { kind: 'btn', name: 'find', icon: ICON.find, title: 'Find & Replace', custom: 'find' },
+        ],
+        [
+            { kind: 'btn', name: 'ul', icon: ICON.ul, title: 'Bullet list', cmd: 'insertUnorderedList' },
+            { kind: 'btn', name: 'ol', icon: ICON.ol, title: 'Numbered list', cmd: 'insertOrderedList' },
+            { kind: 'btn', name: 'outdent', icon: ICON.outdent, title: 'Decrease indent', cmd: 'outdent' },
+            { kind: 'btn', name: 'indent', icon: ICON.indent, title: 'Increase indent', cmd: 'indent' },
+            { kind: 'btn', name: 'quote', icon: ICON.quote, title: 'Quote', custom: 'blockquote' },
+            { kind: 'btn', name: 'code', icon: ICON.code, title: 'Code block', custom: 'codeblock' },
+        ],
+        [
+            { kind: 'btn', name: 'link', icon: ICON.link, title: 'Insert link', custom: 'link' },
+            { kind: 'btn', name: 'unlink', icon: ICON.unlink, title: 'Remove link', cmd: 'unlink' },
+            { kind: 'btn', name: 'image', icon: ICON.image, title: 'Insert image', custom: 'image' },
+            { kind: 'btn', name: 'video', icon: ICON.video, title: 'Insert video', custom: 'video' },
+            { kind: 'btn', name: 'table', icon: ICON.table, title: 'Insert table', custom: 'table' },
+            { kind: 'btn', name: 'hr', icon: ICON.hr, title: 'Horizontal line', custom: 'hr' },
+            { kind: 'btn', name: 'emoji', icon: ICON.emoji, title: 'Emoji', custom: 'emoji' },
+        ],
+        [
+            { kind: 'btn', name: 'undo', icon: ICON.undo, title: 'Undo (Ctrl+Z)', cmd: 'undo' },
+            { kind: 'btn', name: 'redo', icon: ICON.redo, title: 'Redo (Ctrl+Y)', cmd: 'redo' },
+            { kind: 'btn', name: 'template', icon: ICON.template, title: 'Insert Template', custom: 'template' },
+            { kind: 'btn', name: 'source', icon: ICON.source, title: 'View HTML source', custom: 'source' },
+            { kind: 'btn', name: 'fullscreen', icon: ICON.fullscreen, title: 'Toggle full screen', custom: 'fullscreen' },
+        ],
+    ];
+
+    var BASIC_TOOLBAR = [
+        [
+            { kind: 'btn', name: 'bold', icon: ICON.bold, title: 'Bold', cmd: 'bold' },
+            { kind: 'btn', name: 'italic', icon: ICON.italic, title: 'Italic', cmd: 'italic' },
+            { kind: 'btn', name: 'underline', icon: ICON.underline, title: 'Underline', cmd: 'underline' },
+        ],
+        [
+            { kind: 'btn', name: 'ul', icon: ICON.ul, title: 'Bullet list', cmd: 'insertUnorderedList' },
+            { kind: 'btn', name: 'ol', icon: ICON.ol, title: 'Numbered list', cmd: 'insertOrderedList' },
+        ],
+        [
+            { kind: 'btn', name: 'link', icon: ICON.link, title: 'Insert link', custom: 'link' },
+            { kind: 'btn', name: 'image', icon: ICON.image, title: 'Insert image', custom: 'image' },
+        ],
+        [
+            { kind: 'btn', name: 'clean', icon: ICON.clean, title: 'Clear formatting', cmd: 'removeFormat' },
+        ],
+    ];
+
+    function resolveToolbar(cfg) {
+        var t = cfg.toolbar;
+        if (!t || t === 'default') return DEFAULT_TOOLBAR;
+        if (t === 'basic') return BASIC_TOOLBAR;
+        // Compatibility with Quill-style array configs: just use default.
+        if (Array.isArray(t)) return DEFAULT_TOOLBAR;
+        return DEFAULT_TOOLBAR;
+    }
+
+    // ---------------------------------------------------------------------
+    // Selection helpers (saving/restoring caret across dialog interactions)
+    // ---------------------------------------------------------------------
+    function saveSelection(rootEl) {
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        var range = sel.getRangeAt(0);
+        if (!rootEl.contains(range.commonAncestorContainer)) return null;
+        return range.cloneRange();
+    }
+
+    function restoreSelection(range) {
+        if (!range) return;
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    function placeCursorAtEnd(node) {
+        var range = document.createRange();
+        range.selectNodeContents(node);
+        range.collapse(false);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    // ---------------------------------------------------------------------
+    // Modal helper
+    // ---------------------------------------------------------------------
+    function openModal(opts) {
+        // opts: { title, body (DOM), onConfirm, confirmLabel, cancelLabel, wide }
+        var backdrop = el('div', { class: 'rte-modal-backdrop' });
+        var dialog = el('div', { class: 'rte-modal' + (opts.wide ? ' rte-modal-wide' : '') });
+        var header = el('div', { class: 'rte-modal-header' }, [
+            el('div', { class: 'rte-modal-title', text: opts.title || '' }),
+            el('button', {
+                type: 'button', class: 'rte-modal-close', title: 'Close',
+                html: '&times;',
+                onclick: close,
+            }),
+        ]);
+        var body = el('div', { class: 'rte-modal-body' }, [opts.body]);
+        var footer = el('div', { class: 'rte-modal-footer' }, [
+            el('button', {
+                type: 'button', class: 'rte-btn rte-btn-secondary',
+                text: opts.cancelLabel || 'Cancel',
+                onclick: close,
+            }),
+            el('button', {
+                type: 'button', class: 'rte-btn rte-btn-primary',
+                text: opts.confirmLabel || 'Insert',
+                onclick: function () {
+                    var keepOpen = false;
+                    if (typeof opts.onConfirm === 'function') {
+                        keepOpen = opts.onConfirm() === false;
+                    }
+                    if (!keepOpen) close();
+                },
+            }),
+        ]);
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        dialog.appendChild(footer);
+        backdrop.appendChild(dialog);
+        backdrop.addEventListener('mousedown', function (e) { if (e.target === backdrop) close(); });
+        document.body.appendChild(backdrop);
+
+        function close() {
+            if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e) { if (e.key === 'Escape') close(); }
+        document.addEventListener('keydown', onKey);
+
+        // Auto-focus first input
+        setTimeout(function () {
+            var f = dialog.querySelector('input,textarea,select');
+            if (f) f.focus();
+        }, 30);
+
+        return { close: close, dialog: dialog };
+    }
+
+    // ---------------------------------------------------------------------
+    // Editor class
+    // ---------------------------------------------------------------------
+    function RichTextEditor(selector, config) {
+        if (!(this instanceof RichTextEditor)) return new RichTextEditor(selector, config);
+
+        var target = resolveTarget(selector);
+        if (!target) {
+            console.error('[RTE] target not found for selector', selector);
+            return;
+        }
+
+        this.config = Object.assign({
+            base_url: '/cms_rte',
+            toolbar: 'default',
+            editorBodyCssClass: 'rte-content-body',
+            file_upload_handler: null,
+            readOnly: false,
+            height: '320px',
+        }, config || {});
+
+        this.id = nextId();
+        this._target = target;
+        this._initialHTML = target.innerHTML || '';
+        target.innerHTML = '';
+
+        this._build(target);
+        this._bind();
+
+        // Inject initial content (from container or from textarea source)
+        if (target.tagName === 'TEXTAREA') {
+            this.setHTMLCode(target.value || '');
+        } else {
+            this.setHTMLCode(this._initialHTML || '');
+        }
+    }
+
+    RichTextEditor.prototype._build = function (target) {
+        var self = this;
+        var cfg = this.config;
+
+        // Wrapper assumes the role of `target`'s container; we place wrapper after
+        // target and hide target. This lets the original element remain in DOM
+        // (handy for textarea form binding).
+        var wrapper = el('div', { class: 'richtexteditor rte-modern', id: this.id });
+        if (target.tagName === 'TEXTAREA') {
+            target.style.display = 'none';
+            target.parentNode.insertBefore(wrapper, target.nextSibling);
+        } else {
+            // Replace contents inside target (target is just a placeholder div).
+            target.appendChild(wrapper);
+        }
+
+        var toolbar = el('div', { class: 'rte-toolbar', role: 'toolbar' });
+        wrapper.appendChild(toolbar);
+
+        var contentWrap = el('div', { class: 'rte-content-wrap' });
+        var content = el('div', {
+            class: 'rte-content ' + (cfg.editorBodyCssClass || 'rte-content-body'),
+            contenteditable: cfg.readOnly ? 'false' : 'true',
+            spellcheck: 'true',
+            'data-placeholder': cfg.placeholder || '',
+        });
+        contentWrap.appendChild(content);
+        wrapper.appendChild(contentWrap);
+
+        var sourceArea = el('textarea', { class: 'rte-source', spellcheck: 'false' });
+        sourceArea.style.display = 'none';
+        sourceArea.style.minHeight = cfg.height || '320px';
+        wrapper.appendChild(sourceArea);
+
+        var statusbar = el('div', { class: 'rte-statusbar' }, [
+            el('span', { class: 'rte-status-path', text: 'body' }),
+            el('span', { class: 'rte-status-counts', text: '0 words • 0 chars' }),
+        ]);
+        wrapper.appendChild(statusbar);
+
+        this.wrapper = wrapper;
+        this.toolbar = toolbar;
+        this.contentWrap = contentWrap;
+        this.content = content;
+        this.sourceArea = sourceArea;
+        this.statusbar = statusbar;
+        this._buttons = {};
+        this._dropdowns = [];
+
+        // Build toolbar items — each toolbar row is its own flex container
+        var rows = resolveToolbar(cfg);
+        var totalRows = rows.length;
+        var half = Math.ceil(totalRows / 2);
+
+        var tbTop = el('div', { class: 'rte-tb-top' });
+        var tbBottom = el('div', { class: 'rte-tb-bottom' });
+
+        rows.forEach(function (row, idx) {
+            var rowEl = el('div', { class: 'rte-tb-row' });
+            row.forEach(function (item) { self._buildToolbarItem(rowEl, item); });
+            if (idx < half) {
+                tbTop.appendChild(rowEl);
+            } else {
+                tbBottom.appendChild(rowEl);
+            }
+        });
+
+        toolbar.appendChild(tbTop);
+        toolbar.appendChild(tbBottom);
+
+        // Hidden file input for image upload
+        this._fileInput = el('input', { type: 'file', accept: 'image/*', style: { display: 'none' } });
+        wrapper.appendChild(this._fileInput);
+
+        // Drag handle button (bottom-right of status bar) for resizing the editor
+        this._buildDragHandle(statusbar);
+    };
+
+    RichTextEditor.prototype._buildToolbarItem = function (groupEl, item) {
+        var self = this;
+        if (item.kind === 'btn') {
+            var btn = el('button', {
+                type: 'button',
+                class: 'rte-tb-btn',
+                title: item.title || item.name,
+                'data-name': item.name,
+                html: item.icon || item.label || item.name,
+                onclick: function (e) {
+                    e.preventDefault();
+                    self._focusContent();
+                    if (item.cmd) self.exec(item.cmd, item.value);
+                    else if (item.custom) self._customAction(item.custom);
+                    self._syncSource();
+                    self._updateState();
+                },
+            });
+            groupEl.appendChild(btn);
+            this._buttons[item.name] = btn;
+        } else if (item.kind === 'dropdown') {
+            this._buildDropdown(groupEl, item);
+        } else if (item.kind === 'color') {
+            this._buildColorPicker(groupEl, item);
+        }
+    };
+
+    RichTextEditor.prototype._buildDropdown = function (groupEl, item) {
+        var self = this;
+        var label = el('span', { class: 'rte-dd-label', text: item.label || item.name });
+        var btn = el('button', {
+            type: 'button',
+            class: 'rte-tb-btn rte-tb-dropdown',
+            title: item.title || item.label,
+            'data-name': item.name,
+        }, [label, el('span', { class: 'rte-dd-caret', html: ICON.chevron })]);
+        var panel = el('div', { class: 'rte-dropdown-panel' });
+        item.items.forEach(function (opt) {
+            var optEl = el('div', {
+                class: 'rte-dropdown-item',
+                text: opt.label,
+                style: item.action === 'fontName' && opt.value ? { fontFamily: opt.value } : null,
+                onclick: function (e) {
+                    e.preventDefault();
+                    self._focusContent();
+                    if (item.action === 'block') {
+                        self.exec('formatBlock', opt.value);
+                    } else if (item.action === 'fontName') {
+                        if (opt.value) self.exec('fontName', opt.value);
+                    } else if (item.action === 'fontSize') {
+                        self.exec('fontSize', opt.value);
+                    }
+                    label.textContent = opt.label;
+                    closePanel();
+                    self._syncSource();
+                    self._updateState();
+                },
+            });
+            panel.appendChild(optEl);
+        });
+
+        var open = false;
+        function openPanel() {
+            // Close other panels
+            self._dropdowns.forEach(function (d) { d.close(); });
+            var rect = btn.getBoundingClientRect();
+            panel.style.position = 'fixed';
+            panel.style.left = rect.left + 'px';
+            panel.style.top = (rect.bottom + 2) + 'px';
+            panel.style.minWidth = rect.width + 'px';
+            document.body.appendChild(panel);
+            open = true;
+            setTimeout(function () { document.addEventListener('mousedown', onDocClick); }, 0);
+        }
+        function closePanel() {
+            if (!open) return;
+            if (panel.parentNode) panel.parentNode.removeChild(panel);
+            open = false;
+            document.removeEventListener('mousedown', onDocClick);
+        }
+        function onDocClick(e) { if (!panel.contains(e.target) && e.target !== btn) closePanel(); }
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (open) closePanel(); else openPanel();
+        });
+
+        groupEl.appendChild(btn);
+        this._dropdowns.push({ close: closePanel });
+    };
+
+    RichTextEditor.prototype._buildColorPicker = function (groupEl, item) {
+        var self = this;
+        var btn = el('button', {
+            type: 'button',
+            class: 'rte-tb-btn rte-tb-color',
+            title: item.title,
+            'data-name': item.name,
+            html: item.icon,
+        });
+        var swatch = el('span', { class: 'rte-tb-color-swatch', style: { background: item.cmd === 'foreColor' ? '#000' : '#ffeb3b' } });
+        btn.appendChild(swatch);
+        var panel = el('div', { class: 'rte-dropdown-panel rte-color-panel' });
+        var grid = el('div', { class: 'rte-color-grid' });
+        COLORS.forEach(function (c) {
+            grid.appendChild(el('button', {
+                type: 'button',
+                class: 'rte-color-cell',
+                style: { background: c },
+                title: c,
+                onclick: function (e) {
+                    e.preventDefault();
+                    self._focusContent();
+                    self.exec(item.cmd, c);
+                    swatch.style.background = c;
+                    closePanel();
+                    self._syncSource();
+                    self._updateState();
+                },
+            }));
+        });
+        panel.appendChild(grid);
+        var customRow = el('div', { class: 'rte-color-custom' });
+        var input = el('input', { type: 'color', value: '#000000' });
+        var apply = el('button', {
+            type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Apply',
+            onclick: function (e) {
+                e.preventDefault();
+                self._focusContent();
+                self.exec(item.cmd, input.value);
+                swatch.style.background = input.value;
+                closePanel();
+                self._syncSource();
+            },
+        });
+        var clear = el('button', {
+            type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Remove',
+            onclick: function (e) {
+                e.preventDefault();
+                self._focusContent();
+                self.exec(item.cmd === 'foreColor' ? 'foreColor' : 'hiliteColor', 'inherit');
+                closePanel();
+                self._syncSource();
+            },
+        });
+        customRow.appendChild(input);
+        customRow.appendChild(apply);
+        customRow.appendChild(clear);
+        panel.appendChild(customRow);
+
+        var open = false;
+        function openPanel() {
+            self._dropdowns.forEach(function (d) { d.close(); });
+            var rect = btn.getBoundingClientRect();
+            panel.style.position = 'fixed';
+            panel.style.left = rect.left + 'px';
+            panel.style.top = (rect.bottom + 2) + 'px';
+            document.body.appendChild(panel);
+            open = true;
+            setTimeout(function () { document.addEventListener('mousedown', onDocClick); }, 0);
+        }
+        function closePanel() {
+            if (!open) return;
+            if (panel.parentNode) panel.parentNode.removeChild(panel);
+            open = false;
+            document.removeEventListener('mousedown', onDocClick);
+        }
+        function onDocClick(e) { if (!panel.contains(e.target) && e.target !== btn) closePanel(); }
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (open) closePanel(); else openPanel();
+        });
+
+        groupEl.appendChild(btn);
+        this._dropdowns.push({ close: closePanel });
+    };
+
+    RichTextEditor.prototype._buildDragHandle = function (container) {
+        var self = this;
+        var wrap = el('div', { class: 'rte-drag-handle-wrap' });
+        var handle = el('button', {
+            type: 'button',
+            class: 'rte-drag-handle',
+            title: 'Drag to resize editor',
+            'aria-label': 'Drag to resize editor',
+            onmousedown: function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                self._startResize(e);
+            },
+        });
+        // Resize grip icon (corner arrows)
+        handle.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="13" x2="13" y2="13"/><line x1="3" y1="9" x2="9" y2="9"/><line x1="3" y1="5" x2="5" y2="5"/><line x1="13" y1="3" x2="13" y2="13"/><line x1="9" y1="3" x2="13" y2="7"/></svg>';
+        wrap.appendChild(handle);
+        container.appendChild(wrap);
+    };
+
+    RichTextEditor.prototype._startResize = function (e) {
+        var self = this;
+        var wrapper = this.wrapper;
+        var contentWrap = this.contentWrap;
+
+        // Remember initial sizes (use actual rendered values)
+        var startW = wrapper.offsetWidth;
+        var startH = wrapper.offsetHeight;
+        var startX = e.clientX;
+        var startY = e.clientY;
+
+        wrapper.classList.add('rte-dragging');
+        wrapper.style.userSelect = 'none';
+
+        function onMove(e) {
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+            var newW = Math.max(300, startW + dx);
+            var newH = Math.max(300, startH + dy);
+            wrapper.style.width = newW + 'px';
+            wrapper.style.height = newH + 'px';
+        }
+
+        function onUp() {
+            wrapper.classList.remove('rte-dragging');
+            wrapper.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    };
+
+    RichTextEditor.prototype._focusContent = function () {
+        if (this._savedRange) {
+            this.content.focus();
+            try { restoreSelection(this._savedRange); } catch (e) {}
+        } else {
+            this.content.focus();
+        }
+    };
+
+    RichTextEditor.prototype.exec = function (cmd, value) {
+        try {
+            // hiliteColor needs styleWithCSS = true on some browsers
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand(cmd, false, value);
+        } catch (e) {
+            console.warn('[RTE] exec failed', cmd, value, e);
+        }
+        this._snapshotSelection();
+    };
+
+    RichTextEditor.prototype._customAction = function (action) {
+        switch (action) {
+            case 'link': return this._dialogLink();
+            case 'image': return this._dialogImage();
+            case 'video': return this._dialogVideo();
+            case 'table': return this._dialogTable();
+            case 'hr': return this._insertHTML('<hr>');
+            case 'blockquote': return this.exec('formatBlock', 'blockquote');
+            case 'codeblock': return this.exec('formatBlock', 'pre');
+            case 'source': return this._toggleSource();
+            case 'fullscreen': return this._toggleFullscreen();
+            case 'emoji': return this._dialogEmoji();
+            case 'copyformat': return this._doCopyFormat();
+            case 'find': return this._dialogFindReplace();
+            case 'template': return this._dialogTemplate();
+        }
+    };
+
+    // -------- dialogs ---------
+    RichTextEditor.prototype._dialogLink = function () {
+        var self = this;
+        var sel = window.getSelection();
+        var selectedText = sel && sel.toString() ? sel.toString() : '';
+        var body = el('div', { class: 'rte-form' }, [
+            el('label', { class: 'rte-form-label', text: 'URL' }),
+            el('input', { type: 'url', class: 'rte-form-input', name: 'url', placeholder: 'https://example.com', value: 'https://' }),
+            el('label', { class: 'rte-form-label', text: 'Text to display' }),
+            el('input', { type: 'text', class: 'rte-form-input', name: 'text', value: selectedText }),
+            el('label', { class: 'rte-form-row' }, [
+                el('input', { type: 'checkbox', name: 'newtab', checked: true }),
+                el('span', { text: ' Open in new tab' }),
+            ]),
+        ]);
+        openModal({
+            title: 'Insert link',
+            body: body,
+            confirmLabel: 'Insert',
+            onConfirm: function () {
+                var url = body.querySelector('[name=url]').value.trim();
+                var text = body.querySelector('[name=text]').value;
+                var newtab = body.querySelector('[name=newtab]').checked;
+                if (!url) return false;
+                var safeText = text || url;
+                var html = '<a href="' + escapeHtml(url) + '"' +
+                    (newtab ? ' target="_blank" rel="noopener noreferrer"' : '') +
+                    '>' + escapeHtml(safeText) + '</a>';
+                self._insertHTML(html);
+            },
+        });
+    };
+
+    RichTextEditor.prototype._dialogImage = function () {
+        var self = this;
+        var tabs = el('div', { class: 'rte-tabs' });
+        var tabUpload = el('button', { type: 'button', class: 'rte-tab rte-tab-active', text: 'Upload' });
+        var tabUrl = el('button', { type: 'button', class: 'rte-tab', text: 'URL' });
+        tabs.appendChild(tabUpload);
+        tabs.appendChild(tabUrl);
+
+        var paneUpload = el('div', { class: 'rte-form rte-tab-pane rte-tab-pane-active' }, [
+            el('label', { class: 'rte-form-label', text: 'Choose image' }),
+            el('input', { type: 'file', class: 'rte-form-input', name: 'file', accept: 'image/*' }),
+            el('label', { class: 'rte-form-label', text: 'Alt text' }),
+            el('input', { type: 'text', class: 'rte-form-input', name: 'alt' }),
+            el('label', { class: 'rte-form-label', text: 'Width (px, optional)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'width', min: '0' }),
+        ]);
+        var paneUrl = el('div', { class: 'rte-form rte-tab-pane' }, [
+            el('label', { class: 'rte-form-label', text: 'Image URL' }),
+            el('input', { type: 'url', class: 'rte-form-input', name: 'url', placeholder: 'https://...' }),
+            el('label', { class: 'rte-form-label', text: 'Alt text' }),
+            el('input', { type: 'text', class: 'rte-form-input', name: 'alt' }),
+            el('label', { class: 'rte-form-label', text: 'Width (px, optional)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'width', min: '0' }),
+        ]);
+
+        tabUpload.addEventListener('click', function () {
+            tabUpload.classList.add('rte-tab-active');
+            tabUrl.classList.remove('rte-tab-active');
+            paneUpload.classList.add('rte-tab-pane-active');
+            paneUrl.classList.remove('rte-tab-pane-active');
+        });
+        tabUrl.addEventListener('click', function () {
+            tabUrl.classList.add('rte-tab-active');
+            tabUpload.classList.remove('rte-tab-active');
+            paneUrl.classList.add('rte-tab-pane-active');
+            paneUpload.classList.remove('rte-tab-pane-active');
+        });
+
+        var body = el('div', null, [tabs, paneUpload, paneUrl]);
+        openModal({
+            title: 'Insert image',
+            body: body,
+            confirmLabel: 'Insert',
+            onConfirm: function () {
+                var widthAttr = function (input) {
+                    var v = parseInt(input.value, 10);
+                    return v > 0 ? ' width="' + v + '"' : '';
+                };
+                if (paneUpload.classList.contains('rte-tab-pane-active')) {
+                    var fileInput = paneUpload.querySelector('[name=file]');
+                    var altInput = paneUpload.querySelector('[name=alt]');
+                    var widthInput = paneUpload.querySelector('[name=width]');
+                    var f = fileInput.files && fileInput.files[0];
+                    if (!f) return false;
+                    self._uploadImage(f, function (url) {
+                        var html = '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(altInput.value || '') + '"' + widthAttr(widthInput) + '>';
+                        self._insertHTML(html);
+                    });
+                } else {
+                    var urlInput = paneUrl.querySelector('[name=url]');
+                    var altInput2 = paneUrl.querySelector('[name=alt]');
+                    var widthInput2 = paneUrl.querySelector('[name=width]');
+                    var url = urlInput.value.trim();
+                    if (!url) return false;
+                    var html = '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(altInput2.value || '') + '"' + widthAttr(widthInput2) + '>';
+                    self._insertHTML(html);
+                }
+            },
+        });
+    };
+
+    RichTextEditor.prototype._uploadImage = function (file, cb) {
+        var handler = this.config.file_upload_handler;
+        if (typeof handler === 'function') {
+            handler(file, function (url) { cb(url); });
+        } else {
+            // Fallback: embed as base64 data URL.
+            var reader = new FileReader();
+            reader.onload = function () { cb(reader.result); };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    RichTextEditor.prototype._dialogVideo = function () {
+        var self = this;
+        var tabs = el('div', { class: 'rte-tabs' });
+        var tabUpload = el('button', { type: 'button', class: 'rte-tab rte-tab-active', text: 'Upload File' });
+        var tabUrl = el('button', { type: 'button', class: 'rte-tab', text: 'URL Video' });
+        tabs.appendChild(tabUpload);
+        tabs.appendChild(tabUrl);
+
+        var paneUpload = el('div', { class: 'rte-form rte-tab-pane rte-tab-pane-active' }, [
+            el('label', { class: 'rte-form-label', text: 'Choose video file (MP4, WebM, OGG)' }),
+            el('input', { type: 'file', class: 'rte-form-input', name: 'file', accept: 'video/mp4,video/webm,video/ogg,video/*' }),
+            el('label', { class: 'rte-form-label', text: 'Width (px)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'w', value: '560', min: '0' }),
+            el('label', { class: 'rte-form-label', text: 'Height (px)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'h', value: '315', min: '0' }),
+        ]);
+        var paneUrl = el('div', { class: 'rte-form rte-tab-pane' }, [
+            el('label', { class: 'rte-form-label', text: 'Video URL (YouTube, Vimeo, atau .mp4)' }),
+            el('input', { type: 'url', class: 'rte-form-input', name: 'url', placeholder: 'https://www.youtube.com/watch?v=...' }),
+            el('label', { class: 'rte-form-label', text: 'Width (px)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'w', value: '560', min: '0' }),
+            el('label', { class: 'rte-form-label', text: 'Height (px)' }),
+            el('input', { type: 'number', class: 'rte-form-input', name: 'h', value: '315', min: '0' }),
+        ]);
+
+        tabUpload.addEventListener('click', function () {
+            tabUpload.classList.add('rte-tab-active');
+            tabUrl.classList.remove('rte-tab-active');
+            paneUpload.classList.add('rte-tab-pane-active');
+            paneUrl.classList.remove('rte-tab-pane-active');
+        });
+        tabUrl.addEventListener('click', function () {
+            tabUrl.classList.add('rte-tab-active');
+            tabUpload.classList.remove('rte-tab-active');
+            paneUrl.classList.add('rte-tab-pane-active');
+            paneUpload.classList.remove('rte-tab-pane-active');
+        });
+
+        var body = el('div', null, [tabs, paneUpload, paneUrl]);
+        var uploadedUrl = null;
+
+        openModal({
+            title: 'Insert video',
+            body: body,
+            confirmLabel: 'Insert',
+            onConfirm: function () {
+                var w = (paneUpload.classList.contains('rte-tab-pane-active') ?
+                    paneUpload.querySelector('[name=w]') : paneUrl.querySelector('[name=w]')).value || '560';
+                var h = (paneUpload.classList.contains('rte-tab-pane-active') ?
+                    paneUpload.querySelector('[name=h]') : paneUrl.querySelector('[name=h]')).value || '315';
+
+                if (paneUpload.classList.contains('rte-tab-pane-active')) {
+                    var fileInput = paneUpload.querySelector('[name=file]');
+                    var f = fileInput.files && fileInput.files[0];
+                    if (!f) return false;
+                    // Upload the file then insert the video tag
+                    self._uploadVideo(f, function (url) {
+                        var html = '<video controls width="' + w + '" height="' + h + '"><source src="' + escapeHtml(url) + '"></video>';
+                        self._insertHTML(html);
+                    });
+                    return; // close called after async — keep open via return false
+                } else {
+                    var url = paneUrl.querySelector('[name=url]').value.trim();
+                    if (!url) return false;
+                    var html = self._buildVideoEmbed(url, w, h);
+                    self._insertHTML(html);
+                }
+            },
+        });
+    };
+
+    RichTextEditor.prototype._uploadVideo = function (file, cb) {
+        var handler = this.config.file_upload_handler;
+        if (typeof handler === 'function') {
+            handler(file, function (url) { cb(url); });
+        } else {
+            // Fallback: embed as base64 data URL (for small files)
+            var reader = new FileReader();
+            reader.onload = function () { cb(reader.result); };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    RichTextEditor.prototype._buildVideoEmbed = function (url, w, h) {
+        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]+)/);
+        if (yt) {
+            return '<iframe width="' + w + '" height="' + h + '" src="https://www.youtube.com/embed/' + yt[1] +
+                '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+        }
+        var vm = url.match(/vimeo\.com\/(\d+)/);
+        if (vm) {
+            return '<iframe width="' + w + '" height="' + h + '" src="https://player.vimeo.com/video/' + vm[1] +
+                '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+        }
+        if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
+            return '<video controls width="' + w + '" height="' + h + '"><source src="' + escapeHtml(url) + '"></video>';
+        }
+        return '<iframe width="' + w + '" height="' + h + '" src="' + escapeHtml(url) + '" frameborder="0" allowfullscreen></iframe>';
+    };
+
+    RichTextEditor.prototype._dialogTable = function () {
+        var self = this;
+        var grid = el('div', { class: 'rte-table-grid' });
+        var status = el('div', { class: 'rte-table-status', text: '0 × 0' });
+        var rows = 8, cols = 10;
+        var cells = [];
+        for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+                (function (r, c) {
+                    var cell = el('div', {
+                        class: 'rte-table-cell',
+                        onmouseenter: function () {
+                            cells.forEach(function (cc) {
+                                cc.el.classList.toggle('on', cc.r <= r && cc.c <= c);
+                            });
+                            status.textContent = (r + 1) + ' × ' + (c + 1);
+                        },
+                        onclick: function () {
+                            insertTable(r + 1, c + 1);
+                            modal.close();
+                        },
+                    });
+                    cells.push({ el: cell, r: r, c: c });
+                    grid.appendChild(cell);
+                })(r, c);
+            }
+        }
+
+        var customRow = el('div', { class: 'rte-form-row' }, [
+            el('span', { text: 'Or: ' }),
+            el('input', { type: 'number', class: 'rte-form-input rte-form-input-sm', name: 'r', value: '3', min: '1' }),
+            el('span', { text: ' × ' }),
+            el('input', { type: 'number', class: 'rte-form-input rte-form-input-sm', name: 'c', value: '3', min: '1' }),
+            el('button', {
+                type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Insert',
+                onclick: function () {
+                    var rr = parseInt(customRow.querySelector('[name=r]').value, 10) || 1;
+                    var cc = parseInt(customRow.querySelector('[name=c]').value, 10) || 1;
+                    insertTable(rr, cc);
+                    modal.close();
+                },
+            }),
+        ]);
+
+        var body = el('div', { class: 'rte-table-builder' }, [grid, status, customRow]);
+        var modal = openModal({
+            title: 'Insert table',
+            body: body,
+            confirmLabel: 'Close',
+            onConfirm: function () { return; },
+        });
+
+        function insertTable(rr, cc) {
+            var html = '<table class="rte-table" style="border-collapse:collapse;width:100%"><tbody>';
+            for (var i = 0; i < rr; i++) {
+                html += '<tr>';
+                for (var j = 0; j < cc; j++) {
+                    html += '<td style="border:1px solid #ccc;padding:6px;min-width:40px;">&nbsp;</td>';
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table><p><br></p>';
+            self._insertHTML(html);
+        }
+    };
+
+    RichTextEditor.prototype._dialogEmoji = function () {
+        var self = this;
+        var emojis = ['😀','😁','😂','🤣','😊','😍','😘','😎','🤩','🤔','🙄','😴','😢','😭','😡','🤯','😱','🥳','🤝','👏','👍','👎','🙏','💪','❤️','💔','💯','🔥','⭐','✨','✅','❌','⚡','🎉','🎁','🚀','📌','📎','📝','📷','🎵','💡','⚙️','🌟','🌈','☀️','🌙','🌍'];
+        var grid = el('div', { class: 'rte-emoji-grid' });
+        emojis.forEach(function (em) {
+            grid.appendChild(el('button', {
+                type: 'button', class: 'rte-emoji-cell', text: em,
+                onclick: function () {
+                    self._insertHTML(em);
+                    modal.close();
+                },
+            }));
+        });
+        var modal = openModal({
+            title: 'Insert emoji',
+            body: grid,
+            confirmLabel: 'Close',
+            onConfirm: function () { return; },
+        });
+    };
+
+    // -------- Format Painter --------
+    RichTextEditor.prototype._doCopyFormat = function () {
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+            alert('Select some formatted text first, then click Copy Format.');
+            return;
+        }
+        // Store the selected HTML range
+        this._copiedFormat = sel.getRangeAt(0).cloneRange();
+        this._formatCopied = true;
+        // Highlight the button briefly
+        var btn = this._buttons['copyformat'];
+        if (btn) { btn.classList.add('rte-active'); setTimeout(function () { btn.classList.remove('rte-active'); }, 1500); }
+    };
+
+    // -------- Find & Replace --------
+    RichTextEditor.prototype._dialogFindReplace = function () {
+        var self = this;
+        var found = [], currentIdx = -1;
+
+        var findInput = el('input', { type: 'text', class: 'rte-form-input', name: 'find', placeholder: 'Find text...' });
+        var replaceInput = el('input', { type: 'text', class: 'rte-form-input', name: 'replace', placeholder: 'Replace with...' });
+        var statusEl = el('div', { class: 'rte-find-status', text: '' });
+        var replaceOneBtn = el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Replace' });
+        var replaceAllBtn = el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Replace All' });
+
+        function highlight(container, term) {
+            if (!term) return [];
+            var foundRanges = [];
+            var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+            nodes.forEach(function (node) {
+                var text = node.textContent;
+                var idx = text.toLowerCase().indexOf(term.toLowerCase());
+                if (idx !== -1) {
+                    var range = document.createRange();
+                    range.setStart(node, idx);
+                    range.setEnd(node, idx + term.length);
+                    foundRanges.push(range);
+                }
+            });
+            return foundRanges;
+        }
+
+        function doFind() {
+            var term = findInput.value.trim();
+            if (!term) return;
+            // Remove old highlights
+            self.content.querySelectorAll('.rte-find-hl').forEach(function (el) {
+                el.outerHTML = el.textContent;
+            });
+            found = highlight(self.content, term);
+            statusEl.textContent = found.length ? found.length + ' found' : 'Not found';
+            if (found.length) {
+                currentIdx = 0;
+                scrollRangeIntoView(found[0]);
+                highlightRange(found[0]);
+            }
+        }
+
+        function highlightRange(range) {
+            var span = document.createElement('span');
+            span.className = 'rte-find-hl';
+            try {
+                range.surroundContents(span);
+            } catch (e) {}
+        }
+
+        function scrollRangeIntoView(range) {
+            try {
+                var rects = range.getClientRects();
+                if (rects.length) {
+                    self.contentWrap.scrollTop += rects[0].top - self.contentWrap.getBoundingClientRect().top - 80;
+                }
+            } catch (e) {}
+        }
+
+        function doReplace(replaceAll) {
+            var term = findInput.value.trim();
+            var repl = replaceInput.value;
+            if (!term) return;
+            if (replaceAll) {
+                var html = self.content.innerHTML;
+                var regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                self.content.innerHTML = html.replace(regex, repl);
+                statusEl.textContent = 'Replaced all';
+                self._syncSource();
+            } else {
+                if (currentIdx >= 0 && found[currentIdx]) {
+                    try {
+                        found[currentIdx].deleteContents();
+                        found[currentIdx].insertNode(document.createTextNode(repl));
+                        self._syncSource();
+                        doFind();
+                    } catch (e) {}
+                }
+            }
+        }
+
+        var body = el('div', { class: 'rte-form' }, [
+            el('label', { class: 'rte-form-label', text: 'Find' }),
+            findInput,
+            el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Find Next', onclick: doFind, style: { marginTop: '4px' } }),
+            el('label', { class: 'rte-form-label', text: 'Replace with' }),
+            replaceInput,
+            el('div', { style: 'display:flex;gap:6px;margin-top:4px;' }, [replaceOneBtn, replaceAllBtn]),
+            statusEl,
+        ]);
+
+        replaceOneBtn.addEventListener('click', function () { doReplace(false); });
+        replaceAllBtn.addEventListener('click', function () { doReplace(true); });
+
+        openModal({
+            title: 'Find & Replace',
+            body: body,
+            confirmLabel: 'Close',
+            onConfirm: function () {
+                // Cleanup highlights
+                self.content.querySelectorAll('.rte-find-hl').forEach(function (el) {
+                    el.outerHTML = el.textContent;
+                });
+            },
+        });
+
+        setTimeout(function () { findInput.focus(); }, 50);
+    };
+
+    // -------- Insert Template --------
+    RichTextEditor.prototype._dialogTemplate = function () {
+        var self = this;
+        var TEMPLATES = [
+            {
+                label: 'Business Letter',
+                html: '<h2>Official Letter</h2><p>Date: ________________</p><p>To: ________________</p><p>From: ________________</p><hr><p>Subject: ________________</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>Respectfully,</p><p>&nbsp;</p><p>________________</p>',
+            },
+            {
+                label: 'Memo',
+                html: '<h2>Memorandum</h2><p><strong>To:</strong> ____________</p><p><strong>From:</strong> ____________</p><p><strong>Date:</strong> ____________</p><p><strong>Re:</strong> ____________</p><hr><p>&nbsp;</p>',
+            },
+            {
+                label: 'Report Header',
+                html: '<h1>Report Title</h1><p><em>Subtitle or description</em></p><hr><h2>1. Introduction</h2><p>&nbsp;</p><h2>2. Discussion</h2><p>&nbsp;</p><h2>3. Conclusion</h2><p>&nbsp;</p>',
+            },
+            {
+                label: 'Announcement',
+                html: '<h2 style="text-align:center;">Announcement</h2><p style="text-align:center;"><em>Date: ____________</em></p><hr><p>&nbsp;</p><p style="text-align:center;">&#128226; More details coming soon &#128226;</p>',
+            },
+            {
+                label: 'Table of Contents',
+                html: '<h2>Table of Contents</h2><ol><li>Chapter 1 — ____________</li><li>Chapter 2 — ____________</li><li>Chapter 3 — ____________</li></ol>',
+            },
+            {
+                label: 'Agenda',
+                html: '<h2>Meeting Agenda</h2><p><strong>Date:</strong> ____________ &nbsp; <strong>Time:</strong> ____________</p><ol><li>Opening &amp; Roll Call</li><li>Previous Minutes</li><li>Old Business</li><li>New Business</li><li>Announcements</li><li>Adjournment</li></ol>',
+            },
+            {
+                label: 'Blank Page',
+                html: '<p><br></p>',
+            },
+        ];
+
+        var grid = el('div', { class: 'rte-template-grid' });
+        TEMPLATES.forEach(function (tpl) {
+            var card = el('button', { type: 'button', class: 'rte-template-card', text: tpl.label });
+            card.addEventListener('click', function () {
+                self._insertHTML(tpl.html);
+                modal.close();
+            });
+            grid.appendChild(card);
+        });
+
+        var modal = openModal({
+            title: 'Insert Template',
+            body: grid,
+            confirmLabel: 'Close',
+            onConfirm: function () { return; },
+        });
+    };
+
+    // -------- Contextual Popups --------
+    RichTextEditor.prototype._showTableEditorPopup = function (td) {
+        var self = this;
+        this._closeTablePopup();
+        var popup = el('div', { class: 'rte-context-popup rte-table-popup' });
+
+        // Row/Col count controls
+        var ctrlRow = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Columns:' }),
+            el('input', { type: 'number', value: td.cellIndex + 1, min: '1', max: '20', class: 'rte-popup-input',
+                onchange: function () {
+                    self._setColspan(td, parseInt(this.value, 10));
+                }
+            }),
+        ]);
+        var ctrlColor = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Color:' }),
+            el('input', { type: 'color', value: '#f1f3f6', class: 'rte-popup-color',
+                onchange: function () {
+                    td.style.backgroundColor = this.value;
+                    self._syncSource();
+                }
+            }),
+        ]);
+        var ctrlStyle = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Style:' }),
+            el('button', { type: 'button', text: 'Bold', class: 'rte-btn rte-btn-sm',
+                onclick: function () {
+                    td.style.fontWeight = td.style.fontWeight === 'bold' ? '' : 'bold';
+                    self._syncSource();
+                }
+            }),
+            el('button', { type: 'button', text: 'Center', class: 'rte-btn rte-btn-sm',
+                onclick: function () {
+                    td.style.textAlign = td.style.textAlign === 'center' ? '' : 'center';
+                    self._syncSource();
+                }
+            }),
+        ]);
+        popup.appendChild(ctrlRow);
+        popup.appendChild(ctrlColor);
+        popup.appendChild(ctrlStyle);
+
+        var rect = td.getBoundingClientRect();
+        popup.style.position = 'fixed';
+        popup.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
+        popup.style.top = (rect.bottom + 4) + 'px';
+        document.body.appendChild(popup);
+        this._tablePopup = popup;
+
+        // Close on outside click
+        setTimeout(function () {
+            document.addEventListener('click', self._tablePopupCloseHandler = function (e) {
+                if (!popup.contains(e.target) && !td.contains(e.target)) {
+                    self._closeTablePopup();
+                }
+            });
+        }, 0);
+    };
+
+    RichTextEditor.prototype._closeTablePopup = function () {
+        if (this._tablePopup) {
+            if (this._tablePopup.parentNode) this._tablePopup.parentNode.removeChild(this._tablePopup);
+            this._tablePopup = null;
+        }
+        if (this._tablePopupCloseHandler) {
+            document.removeEventListener('click', this._tablePopupCloseHandler);
+            this._tablePopupCloseHandler = null;
+        }
+    };
+
+    RichTextEditor.prototype._setColspan = function (td, count) {
+        var table = td.closest('table');
+        if (!table) return;
+        var rows = table.rows;
+        var colIdx = td.cellIndex;
+        var rowIdx = td.parentNode.rowIndex;
+        for (var r = 0; r < rows.length; r++) {
+            if (r === rowIdx) {
+                td.colSpan = Math.min(count, rows[r].cells.length - colIdx);
+            }
+        }
+        this._syncSource();
+    };
+
+    RichTextEditor.prototype._showImageEditorPopup = function (img) {
+        var self = this;
+        this._closeImagePopup();
+        var popup = el('div', { class: 'rte-context-popup rte-image-popup' });
+
+        var ctrlAlign = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Align:' }),
+            el('button', { type: 'button', text: 'Left', class: 'rte-btn rte-btn-sm',
+                onclick: function () { img.style.float = ''; img.style.display = 'block'; img.style.marginLeft = ''; img.style.marginRight = 'auto'; self._syncSource(); }
+            }),
+            el('button', { type: 'button', text: 'Center', class: 'rte-btn rte-btn-sm',
+                onclick: function () { img.style.float = ''; img.style.display = 'block'; img.style.marginLeft = 'auto'; img.style.marginRight = 'auto'; self._syncSource(); }
+            }),
+            el('button', { type: 'button', text: 'Right', class: 'rte-btn rte-btn-sm',
+                onclick: function () { img.style.float = ''; img.style.display = 'block'; img.style.marginLeft = 'auto'; img.style.marginRight = ''; img.style.display = 'block'; img.style.marginLeft = 'auto'; img.style.marginRight = '0'; self._syncSource(); }
+            }),
+        ]);
+        var ctrlWidth = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Width (px):' }),
+            el('input', { type: 'number', value: img.width || img.offsetWidth, min: '10', class: 'rte-popup-input',
+                onchange: function () { img.width = parseInt(this.value, 10) || img.naturalWidth; self._syncSource(); }
+            }),
+        ]);
+        var ctrlBorder = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Border (px):' }),
+            el('input', { type: 'number', value: parseInt(img.style.borderWidth || '0', 10), min: '0', class: 'rte-popup-input',
+                onchange: function () { img.style.borderWidth = this.value + 'px'; img.style.borderStyle = parseInt(this.value, 10) > 0 ? 'solid' : 'none'; self._syncSource(); }
+            }),
+        ]);
+        var ctrlDelete = el('div', { class: 'rte-popup-row' }, [
+            el('button', { type: 'button', text: '🗑 Delete Image', class: 'rte-btn rte-btn-sm', style: 'color:#dc2626;background:#fef2f2;',
+                onclick: function () {
+                    if (confirm('Delete this image?')) {
+                        img.parentNode.removeChild(img);
+                        self._closeImagePopup();
+                        self._syncSource();
+                    }
+                }
+            }),
+        ]);
+
+        popup.appendChild(ctrlAlign);
+        popup.appendChild(ctrlWidth);
+        popup.appendChild(ctrlBorder);
+        popup.appendChild(ctrlDelete);
+
+        var rect = img.getBoundingClientRect();
+        popup.style.position = 'fixed';
+        popup.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
+        popup.style.top = (rect.bottom + 4) + 'px';
+        document.body.appendChild(popup);
+        this._imagePopup = popup;
+
+        setTimeout(function () {
+            document.addEventListener('click', self._imagePopupCloseHandler = function (e) {
+                if (!popup.contains(e.target) && e.target !== img) {
+                    self._closeImagePopup();
+                }
+            });
+        }, 0);
+    };
+
+    RichTextEditor.prototype._closeImagePopup = function () {
+        if (this._imagePopup) {
+            if (this._imagePopup.parentNode) this._imagePopup.parentNode.removeChild(this._imagePopup);
+            this._imagePopup = null;
+        }
+        if (this._imagePopupCloseHandler) {
+            document.removeEventListener('click', this._imagePopupCloseHandler);
+            this._imagePopupCloseHandler = null;
+        }
+    };
+
+    // -------- core operations ---------
+    RichTextEditor.prototype._insertHTML = function (html) {
+        this._focusContent();
+        try {
+            document.execCommand('insertHTML', false, html);
+        } catch (e) {
+            // Fallback: append at end
+            this.content.insertAdjacentHTML('beforeend', html);
+        }
+        this._syncSource();
+        this._updateState();
+    };
+
+    RichTextEditor.prototype._toggleSource = function () {
+        var showingSource = this.sourceArea.style.display !== 'none';
+        if (showingSource) {
+            // Switch back to WYSIWYG
+            this.content.innerHTML = this.sourceArea.value;
+            this.sourceArea.style.display = 'none';
+            this.content.style.display = '';
+            this.wrapper.classList.remove('rte-source-mode');
+        } else {
+            this.sourceArea.value = this.content.innerHTML;
+            this.sourceArea.style.display = '';
+            this.content.style.display = 'none';
+            this.wrapper.classList.add('rte-source-mode');
+        }
+    };
+
+    RichTextEditor.prototype._toggleFullscreen = function () {
+        this.wrapper.classList.toggle('rte-fullscreen');
+        if (this.wrapper.classList.contains('rte-fullscreen')) {
+            document.body.classList.add('rte-body-fullscreen');
+        } else {
+            document.body.classList.remove('rte-body-fullscreen');
+        }
+    };
+
+    RichTextEditor.prototype._snapshotSelection = function () {
+        this._savedRange = saveSelection(this.content);
+    };
+
+    RichTextEditor.prototype._syncSource = function () {
+        // Mirror to underlying textarea if any
+        if (this._target.tagName === 'TEXTAREA') {
+            this._target.value = this.content.innerHTML;
+        }
+    };
+
+    RichTextEditor.prototype._updateState = function () {
+        var self = this;
+        // Toggle "active" class on toolbar buttons matching queryCommandState
+        var map = {
+            bold: 'bold', italic: 'italic', underline: 'underline', strike: 'strikeThrough',
+            sub: 'subscript', sup: 'superscript',
+            ul: 'insertUnorderedList', ol: 'insertOrderedList',
+            alignleft: 'justifyLeft', aligncenter: 'justifyCenter',
+            alignright: 'justifyRight', alignjustify: 'justifyFull',
+        };
+        Object.keys(map).forEach(function (key) {
+            var btn = self._buttons[key];
+            if (!btn) return;
+            try {
+                btn.classList.toggle('rte-active', document.queryCommandState(map[key]));
+            } catch (e) {}
+        });
+        // Stats
+        var text = this.content.textContent || '';
+        var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        var chars = text.length;
+        var counts = this.statusbar.querySelector('.rte-status-counts');
+        if (counts) counts.textContent = words + ' words • ' + chars + ' chars';
+    };
+
+    RichTextEditor.prototype._bind = function () {
+        var self = this;
+        var c = this.content;
+
+        c.addEventListener('input', function () {
+            self._snapshotSelection();
+            self._syncSource();
+            self._updateState();
+            if (self.config.onchange) try { self.config.onchange(self.getHTMLCode()); } catch (e) {}
+        });
+        c.addEventListener('keyup', function () { self._snapshotSelection(); self._updateState(); });
+        c.addEventListener('mouseup', function () { self._snapshotSelection(); self._updateState(); });
+
+        // Contextual table popup — show when cursor enters a table cell
+        c.addEventListener('mouseup', function (e) {
+            var sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            var node = sel.anchorNode;
+            if (!node) return;
+            var td = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+            while (td && td.tagName !== 'TD') td = td.parentElement;
+            if (td && td.closest('table')) {
+                self._showTableEditorPopup(td);
+            } else {
+                self._closeTablePopup();
+            }
+        });
+
+        // Contextual image popup — show floating toolbar when image is clicked
+        c.addEventListener('click', function (e) {
+            var target = e.target;
+            if (target.tagName === 'IMG') {
+                self._showImageEditorPopup(target);
+            } else if (target.tagName !== 'TD') {
+                self._closeImagePopup();
+            }
+        });
+        c.addEventListener('blur', function () { self._snapshotSelection(); });
+        c.addEventListener('focus', function () { self._updateState(); });
+
+        // Source area syncs back to content on blur
+        this.sourceArea.addEventListener('input', function () {
+            if (self._target.tagName === 'TEXTAREA') self._target.value = self.sourceArea.value;
+        });
+
+        // Paste cleanup: prefer plain text-ish; allow HTML but strip dangerous
+        c.addEventListener('paste', function (e) {
+            if (!e.clipboardData) return;
+            var html = e.clipboardData.getData('text/html');
+            var text = e.clipboardData.getData('text/plain');
+            if (html) {
+                e.preventDefault();
+                var clean = self._sanitizePastedHTML(html);
+                document.execCommand('insertHTML', false, clean);
+            } else if (text) {
+                // Let native handle plain text — fine
+            }
+        });
+
+        // Drag-and-drop image upload
+        c.addEventListener('drop', function (e) {
+            if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+            var f = e.dataTransfer.files[0];
+            if (!/^image\//.test(f.type)) return;
+            e.preventDefault();
+            // Move caret to drop point
+            var range = (document.caretRangeFromPoint || document.caretPositionFromPoint)
+                ? (document.caretRangeFromPoint
+                    ? document.caretRangeFromPoint(e.clientX, e.clientY)
+                    : null)
+                : null;
+            if (range) { var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); self._snapshotSelection(); }
+            self._uploadImage(f, function (url) {
+                self._insertHTML('<img src="' + escapeHtml(url) + '" alt="">');
+            });
+        });
+
+        // Keyboard shortcuts
+        c.addEventListener('keydown', function (e) {
+            if (e.ctrlKey || e.metaKey) {
+                var k = e.key.toLowerCase();
+                if (k === 'b') { e.preventDefault(); self.exec('bold'); }
+                else if (k === 'i') { e.preventDefault(); self.exec('italic'); }
+                else if (k === 'u') { e.preventDefault(); self.exec('underline'); }
+                else if (k === 'k') { e.preventDefault(); self._dialogLink(); }
+                else if (k === 'z') { /* native undo */ }
+                else if (k === 'y') { /* native redo */ }
+                self._snapshotSelection();
+                self._updateState();
+            }
+
+            // Tab inside lists -> indent
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                self.exec(e.shiftKey ? 'outdent' : 'indent');
+            }
+        });
+
+        // Click outside fullscreen / Esc to leave
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && self.wrapper.classList.contains('rte-fullscreen')) {
+                self._toggleFullscreen();
+            }
+        });
+    };
+
+    RichTextEditor.prototype._sanitizePastedHTML = function (html) {
+        // Strip <script>, <style>, on* attributes, MS Office cruft
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var disallowed = ['script', 'style', 'meta', 'link', 'object', 'embed'];
+        disallowed.forEach(function (tag) {
+            var nodes = doc.querySelectorAll(tag);
+            nodes.forEach(function (n) { n.parentNode.removeChild(n); });
+        });
+        var all = doc.body.querySelectorAll('*');
+        all.forEach(function (n) {
+            // Drop on* event handlers
+            for (var i = n.attributes.length - 1; i >= 0; i--) {
+                var attr = n.attributes[i];
+                if (/^on/i.test(attr.name)) n.removeAttribute(attr.name);
+                if (attr.name === 'class' && /\bMso/.test(attr.value)) n.removeAttribute('class');
+            }
+        });
+        return doc.body.innerHTML;
+    };
+
+    // ------- Public API -------
+    RichTextEditor.prototype.getHTMLCode = function () {
+        if (this.sourceArea.style.display !== 'none') {
+            // Return whatever is in source view
+            return this.sourceArea.value;
+        }
+        return this.content.innerHTML;
+    };
+    RichTextEditor.prototype.getHTML = RichTextEditor.prototype.getHTMLCode;
+
+    RichTextEditor.prototype.setHTMLCode = function (html) {
+        var safe = (html == null) ? '' : html;
+        if (this.sourceArea.style.display !== 'none') {
+            this.sourceArea.value = safe;
+        }
+        this.content.innerHTML = safe;
+        this._syncSource();
+        this._updateState();
+    };
+    RichTextEditor.prototype.setHTML = RichTextEditor.prototype.setHTMLCode;
+
+    RichTextEditor.prototype.insertHTML = function (html) { this._insertHTML(html); };
+
+    RichTextEditor.prototype.insertImageByUrl = function (url, alt) {
+        this._insertHTML('<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(alt || '') + '">');
+    };
+
+    RichTextEditor.prototype.focus = function () {
+        this.content.focus();
+        placeCursorAtEnd(this.content);
+    };
+
+    RichTextEditor.prototype.destroy = function () {
+        if (this.wrapper && this.wrapper.parentNode) this.wrapper.parentNode.removeChild(this.wrapper);
+        if (this._target && this._target.tagName === 'TEXTAREA') this._target.style.display = '';
+    };
+
+    // Static plugin registry (compat shim)
+    RichTextEditor.plugins = RichTextEditor.plugins || {};
+    RichTextEditor.registerPlugin = function (name, pluginFn) {
+        RichTextEditor.plugins[name] = pluginFn;
+    };
+
+    global.RichTextEditor = RichTextEditor;
+})(typeof window !== 'undefined' ? window : this);

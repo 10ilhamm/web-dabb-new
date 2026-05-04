@@ -1399,7 +1399,7 @@
 
             try {
                 editor1 = new RichTextEditor("#div_editor1", {
-                    base_url: "/richtexteditor",
+                    base_url: "/cms_rte",
                     editorBodyCssClass: "rte-content-body",
                     file_upload_handler: function (file, callback) {
                         var formData = new FormData();

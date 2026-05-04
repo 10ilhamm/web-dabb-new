@@ -2,7 +2,8 @@
 
 @section('header')
     <div class="text-[13px] text-gray-500 font-medium">
-        <a href="{{ route('dashboard') }}" class="text-gray-400 hover:text-gray-600">{{ __('dashboard.header.breadcrumb_home') }}</a> /
+        <a href="{{ route('dashboard') }}"
+            class="text-gray-400 hover:text-gray-600">{{ __('dashboard.header.breadcrumb_home') }}</a> /
         <span class="text-[#0ea5e9]">{{ __("dashboard.{$role}.title") }}</span>
     </div>
 @endsection
@@ -13,82 +14,103 @@
         <h1 class="text-[22px] font-bold text-[#1E293B] mb-2">
             @php
                 $greetingKey = "dashboard.welcome.greeting_{$role}";
-                $greeting = __($greetingKey);
+                $greeting = __($greetingKey, ['name' => $user->name]);
             @endphp
-            {{ str_contains($greeting, 'greeting_') ? "Selamat Datang, {$user->name}" : $greeting }}
+            {{ $greeting }}
         </h1>
         <p class="text-gray-500 text-sm">{{ __("dashboard.welcome.subtitle_{$role}") }}</p>
 
         {{-- ===== ADMIN SPECIAL: Stats Cards ===== --}}
-        @if($role === 'admin')
+        @if ($role === 'admin')
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6">
 
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-3xl font-bold text-gray-900 leading-tight">10</div>
-                            <div class="text-xs font-medium text-gray-600 mt-1">{{ __('dashboard.admin.stats.total_visitors') }}</div>
+                            <div class="text-3xl font-bold text-gray-900 leading-tight">
+                                {{ number_format($totalVisitors ?? 0) }}</div>
+                            <div class="text-xs font-medium text-gray-600 mt-1">
+                                {{ __('dashboard.admin.stats.total_visitors') }}</div>
                         </div>
                         <div class="p-2 bg-gray-50 rounded-lg text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="mt-4 text-right">
-                        <a href="#" class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
+                        <a href="#"
+                            class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-3xl font-bold text-gray-900 leading-tight">3</div>
-                            <div class="text-xs font-medium text-gray-600 mt-1">{{ __('dashboard.admin.stats.daily_visitors') }}</div>
+                            <div class="text-3xl font-bold text-gray-900 leading-tight"
+                                id="avgDailyStat">{{ number_format($total7 ?? 0) }}</div>
+                            <div class="text-xs font-medium text-gray-600 mt-1">
+                                {{ __('dashboard.admin.stats.daily_visitors') }}</div>
                         </div>
                         <div class="p-2 bg-gray-50 rounded-lg text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
                             </svg>
                         </div>
                     </div>
+                    <div class="mt-1.5">
+                        <span class="text-[10px] text-gray-400" id="avgDailyLabel">{{ __("dashboard.admin.stats.avg_daily_7") }}</span>
+                    </div>
                     <div class="mt-4 text-right">
-                        <a href="#" class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
+                        <a href="#"
+                            class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div class="flex justify-between items-start relative">
                         <div>
-                            <div class="text-3xl font-bold text-gray-900 leading-tight">2</div>
-                            <div class="text-xs font-medium text-gray-600 mt-1">{{ __('dashboard.admin.stats.online_users') }}</div>
+                            <div class="text-3xl font-bold text-gray-900 leading-tight">
+                                {{ number_format($onlineUsers ?? 0) }}</div>
+                            <div class="text-xs font-medium text-gray-600 mt-1">
+                                {{ __('dashboard.admin.stats.online_users') }}</div>
                         </div>
                         <div class="p-2 bg-gray-50 rounded-lg text-gray-600 relative">
-                            <div class="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+                            <div class="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full border border-white">
+                            </div>
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="mt-4 text-right">
-                        <a href="#" class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
+                        <a href="#"
+                            class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-3xl font-bold text-gray-900 leading-tight">4</div>
-                            <div class="text-xs font-medium text-gray-600 mt-1">{{ __('dashboard.admin.stats.total_users') }}</div>
+                            <div class="text-3xl font-bold text-gray-900 leading-tight">
+                                {{ number_format($totalUsers ?? 0) }}</div>
+                            <div class="text-xs font-medium text-gray-600 mt-1">
+                                {{ __('dashboard.admin.stats.total_users') }}</div>
                         </div>
                         <div class="p-2 bg-gray-50 rounded-lg text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="mt-4 text-right">
-                        <a href="#" class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
+                        <a href="#"
+                            class="text-[11px] font-medium text-gray-400 hover:text-blue-500">{{ __('dashboard.admin.stats.view_details') }}</a>
                     </div>
                 </div>
 
@@ -96,34 +118,50 @@
         @endif
 
         {{-- ===== ADMIN SPECIAL: Chart ===== --}}
-        @if($role === 'admin')
+        @if ($role === 'admin')
             <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-gray-800">{{ __('dashboard.admin.chart.title') }}</h2>
-                </div>
-                <div class="w-full relative" style="height: 350px;">
-                    <canvas id="visitorChart"></canvas>
-                </div>
-                <div class="flex justify-center flex-col items-center mt-4">
-                    <div class="text-[11px] font-semibold text-gray-800 mb-2">{{ __('dashboard.admin.chart.user_type') }}</div>
-                    <div class="flex space-x-6 text-[11px] font-medium text-gray-600">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-[#3B82F6] mr-2"></div>
-                            {{ __('dashboard.admin.chart.unregistered_user') }}
+                    {{-- Timeframe selector for ApexCharts --}}
+                    <div class="flex flex-col gap-3">
+                        <div class="flex justify-between items-center flex-wrap gap-3">
+                            <div class="text-[11px] font-semibold text-gray-800">
+                                {{ __('dashboard.admin.chart.user_type') }}</div>
+                            <select id="chartTimeframe"
+                                class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer bg-white">
+                                <option value="day">Hari Ini (per jam)</option>
+                                <option value="week" selected>7 Hari Terakhir</option>
+                                <option value="month">30 Hari</option>
+                                <option value="year">1 Tahun</option>
+                            </select>
                         </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-[#06B6D4] mr-2"></div>{{ __('dashboard.admin.chart.admin') }}
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-[#EAB308] mr-2"></div>{{ __('dashboard.admin.chart.employee') }}
+                        <div class="flex items-center gap-5 text-[11px] font-medium text-gray-600" style="gap: 20px;">
+                            {{-- Guest (always first) --}}
+                            <div class="flex items-center gap-2" style="gap: 8px;">
+                                <span
+                                    style="width:12px;height:12px;min-width:12px;border-radius:999px;background-color:{{ $guestColor ?? '#3B82F6' }};display:inline-block;"></span>
+                                <span>{{ __('dashboard.admin.chart.unregistered_user') }}</span>
+                            </div>
+                            {{-- Registered roles — dynamic from DB --}}
+                            @foreach($chartRoles as $roleItem)
+                            @php $roleColor = $chartColors[$roleItem->name] ?? '#6B7280'; @endphp
+                            <div class="flex items-center gap-2" style="gap: 8px;">
+                                <span
+                                    style="width:12px;height:12px;min-width:12px;border-radius:999px;background-color:{{ $roleColor }};display:inline-block;"></span>
+                                <span>{{ $roleItem->i18nLabel() }}</span>
+                            </div>
+                            @endforeach
                         </div>
                     </div>
+                </div>
+                <div class="w-full relative" style="height: 350px;">
+                    <div id="visitorChart"></div>
                 </div>
             </div>
         @endif
 
         {{-- ===== PEGAWAI: Simple Card ===== --}}
-        @if($role === 'pegawai')
+        @if ($role === 'pegawai')
             <div class="mt-8 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">{{ __('dashboard.welcome.recent_activity') }}</h2>
                 <div class="text-sm text-gray-500">{{ __('dashboard.welcome.no_activity') }}</div>
@@ -131,26 +169,30 @@
         @endif
 
         {{-- ===== GENERAL CARD: works for umum, pelajar_mahasiswa, instansi_swasta ===== --}}
-        @if(in_array($role, ['umum', 'pelajar_mahasiswa', 'instansi_swasta']))
+        @if (in_array($role, ['umum', 'pelajar_mahasiswa', 'instansi_swasta']))
             <div class="mt-8 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">{{ __("dashboard.{$role}.card_title") }}</h2>
                 <p class="text-sm text-gray-600 mb-4">{{ __("dashboard.{$role}.card_desc") }}</p>
 
-                @if($role === 'umum')
-                    <button class="bg-[#174E93] text-white px-4 py-2 rounded shadow hover:bg-blue-800 transition-colors text-sm font-medium">
-                        {{ __("dashboard.umum.card_button") }}
+                @if ($role === 'umum')
+                    <button
+                        class="bg-[#174E93] text-white px-4 py-2 rounded shadow hover:bg-blue-800 transition-colors text-sm font-medium">
+                        {{ __('dashboard.umum.card_button') }}
                     </button>
                 @elseif($role === 'pelajar_mahasiswa')
-                    <button class="bg-[#0ea5e9] text-white px-4 py-2 rounded shadow hover:bg-blue-500 transition-colors text-sm font-medium">
-                        {{ __("dashboard.pelajar.card_button") }}
+                    <button
+                        class="bg-[#0ea5e9] text-white px-4 py-2 rounded shadow hover:bg-blue-500 transition-colors text-sm font-medium">
+                        {{ __('dashboard.pelajar.card_button') }}
                     </button>
                 @elseif($role === 'instansi_swasta')
                     <div class="flex space-x-3">
-                        <button class="bg-[#174E93] text-white px-4 py-2 rounded shadow hover:bg-blue-800 transition-colors text-sm font-medium">
-                            {{ __("dashboard.instansi.card_button1") }}
+                        <button
+                            class="bg-[#174E93] text-white px-4 py-2 rounded shadow hover:bg-blue-800 transition-colors text-sm font-medium">
+                            {{ __('dashboard.instansi.card_button1') }}
                         </button>
-                        <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-sm font-medium">
-                            {{ __("dashboard.instansi.card_button2") }}
+                        <button
+                            class="bg-gray-100 text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-sm font-medium">
+                            {{ __('dashboard.instansi.card_button2') }}
                         </button>
                     </div>
                 @endif
@@ -159,112 +201,126 @@
     </div>
 @endsection
 
-{{-- ===== ADMIN CHART SCRIPT ===== --}}
+{{-- Chart scripts --}}
+@if ($role === 'admin')
 @push('scripts')
-    @if($role === 'admin')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('visitorChart');
-            if (!ctx) return;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var roleChartData = @json($roleJsData ?? []);
+    var chartLabels7 = @json($chartLabels7 ?? []);
+    var guestData7 = @json($guestData7 ?? []);
+    var chartLabels30 = @json($chartLabels30 ?? []);
+    var guestData30 = @json($guestData30 ?? []);
+    var chartLabelsYear = @json($chartLabelsYear ?? []);
+    var guestDataYear = @json($guestDataYear ?? []);
+    var avgHourGuest = {{ $avgHourGuest ?? 0 }};
+    var guestColor = '{{ $guestColor ?? '#3B82F6' }}';
 
-            const chartCtx = ctx.getContext('2d');
-            const chartTitle = "{{ __('dashboard.admin.chart.subtitle') }}";
+    var chartEl = document.getElementById('visitorChart');
+    if (!chartEl) return;
 
-            new Chart(chartCtx, {
-                type: 'line',
-                data: {
-                    labels: ['08:00', '09:00', '10:00', '11:00', '12:00'],
-                    datasets: [
-                        {
-                            label: "{{ __('dashboard.admin.chart.unregistered_user') }}",
-                            data: [0, 0, 0, 0, 0],
-                            borderColor: '#3B82F6',
-                            backgroundColor: '#3B82F6',
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            pointRadius: 0
-                        },
-                        {
-                            label: "{{ __('dashboard.admin.chart.admin') }}",
-                            data: [0, 0, 2, 0, 0],
-                            borderColor: '#06B6D4',
-                            backgroundColor: '#06B6D4',
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            pointRadius: 0
-                        },
-                        {
-                            label: "{{ __('dashboard.admin.chart.employee') }}",
-                            data: [0, 1, 0, 0, 0],
-                            borderColor: '#EAB308',
-                            backgroundColor: '#EAB308',
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            pointRadius: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: chartTitle,
-                            align: 'start',
-                            color: '#334155',
-                            font: { size: 13, weight: 'bold', family: "'Inter', sans-serif" },
-                            padding: { bottom: 30 }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            titleColor: '#1e293b',
-                            bodyColor: '#475569',
-                            borderColor: '#e2e8f0',
-                            borderWidth: 1,
-                            padding: 10,
-                            boxPadding: 4,
-                            usePointStyle: true,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 4,
-                            ticks: {
-                                stepSize: 1,
-                                font: { size: 11, family: "'Inter', sans-serif" },
-                                color: '#94a3b8'
-                            },
-                            border: { display: false },
-                            grid: { color: '#f1f5f9', drawBorder: false },
-                            title: {
-                                display: true,
-                                text: "{{ __('dashboard.admin.chart.y_axis') }}",
-                                font: { size: 10, weight: 'bold', family: "'Inter', sans-serif" },
-                                color: '#475569'
-                            }
-                        },
-                        x: {
-                            grid: { display: false, drawBorder: false },
-                            ticks: {
-                                font: { size: 11, family: "'Inter', sans-serif" },
-                                color: '#94a3b8'
-                            },
-                            border: { display: false }
-                        }
-                    },
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
-                    }
-                }
+    function getGuestData(tf) {
+        if (tf === 'week')  return guestData7;
+        if (tf === 'month') return guestData30;
+        if (tf === 'year')  return guestDataYear;
+        return guestData7;
+    }
+
+    function getTimeframe() {
+        var sel = document.getElementById('chartTimeframe');
+        return sel ? sel.value : 'week';
+    }
+
+    function buildSeries(tf) {
+        var dataKey = tf === 'day' ? 'avgHour' : tf === 'week' ? 'data7' : tf === 'month' ? 'data30' : 'dataYear';
+        var series = [{
+            name: "{{ __('dashboard.admin.chart.unregistered_user') }}",
+            data: getGuestData(tf) || []
+        }];
+        roleChartData.forEach(function(role) {
+            series.push({
+                name: role.label,
+                data: tf === 'day'
+                    ? Array(24).fill(role.avgHour)
+                    : (role[dataKey] || [])
             });
         });
-    </script>
-    @endif
+        return series;
+    }
+
+    function getCategories(tf) {
+        if (tf === 'day') {
+            return Array.from({length: 24}, function(_, i) { return i.toString().padStart(2,'0')+':00'; });
+        }
+        if (tf === 'month') return chartLabels30;
+        if (tf === 'year')  return chartLabelsYear;
+        return chartLabels7;
+    }
+
+    var chartInstance = null;
+
+    function renderChart(tf) {
+        var avgDailyStat = document.getElementById('avgDailyStat');
+        var avgDailyLabel = document.getElementById('avgDailyLabel');
+        var nf = function(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); };
+        var getTotal = function(t) {
+            if (t === 'day')   return {{ $totalToday ?? 0 }};
+            if (t === 'week')  return {{ $total7 ?? 0 }};
+            if (t === 'month') return {{ $total30 ?? 0 }};
+            if (t === 'year')  return {{ $total365 ?? 0 }};
+            return 0;
+        };
+        var getLabel = function(t) {
+            return {'day':'Total kunjungan hari ini','week':'Total 7 hari terakhir','month':'Total 30 hari','year':'Total 1 tahun'}[t] || '';
+        };
+        if (avgDailyStat) avgDailyStat.textContent = nf(Math.round(getTotal(tf)));
+        if (avgDailyLabel) avgDailyLabel.textContent = getLabel(tf);
+
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+        var options = {
+            series: buildSeries(tf),
+            chart: {
+                type: 'area',
+                height: 350,
+                toolbar: {
+                    show: true,
+                    tools: { download: true, selection: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true },
+                    export: { csv: { filename: 'visitor-report', columnDelimiter: ',', headerCategory: 'Tanggal', headerValue: 'Pengunjung' }, svg: { filename: 'visitor-report' }, png: { filename: 'visitor-report' } }
+                },
+                animations: { enabled: true, easing: 'easeinout', speed: 800 },
+                zoom: { enabled: true },
+                redrawOnParentResize: true,
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2.5 },
+            colors: [guestColor].concat(roleChartData.map(function(r) { return r.color; })),
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05, stops: [0, 90, 100] } },
+            xaxis: {
+                categories: getCategories(tf),
+                labels: { style: { colors: '#94a3b8', fontSize: '11px', fontFamily: 'Inter, sans-serif' } },
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+            },
+            yaxis: {
+                min: 0,
+                labels: { style: { colors: '#94a3b8', fontSize: '11px', fontFamily: 'Inter, sans-serif' }, formatter: function(v) { return Math.round(v).toString(); } },
+                title: { text: "{{ __('dashboard.admin.chart.y_axis') }}", style: { color: '#475569', fontSize: '10px', fontWeight: 'bold', fontFamily: 'Inter, sans-serif' } },
+            },
+            grid: { borderColor: '#f1f5f9', strokeDashArray: 3, xaxis: { lines: { show: false } } },
+            legend: { show: false },
+            tooltip: { theme: 'light', x: { show: true }, y: { formatter: function(v) { return Math.round(v) + ' {{ __('dashboard.admin.chart.y_axis') }}'; } } },
+        };
+
+        chartInstance = new ApexCharts(chartEl, options);
+            chartInstance.render();
+    }
+
+    renderChart(getTimeframe());
+
+    var tfSel = document.getElementById('chartTimeframe');
+    if (tfSel) tfSel.addEventListener('change', function() { renderChart(this.value); });
+});
+</script>
 @endpush
+@endif

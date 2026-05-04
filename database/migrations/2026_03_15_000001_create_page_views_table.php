@@ -10,11 +10,13 @@ return new class extends Migration
     {
         Schema::create('page_views', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('path');
             $table->string('ip')->nullable();
             $table->date('viewed_date');
             $table->timestamps();
 
+            $table->index(['user_id', 'viewed_date']);
             $table->index(['path', 'viewed_date']);
             $table->index('viewed_date');
         });

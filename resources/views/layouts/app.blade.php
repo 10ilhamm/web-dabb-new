@@ -20,10 +20,6 @@
     <!-- Tailwind CSS (via Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- RichTextEditor for CMS (local) -->
-    <link rel="stylesheet" href="{{ asset('richtexteditor/rte_theme_default.css') }}">
-    <link rel="stylesheet" href="{{ asset('richtexteditor/runtime/richtexteditor_content.css') }}">
-
     <!-- Sidebar & Alert CSS -->
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/alert.css') }}">
@@ -602,12 +598,14 @@
         </script>
     @endif
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <!-- RichTextEditor for CMS (local) -->
-    <script src="{{ asset('richtexteditor/rte.js') }}"></script>
-    <script src="{{ asset('richtexteditor/plugins/all_plugins.js') }}"></script>
+    <!-- CMS RichTextEditor (MIT licensed, self-built) -->
+    <link rel="stylesheet" href="{{ asset('cms_rte/rte_theme_default.css') }}">
+    <link rel="stylesheet" href="{{ asset('cms_rte/runtime/richtexteditor_content.css') }}">
+    <script src="{{ asset('cms_rte/rte.js') }}"></script>
+    <script src="{{ asset('cms_rte/all_plugins.js') }}"></script>
 
     @stack('rte-scripts')
 

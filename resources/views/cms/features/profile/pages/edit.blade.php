@@ -1,8 +1,8 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/cms/profile/profile.css') }}">
-    <link rel="stylesheet" href="{{ asset('richtexteditor/runtime/guest_richtexteditor_content.css') }}">
+    <link rel="stylesheet" href="{{ asset('cms_rte/runtime/guest_cms_rte_content.css') }}">
     <style>
         /* Mirror guest page profile.blade.php styles for preview pane */
         #preview-container.profile-section-desc {

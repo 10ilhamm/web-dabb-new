@@ -17,9 +17,10 @@ class TrackPageView
         if ($request->isMethod('GET') && !$request->ajax() && !$request->is('cms/*', 'api/*', 'login', 'register')) {
             try {
                 PageView::create([
+                    'user_id' => $request->user()?->id,
                     'path' => $request->path(),
                     'ip' => $request->ip(),
-                    'viewed_date' => now()->toDateString(),
+                    'viewed_date' => now('Asia/Jakarta')->toDateString(),
                 ]);
             } catch (\Throwable $e) {
                 // Silently fail - don't break the page for tracking issues

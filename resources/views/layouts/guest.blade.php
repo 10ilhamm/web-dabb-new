@@ -13,8 +13,8 @@
     <link rel="shortcut icon" type="image/png" href="{{ asset('image/logo_anri.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('image/logo_anri.png') }}">
 
-    <!-- RTE Content CSS — SCOPED, avoids global rules that break guest page layout -->
-    <link rel="stylesheet" href="{{ asset('richtexteditor/runtime/guest_richtexteditor_content.css') }}">
+    <!-- CMS RTE Content CSS — SCOPED, avoids global rules that break guest page layout -->
+    <link rel="stylesheet" href="{{ asset('cms_rte/runtime/guest_richtexteditor_content.css') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -56,8 +56,8 @@
 
     <x-chat-widget />
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     @stack('scripts')
 

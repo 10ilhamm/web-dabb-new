@@ -1200,7 +1200,7 @@
                 window.rteUploadUrl || "/cms/settings/rte-upload";
             try {
                 // Define base_url - local path
-                var rteBaseUrl = "/richtexteditor";
+                var rteBaseUrl = "/cms_rte";
 
                 editor1 = new RichTextEditor("#div_editor1", {
                     base_url: rteBaseUrl,
@@ -1223,11 +1223,11 @@
                     },
                 });
                 console.log(
-                    "[RTE] RichTextEditor created successfully with base_url:",
+                    "[RTE] cms_rte created successfully with base_url:",
                     rteBaseUrl,
                 );
             } catch (e) {
-                console.error("[RTE] Error creating RichTextEditor:", e);
+                console.error("[RTE] Error creating cms_rte:", e);
             }
 
             // Listen for editor content changes to update preview

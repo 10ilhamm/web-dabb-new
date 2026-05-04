@@ -418,8 +418,8 @@
 @endsection
 
 @push('scripts')
-    <script type="text/javascript" src="{{ asset('richtexteditor/rte.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('richtexteditor/plugins/all_plugins.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('cms_rte/rte.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('cms_rte/all_plugins.js') }}"></script>
     <script>
         // Translation strings for JS
         var __t = {
@@ -1916,7 +1916,7 @@
                 }
                 try {
                     editor1 = new RichTextEditor("#div_editor1", {
-                        base_url: '/richtexteditor',
+                        base_url: '/cms_rte',
                         editorBodyCssClass: 'rte-content-body'
                     });
                 } catch (e) {

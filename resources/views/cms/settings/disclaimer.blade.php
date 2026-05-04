@@ -58,7 +58,17 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var editor1 = new RichTextEditor("#div_editor1", {
-            base_url: '/richtexteditor',
+            base_url: '/cms_rte',
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                [{ 'font': [] }, { 'size': [] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean'],
+            ],
             editorBodyCssClass: 'rte-content-body',
             file_upload_handler: function(file, callback, optionalIndex, optionalFiles) {
                 var formData = new FormData();

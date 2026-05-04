@@ -824,8 +824,8 @@
 @endsection
 
 @push('scripts')
-    <script type="text/javascript" src="{{ asset('richtexteditor/rte.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('richtexteditor/plugins/all_plugins.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('cms_rte/rte.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('cms_rte/all_plugins.js') }}"></script>
     <script>
         var __t = {
             upload_images_first: '{{ __('cms.virtual_slideshow.upload_images_first') }}',
@@ -2808,7 +2808,7 @@
                 }
                 try {
                     editor1 = new RichTextEditor("#div_editor1", {
-                        base_url: '/richtexteditor',
+                        base_url: '/cms_rte',
                         editorBodyCssClass: 'rte-content-body'
                     });
                     // Restore saved description content with multiple attempts

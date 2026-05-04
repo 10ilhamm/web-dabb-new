@@ -60,7 +60,9 @@
       "Bash(where magick *)",
       "Bash(where python *)",
       "Bash(powershell *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "Bash(docker exec *)",
+      "Bash(docker cp *)"
     ]
   }
 }
