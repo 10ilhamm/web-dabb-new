@@ -15,10 +15,11 @@
     line-height: 1.5;
     display: flex;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden;
     position: relative;
     width: 100%;
-    height: 100%;
+    max-width: 100%;
+    height: auto;
     min-height: 500px;
 }
 
@@ -36,6 +37,7 @@
     flex-direction: column;
     width: 100%;
     overflow: hidden;
+    position: relative;
 }
 
 /* =========================================================================
@@ -271,16 +273,16 @@
 }
 
 /* =========================================================================
- * Editor content area (scrollable both directions)
+ * Editor content area (scrollable only vertically)
  * ========================================================================= */
 .rte-content-wrap {
     flex: 1 1 auto;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
     background: #fff;
     scrollbar-width: thin;
     scrollbar-color: #d0d4da #f4f5f7;
-    /* min-height from runtime/richtexteditor_content.css .rte-wrapper #div_editor1 */
     min-height: 460px;
     height: 100%;
 }
@@ -298,12 +300,14 @@
 .rte-content {
     min-height: 500px;
     height: auto;
-    padding: 14px 18px;
+    padding: 12px 14px;
     outline: none;
     background: #fff;
     color: #222;
     width: 100%;
     box-sizing: border-box;
+    overflow-x: hidden;
+    word-wrap: break-word;
 }
 
 .rte-content:focus {
@@ -443,28 +447,28 @@
 }
 
 .rte-drag-handle {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: nwse-resize;
-    color: #b0b5bd;
-    border-radius: 4px;
-    transition: color 120ms ease, background 120ms ease;
+    color: #737373;
+    border-radius: 3px;
+    transition: background 120ms ease, color 120ms ease;
     padding: 0;
     background: transparent;
     border: none;
 }
 
 .rte-drag-handle:hover {
-    color: #4b5563;
-    background: #e8edf3;
+    background-color: #f1f3f4;
+    color: #377dff;
 }
 
 .rte-drag-handle:active {
-    color: #2563eb;
-    background: #dbeafe;
+    background-color: #e8f0fe;
+    color: #377dff;
 }
 
 .rte-drag-handle svg {

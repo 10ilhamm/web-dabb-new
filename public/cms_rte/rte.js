@@ -645,8 +645,8 @@
                 self._startResize(e);
             },
         });
-        // Resize grip icon (corner arrows)
-        handle.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="13" x2="13" y2="13"/><line x1="3" y1="9" x2="9" y2="9"/><line x1="3" y1="5" x2="5" y2="5"/><line x1="13" y1="3" x2="13" y2="13"/><line x1="9" y1="3" x2="13" y2="7"/></svg>';
+        // Resize grip icon (diagonal arrows like richtexteditor.com)
+        handle.innerHTML = '<svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" fill="#888"><rect x="100" y="0" width="20" height="20"/><rect x="75" y="25" width="20" height="20"/><rect x="100" y="25" width="20" height="20"/><rect x="50" y="50" width="20" height="20"/><rect x="75" y="50" width="20" height="20"/><rect x="100" y="50" width="20" height="20"/><rect x="25" y="75" width="20" height="20"/><rect x="50" y="75" width="20" height="20"/><rect x="75" y="75" width="20" height="20"/><rect x="100" y="75" width="20" height="20"/><rect x="0" y="100" width="20" height="20"/><rect x="25" y="100" width="20" height="20"/><rect x="50" y="100" width="20" height="20"/><rect x="75" y="100" width="20" height="20"/><rect x="100" y="100" width="20" height="20"/></svg>';
         wrap.appendChild(handle);
         container.appendChild(wrap);
     };
@@ -656,22 +656,23 @@
         var wrapper = this.wrapper;
         var contentWrap = this.contentWrap;
 
-        // Remember initial sizes (use actual rendered values)
-        var startW = wrapper.offsetWidth;
+        // Remember initial sizes
         var startH = wrapper.offsetHeight;
-        var startX = e.clientX;
         var startY = e.clientY;
 
         wrapper.classList.add('rte-dragging');
         wrapper.style.userSelect = 'none';
 
         function onMove(e) {
-            var dx = e.clientX - startX;
             var dy = e.clientY - startY;
-            var newW = Math.max(300, startW + dx);
+            // Only resize height — width stays at 100% of parent
             var newH = Math.max(300, startH + dy);
-            wrapper.style.width = newW + 'px';
             wrapper.style.height = newH + 'px';
+            // Ensure wrapper never exceeds parent width
+            var parentW = wrapper.parentElement ? wrapper.parentElement.clientWidth : wrapper.offsetWidth;
+            if (wrapper.offsetWidth > parentW) {
+                wrapper.style.width = parentW + 'px';
+            }
         }
 
         function onUp() {
