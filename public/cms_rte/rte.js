@@ -85,7 +85,7 @@
         sub: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>',
         sup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 10 10 10 4"/><polyline points="20 14 14 14 14 20"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>',
         ul: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/></svg>',
-        ol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="10" y1="18" x2="20" y2="18"/><path d="M3 5.5c0-.83 1-1.5 2-1.5S7 4 7 4v1c0 .5-.5 1-1 1S5 5.5 5 6s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/><path d="M3 11.5c0-.83 1-1.5 2-1.5S7 10 7 10v1c0 .5-.5 1-1 1S5 11.5 5 12s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/><path d="M3 17.5c0-.83 1-1.5 2-1.5S7 16 7 16v1c0 .5-.5 1-1 1S5 17 5 17.5s.5 1 1 1c.8 0 1.5-.5 2-1.5" fill="currentColor" stroke="none"/></svg>',
+        ol: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-ol" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5"/><path d="M1.713 11.865v-.474H2c.217 0 .363-.137.363-.317 0-.185-.158-.31-.361-.31-.223 0-.367.152-.373.31h-.59c.016-.467.373-.787.986-.787.588-.002.954.291.957.703a.595.595 0 0 1-.492.594v.033a.615.615 0 0 1 .569.631c.003.533-.502.8-1.051.8-.656 0-1-.37-1.008-.794h.582c.008.178.186.306.422.309.254 0 .424-.145.422-.35-.002-.195-.155-.348-.414-.348h-.3zm-.004-4.699h-.604v-.035c0-.408.295-.844.958-.844.583 0 .96.326.96.756 0 .389-.257.617-.476.848l-.537.572v.03h1.054V9H1.143v-.395l.957-.99c.138-.142.293-.304.293-.508 0-.18-.147-.32-.342-.32a.33.33 0 0 0-.342.338zM2.564 5h-.635V2.924h-.031l-.598.42v-.567l.629-.443h.635z"/></svg>',
         indent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/><polyline points="3,10 7,12 3,14"/></svg>',
         outdent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/><polyline points="7,10 3,12 7,14"/></svg>',
         alignLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>',
@@ -101,21 +101,33 @@
         quote: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7H5c-1 0-2 1-2 2v4c0 1 1 2 2 2h2v1c0 2-2 3-2 3l1 1s4-1 4-5V9c0-1-.4-2-1-2zm10 0h-4c-1 0-2 1-2 2v4c0 1 1 2 2 2h2v1c0 2-2 3-2 3l1 1s4-1 4-5V9c0-1-.4-2-1-2z"/></svg>',
         code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
         clean: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 17l7-13 7 13"/><line x1="3" y1="3" x2="21" y2="21"/></svg>',
-        undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 3 13 9 13"/><path d="M3.5 13a9 9 0 1 0 2.6-7.5L3 9"/></svg>',
-        redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 7 21 13 15 13"/><path d="M20.5 13a9 9 0 1 1-2.6-7.5L21 9"/></svg>',
+        undo: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/></svg>',
+        redo: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>',
         source: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 2 12 6 15"/><polyline points="18 9 22 12 18 15"/><line x1="14" y1="6" x2="10" y2="18"/></svg>',
         fullscreen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V3h6"/><path d="M21 9V3h-6"/><path d="M3 15v6h6"/><path d="M21 15v6h-6"/></svg>',
         chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
-        paint: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+        paint: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-palette" viewBox="0 0 16 16"><path d="M8 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m4 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M5.5 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m.5 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/><path d="M16 8c0 3.15-1.866 2.585-3.567 2.07C11.42 9.763 10.465 9.473 10 10c-.603.683-.475 1.819-.351 2.92C9.826 14.495 9.996 16 8 16a8 8 0 1 1 8-8m-8 7c.611 0 .654-.171.655-.176.078-.146.124-.464.07-1.119-.014-.168-.037-.37-.061-.591-.052-.464-.112-1.005-.118-1.462-.01-.707.083-1.61.704-2.314.369-.417.845-.578 1.272-.618.404-.038.812.026 1.16.104.343.077.702.186 1.025.284l.028.008c.346.105.658.199.953.266.653.148.904.083.991.024C14.717 9.38 15 9.161 15 8a7 7 0 1 0-7 7"/></svg>',
         textcolor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M7 17l5-12 5 12"/><line x1="9" y1="13" x2="15" y2="13"/></svg>',
-        copyformat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4l-2-2z"/><line x1="9" y1="3" x2="9" y2="3"/><path d="M9 3v4"/><path d="M15 3v4"/></svg>',
-        pasteformat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v2m0 4v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h4l2-3"/><path d="M9 14l2 2 4-4"/></svg>',
+        copyformat: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>',
+        pasteformat: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0"/><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/></svg>',
         find: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
         replace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
         template: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
         tableEdit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',
         imageEdit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
         emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.8" fill="currentColor"/><circle cx="15" cy="10" r="0.8" fill="currentColor"/><path d="M8 14.5c1 1.5 2.5 2.2 4 2.2s3-.7 4-2.2"/></svg>',
+        document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+        lineheight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+        insertRowBefore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 9 7 12 3 15"/></svg>',
+        insertRowAfter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 15 7 12 3 9"/></svg>',
+        insertColBefore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="9 3 12 7 15 3"/></svg>',
+        insertColAfter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="15 21 12 17 9 21"/></svg>',
+        deleteRow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 9 7 12 3 15"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 15 7 12 3 9"/><line x1="3" y1="8" x2="3" y2="16"/><line x1="21" y1="8" x2="21" y2="16"/></svg>',
+        deleteCol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 3 12 7 9 11"/><line x1="12" y1="3" x2="12" y2="21"/><polyline points="15 3 12 7 15 11"/><line x1="8" y1="3" x2="16" y2="3"/><line x1="8" y1="21" x2="16" y2="21"/></svg>',
+        deleteTable: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
+        mergeCells: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M11 7h2m-1-1v2m3-1h2m-1-1v2" stroke-width="1.5"/></svg>',
+        splitCell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+        tableHeader: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="9"/></svg>',
     };
 
     // ---------------------------------------------------------------------
@@ -170,6 +182,16 @@
         { label: 'Code',       value: 'pre' },
     ];
 
+    var LINE_HEIGHTS = [
+        { label: '100%', value: '100' },
+        { label: '150%', value: '150' },
+        { label: '200%', value: '200' },
+        { label: '300%', value: '300' },
+        { label: '400%', value: '400' },
+        { label: '500%', value: '500' },
+        { label: '600%', value: '600' },
+    ];
+
     // ---------------------------------------------------------------------
     // Default toolbar layout (rows of groups; each group is array of buttons)
     // ---------------------------------------------------------------------
@@ -178,6 +200,7 @@
             { kind: 'dropdown', name: 'paragraph', label: 'Paragraph', items: BLOCK_FORMATS, action: 'block' },
             { kind: 'dropdown', name: 'font', label: 'Font', items: FONT_FAMILIES, action: 'fontName' },
             { kind: 'dropdown', name: 'size', label: 'Size', items: FONT_SIZES, action: 'fontSize' },
+            { kind: 'dropdown', name: 'lineheight', label: 'Line', items: LINE_HEIGHTS, action: 'lineHeight' },
         ],
         [
             { kind: 'btn', name: 'bold', icon: ICON.bold, title: 'Bold (Ctrl+B)', cmd: 'bold' },
@@ -191,6 +214,7 @@
             { kind: 'color', name: 'forecolor', icon: ICON.textcolor, title: 'Text color', cmd: 'foreColor' },
             { kind: 'color', name: 'backcolor', icon: ICON.paint, title: 'Highlight', cmd: 'hiliteColor' },
             { kind: 'btn', name: 'copyformat', icon: ICON.copyformat, title: 'Copy Format', custom: 'copyformat' },
+            { kind: 'btn', name: 'pasteformat', icon: ICON.pasteformat, title: 'Paste Format', custom: 'pasteformat' },
             { kind: 'btn', name: 'removeformat', icon: ICON.clean, title: 'Remove Format', cmd: 'removeFormat' },
         ],
         [
@@ -206,13 +230,14 @@
             { kind: 'btn', name: 'outdent', icon: ICON.outdent, title: 'Decrease indent', cmd: 'outdent' },
             { kind: 'btn', name: 'indent', icon: ICON.indent, title: 'Increase indent', cmd: 'indent' },
             { kind: 'btn', name: 'quote', icon: ICON.quote, title: 'Quote', custom: 'blockquote' },
-            { kind: 'btn', name: 'code', icon: ICON.code, title: 'Code block', custom: 'codeblock' },
+            { kind: 'btn', name: 'code', icon: ICON.code, title: 'Insert Code Block', custom: 'codeblock' },
         ],
         [
             { kind: 'btn', name: 'link', icon: ICON.link, title: 'Insert link', custom: 'link' },
             { kind: 'btn', name: 'unlink', icon: ICON.unlink, title: 'Remove link', cmd: 'unlink' },
             { kind: 'btn', name: 'image', icon: ICON.image, title: 'Insert image', custom: 'image' },
             { kind: 'btn', name: 'video', icon: ICON.video, title: 'Insert video', custom: 'video' },
+            { kind: 'btn', name: 'document', icon: ICON.document, title: 'Insert Document', custom: 'document' },
             { kind: 'btn', name: 'table', icon: ICON.table, title: 'Insert table', custom: 'table' },
             { kind: 'btn', name: 'hr', icon: ICON.hr, title: 'Horizontal line', custom: 'hr' },
             { kind: 'btn', name: 'emoji', icon: ICON.emoji, title: 'Emoji', custom: 'emoji' },
@@ -289,6 +314,7 @@
         var backdrop = el('div', { class: 'rte-modal-backdrop' });
         var dialog = el('div', { class: 'rte-modal' + (opts.wide ? ' rte-modal-wide' : '') });
         var header = el('div', { class: 'rte-modal-header' }, [
+            el('div', { class: 'rte-modal-drag-handle', html: '<svg width="16" height="10" viewBox="0 0 16 10" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="15" y2="1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' }),
             el('div', { class: 'rte-modal-title', text: opts.title || '' }),
             el('button', {
                 type: 'button', class: 'rte-modal-close', title: 'Close',
@@ -321,6 +347,66 @@
         backdrop.appendChild(dialog);
         backdrop.addEventListener('mousedown', function (e) { if (e.target === backdrop) close(); });
         document.body.appendChild(backdrop);
+
+        // --- Draggable modal ---
+        var isDragging = false;
+        var dragOffX = 0, dragOffY = 0;
+
+        // Calculate initial centered position AFTER dialog is in DOM
+        var initLeft = (backdrop.clientWidth - dialog.offsetWidth) / 2;
+        var initTop = (backdrop.clientHeight - dialog.offsetHeight) / 2;
+        dialog.style.position = 'absolute';
+        dialog.style.left = initLeft + 'px';
+        dialog.style.top = initTop + 'px';
+
+        function onDragStart(e) {
+            var target = e.target;
+            // Don't start drag if clicking a button, input, or the close button
+            while (target && target !== dialog) {
+                if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+                if (target.classList && (target.classList.contains('rte-modal-close') || target.classList.contains('rte-btn'))) return;
+                target = target.parentNode;
+            }
+
+            isDragging = true;
+            var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            dragOffX = clientX - dialog.offsetLeft;
+            dragOffY = clientY - dialog.offsetTop;
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            var newLeft = clientX - dragOffX;
+            var newTop = clientY - dragOffY;
+            // Clamp within backdrop bounds
+            var maxLeft = backdrop.clientWidth - dialog.offsetWidth;
+            var maxTop = backdrop.clientHeight - dialog.offsetHeight;
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+            dialog.style.left = newLeft + 'px';
+            dialog.style.top = newTop + 'px';
+        }
+
+        function onDragEnd() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+        header.addEventListener('mousedown', onDragStart);
+        header.addEventListener('touchstart', onDragStart, { passive: false });
 
         function close() {
             if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
@@ -504,6 +590,8 @@
                         if (opt.value) self.exec('fontName', opt.value);
                     } else if (item.action === 'fontSize') {
                         self.exec('fontSize', opt.value);
+                    } else if (item.action === 'lineHeight') {
+                        self._setLineHeight(opt.value);
                     }
                     label.textContent = opt.label;
                     closePanel();
@@ -714,13 +802,15 @@
             case 'table': return this._dialogTable();
             case 'hr': return this._insertHTML('<hr>');
             case 'blockquote': return this.exec('formatBlock', 'blockquote');
-            case 'codeblock': return this.exec('formatBlock', 'pre');
+            case 'codeblock': return this._dialogCode();
             case 'source': return this._toggleSource();
             case 'fullscreen': return this._toggleFullscreen();
             case 'emoji': return this._dialogEmoji();
             case 'copyformat': return this._doCopyFormat();
+            case 'pasteformat': return this._doPasteFormat();
             case 'find': return this._dialogFindReplace();
             case 'template': return this._dialogTemplate();
+            case 'document': return this._dialogInsertDocument();
         }
     };
 
@@ -1031,7 +1121,7 @@
     RichTextEditor.prototype._doCopyFormat = function () {
         var sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-            alert('Select some formatted text first, then click Copy Format.');
+            Swal.fire({ title: 'Gagal', text: 'Pilih teks yang sudah diformat terlebih dahulu, lalu klik Salin Format.', icon: 'warning', confirmButtonText: 'OK' });
             return;
         }
         // Store the selected HTML range
@@ -1050,6 +1140,7 @@
         var findInput = el('input', { type: 'text', class: 'rte-form-input', name: 'find', placeholder: 'Find text...' });
         var replaceInput = el('input', { type: 'text', class: 'rte-form-input', name: 'replace', placeholder: 'Replace with...' });
         var statusEl = el('div', { class: 'rte-find-status', text: '' });
+        var findNextBtn = el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Find Next' });
         var replaceOneBtn = el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Replace' });
         var replaceAllBtn = el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Replace All' });
 
@@ -1071,20 +1162,10 @@
             return foundRanges;
         }
 
-        function doFind() {
-            var term = findInput.value.trim();
-            if (!term) return;
-            // Remove old highlights
+        function clearHighlights() {
             self.content.querySelectorAll('.rte-find-hl').forEach(function (el) {
-                el.outerHTML = el.textContent;
+                el.replaceWith(document.createTextNode(el.textContent));
             });
-            found = highlight(self.content, term);
-            statusEl.textContent = found.length ? found.length + ' found' : 'Not found';
-            if (found.length) {
-                currentIdx = 0;
-                scrollRangeIntoView(found[0]);
-                highlightRange(found[0]);
-            }
         }
 
         function highlightRange(range) {
@@ -1104,6 +1185,57 @@
             } catch (e) {}
         }
 
+        function updateHighlight() {
+            clearHighlights();
+            if (currentIdx >= 0 && currentIdx < found.length) {
+                highlightRange(found[currentIdx]);
+                scrollRangeIntoView(found[currentIdx]);
+            }
+        }
+
+        // Find Next - advance to the next match without resetting
+        function doFindNext() {
+            var term = findInput.value.trim();
+            if (!term) return;
+
+            if (found.length === 0) {
+                // No previous search, do full search
+                found = highlight(self.content, term);
+                if (found.length === 0) {
+                    statusEl.textContent = 'Not found';
+                    return;
+                }
+                currentIdx = 0;
+            } else {
+                // Advance to next match
+                currentIdx = (currentIdx + 1) % found.length;
+                if (currentIdx === 0) {
+                    statusEl.textContent = 'Reached start, wrapping...';
+                }
+            }
+
+            statusEl.textContent = (currentIdx + 1) + ' of ' + found.length + ' found';
+            updateHighlight();
+        }
+
+        // Full search - resets everything
+        function doFind() {
+            var term = findInput.value.trim();
+            if (!term) return;
+
+            clearHighlights();
+            found = highlight(self.content, term);
+            statusEl.textContent = found.length ? found.length + ' found' : 'Not found';
+
+            if (found.length) {
+                currentIdx = 0;
+                highlightRange(found[0]);
+                scrollRangeIntoView(found[0]);
+            } else {
+                currentIdx = -1;
+            }
+        }
+
         function doReplace(replaceAll) {
             var term = findInput.value.trim();
             var repl = replaceInput.value;
@@ -1114,13 +1246,25 @@
                 self.content.innerHTML = html.replace(regex, repl);
                 statusEl.textContent = 'Replaced all';
                 self._syncSource();
+                found = []; currentIdx = -1;
             } else {
-                if (currentIdx >= 0 && found[currentIdx]) {
+                if (currentIdx >= 0 && currentIdx < found.length) {
                     try {
                         found[currentIdx].deleteContents();
                         found[currentIdx].insertNode(document.createTextNode(repl));
                         self._syncSource();
-                        doFind();
+                        statusEl.textContent = 'Replaced';
+                        // Re-find all matches after replacement
+                        clearHighlights();
+                        found = highlight(self.content, term);
+                        if (found.length) {
+                            currentIdx = 0;
+                            highlightRange(found[0]);
+                            statusEl.textContent = (currentIdx + 1) + ' of ' + found.length + ' found';
+                        } else {
+                            currentIdx = -1;
+                            statusEl.textContent = 'Not found';
+                        }
                     } catch (e) {}
                 }
             }
@@ -1129,13 +1273,14 @@
         var body = el('div', { class: 'rte-form' }, [
             el('label', { class: 'rte-form-label', text: 'Find' }),
             findInput,
-            el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Find Next', onclick: doFind, style: { marginTop: '4px' } }),
+            el('button', { type: 'button', class: 'rte-btn rte-btn-secondary rte-btn-sm', text: 'Find Next', onclick: doFindNext, style: { marginTop: '4px' } }),
             el('label', { class: 'rte-form-label', text: 'Replace with' }),
             replaceInput,
             el('div', { style: 'display:flex;gap:6px;margin-top:4px;' }, [replaceOneBtn, replaceAllBtn]),
             statusEl,
         ]);
 
+        findNextBtn.addEventListener('click', doFindNext);
         replaceOneBtn.addEventListener('click', function () { doReplace(false); });
         replaceAllBtn.addEventListener('click', function () { doReplace(true); });
 
@@ -1144,10 +1289,7 @@
             body: body,
             confirmLabel: 'Close',
             onConfirm: function () {
-                // Cleanup highlights
-                self.content.querySelectorAll('.rte-find-hl').forEach(function (el) {
-                    el.outerHTML = el.textContent;
-                });
+                clearHighlights();
             },
         });
 
@@ -1207,90 +1349,6 @@
     };
 
     // -------- Contextual Popups --------
-    RichTextEditor.prototype._showTableEditorPopup = function (td) {
-        var self = this;
-        this._closeTablePopup();
-        var popup = el('div', { class: 'rte-context-popup rte-table-popup' });
-
-        // Row/Col count controls
-        var ctrlRow = el('div', { class: 'rte-popup-row' }, [
-            el('label', { text: 'Columns:' }),
-            el('input', { type: 'number', value: td.cellIndex + 1, min: '1', max: '20', class: 'rte-popup-input',
-                onchange: function () {
-                    self._setColspan(td, parseInt(this.value, 10));
-                }
-            }),
-        ]);
-        var ctrlColor = el('div', { class: 'rte-popup-row' }, [
-            el('label', { text: 'Color:' }),
-            el('input', { type: 'color', value: '#f1f3f6', class: 'rte-popup-color',
-                onchange: function () {
-                    td.style.backgroundColor = this.value;
-                    self._syncSource();
-                }
-            }),
-        ]);
-        var ctrlStyle = el('div', { class: 'rte-popup-row' }, [
-            el('label', { text: 'Style:' }),
-            el('button', { type: 'button', text: 'Bold', class: 'rte-btn rte-btn-sm',
-                onclick: function () {
-                    td.style.fontWeight = td.style.fontWeight === 'bold' ? '' : 'bold';
-                    self._syncSource();
-                }
-            }),
-            el('button', { type: 'button', text: 'Center', class: 'rte-btn rte-btn-sm',
-                onclick: function () {
-                    td.style.textAlign = td.style.textAlign === 'center' ? '' : 'center';
-                    self._syncSource();
-                }
-            }),
-        ]);
-        popup.appendChild(ctrlRow);
-        popup.appendChild(ctrlColor);
-        popup.appendChild(ctrlStyle);
-
-        var rect = td.getBoundingClientRect();
-        popup.style.position = 'fixed';
-        popup.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
-        popup.style.top = (rect.bottom + 4) + 'px';
-        document.body.appendChild(popup);
-        this._tablePopup = popup;
-
-        // Close on outside click
-        setTimeout(function () {
-            document.addEventListener('click', self._tablePopupCloseHandler = function (e) {
-                if (!popup.contains(e.target) && !td.contains(e.target)) {
-                    self._closeTablePopup();
-                }
-            });
-        }, 0);
-    };
-
-    RichTextEditor.prototype._closeTablePopup = function () {
-        if (this._tablePopup) {
-            if (this._tablePopup.parentNode) this._tablePopup.parentNode.removeChild(this._tablePopup);
-            this._tablePopup = null;
-        }
-        if (this._tablePopupCloseHandler) {
-            document.removeEventListener('click', this._tablePopupCloseHandler);
-            this._tablePopupCloseHandler = null;
-        }
-    };
-
-    RichTextEditor.prototype._setColspan = function (td, count) {
-        var table = td.closest('table');
-        if (!table) return;
-        var rows = table.rows;
-        var colIdx = td.cellIndex;
-        var rowIdx = td.parentNode.rowIndex;
-        for (var r = 0; r < rows.length; r++) {
-            if (r === rowIdx) {
-                td.colSpan = Math.min(count, rows[r].cells.length - colIdx);
-            }
-        }
-        this._syncSource();
-    };
-
     RichTextEditor.prototype._showImageEditorPopup = function (img) {
         var self = this;
         this._closeImagePopup();
@@ -1321,13 +1379,29 @@
             }),
         ]);
         var ctrlDelete = el('div', { class: 'rte-popup-row' }, [
-            el('button', { type: 'button', text: '🗑 Delete Image', class: 'rte-btn rte-btn-sm', style: 'color:#dc2626;background:#fef2f2;',
+            el('button', { type: 'button', text: '🗑 Hapus Gambar', class: 'rte-btn rte-btn-sm', style: 'color:#dc2626;background:#fef2f2;',
                 onclick: function () {
-                    if (confirm('Delete this image?')) {
-                        img.parentNode.removeChild(img);
-                        self._closeImagePopup();
-                        self._syncSource();
-                    }
+                    Swal.fire({
+                        title: 'Hapus Gambar?',
+                        text: 'Tindakan ini tidak dapat dibatalkan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-2xl',
+                            confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors',
+                            cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors',
+                        },
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            img.parentNode.removeChild(img);
+                            self._closeImagePopup();
+                            self._syncSource();
+                        }
+                    });
                 }
             }),
         ]);
@@ -1364,6 +1438,628 @@
         }
     };
 
+    // -------- Line Height --------
+    RichTextEditor.prototype._setLineHeight = function (value) {
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        var node = sel.anchorNode;
+        if (!node) return;
+        // Walk up to find a block element
+        var el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+        while (el && el !== this.content) {
+            var tag = el.tagName;
+            if (tag && /^(P|DIV|H[1-6]|LI|TR|BLOCKQUOTE|PRE)$/.test(tag)) break;
+            el = el.parentElement;
+        }
+        if (el && el !== this.content) {
+            el.style.lineHeight = (value / 100);
+        }
+        this._syncSource();
+    };
+
+    // -------- Paste Format --------
+    RichTextEditor.prototype._doPasteFormat = function () {
+        if (!this._formatCopied || !this._copiedFormat) {
+            Swal.fire({ title: 'Gagal', text: 'Klik "Salin Format" pada teks yang sudah diformat terlebih dahulu.', icon: 'warning', confirmButtonText: 'OK' });
+            return;
+        }
+        var self = this;
+        var savedSel = window.getSelection();
+        if (!savedSel || savedSel.rangeCount === 0) {
+            Swal.fire({ title: 'Gagal', text: 'Pilih teks untuk menerapkan format.', icon: 'warning', confirmButtonText: 'OK' });
+            return;
+        }
+        var targetRange = savedSel.getRangeAt(0);
+        try {
+            var container = this._copiedFormat.commonAncestorContainer.cloneNode(true);
+            // Extract the formatting wrapper (bold, italic, span, etc.)
+            var formatRoot = this._getFormatWrapper(this._copiedRange || this._copiedFormat);
+            if (!formatRoot) {
+                // Fallback: just wrap selected text in a <span> with inline styles from the copied node
+                var frag = targetRange.extractContents();
+                var wrapper = document.createElement('span');
+                // Copy computed styles from the source node
+                var srcNode = this._copiedFormat.commonAncestorContainer;
+                if (srcNode.nodeType === Node.TEXT_NODE) srcNode = srcNode.parentElement;
+                if (srcNode && srcNode !== this.content) {
+                    var cs = window.getComputedStyle(srcNode);
+                    var inlineStyle = [
+                        'fontWeight', 'fontStyle', 'textDecoration', 'color',
+                        'backgroundColor', 'fontFamily', 'fontSize',
+                    ].map(function (prop) {
+                        var v = cs.getPropertyValue(
+                            prop === 'textDecoration' ? 'text-decoration' :
+                            prop === 'fontFamily' ? 'font-family' :
+                            prop === 'fontSize' ? 'font-size' :
+                            prop === 'fontWeight' ? 'font-weight' :
+                            prop === 'fontStyle' ? 'font-style' :
+                            prop === 'backgroundColor' ? 'background-color' : prop
+                        );
+                        return v && v !== 'normal' && v !== 'none' && v !== 'inherit' ? prop.replace(/([A-Z])/g, '-$1').toLowerCase() + ':' + v : null;
+                    }).filter(Boolean).join(';');
+                    if (inlineStyle) wrapper.style.cssText = inlineStyle;
+                }
+                wrapper.appendChild(frag);
+                targetRange.insertNode(wrapper);
+            } else {
+                var newWrapper = formatRoot.cloneNode(false);
+                newWrapper.appendChild(targetRange.extractContents());
+                targetRange.insertNode(newWrapper);
+            }
+            // Restore cursor after inserted element
+            var range = document.createRange();
+            range.setStartAfter(newWrapper || wrapper || targetRange.startContainer);
+            range.collapse(true);
+            savedSel.removeAllRanges();
+            savedSel.addRange(range);
+            this._syncSource();
+            this._updateState();
+        } catch (e) {
+            console.warn('[RTE] Paste format error', e);
+        }
+    };
+
+    RichTextEditor.prototype._getFormatWrapper = function (range) {
+        // Walk from the start of the copied range up to find an inline formatting element
+        var node = range.startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        while (node && node !== this.content) {
+            var tag = node.tagName;
+            if (tag && /^(B|I|U|S|STRONG|EM|SUP|SUB|SPAN|A)$/.test(tag)) return node;
+            node = node.parentElement;
+        }
+        return null;
+    };
+
+    // -------- Insert Code Block --------
+    RichTextEditor.prototype._dialogCode = function () {
+        var self = this;
+        var LANGUAGES = [
+            'plain text', 'javascript', 'typescript', 'python', 'php',
+            'html', 'css', 'sql', 'bash', 'json', 'xml', 'java', 'c', 'cpp', 'csharp', 'ruby', 'go', 'rust', 'swift', 'kotlin',
+        ];
+        var langSelect = el('select', { class: 'rte-form-input', style: 'margin-bottom:8px;' });
+        LANGUAGES.forEach(function (lang) {
+            langSelect.appendChild(el('option', { value: lang, text: lang }));
+        });
+        var codeArea = el('textarea', {
+            class: 'rte-source',
+            style: 'width:100%;min-height:180px;background:#1e2230;color:#e6e6e6;padding:12px;border-radius:6px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;font-size:13px;line-height:1.5;border:1px solid #d6d8dc;',
+            placeholder: 'Paste or type your code here...',
+        });
+        var body = el('div', { class: 'rte-form' }, [
+            el('label', { class: 'rte-form-label', text: 'Language' }),
+            langSelect,
+            el('label', { class: 'rte-form-label', text: 'Code' }),
+            codeArea,
+        ]);
+        openModal({
+            title: 'Insert Code Block',
+            body: body,
+            confirmLabel: 'Insert',
+            wide: true,
+            onConfirm: function () {
+                var lang = langSelect.value;
+                var code = codeArea.value;
+                if (!code.trim()) return false;
+                var langClass = lang !== 'plain text' ? ' class="language-' + lang.replace(/\s+/g, '-') + '"' : '';
+                var escaped = escapeHtml(code);
+                self._insertHTML('<pre' + langClass + ' style="background:#1f2330;color:#e6e6e6;padding:12px 14px;border-radius:6px;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;font-size:0.92em;line-height:1.5;margin:0.5em 0;"><code>' + escaped + '</code></pre><p><br></p>');
+            },
+        });
+        setTimeout(function () { codeArea.focus(); }, 30);
+    };
+
+    // -------- Insert Document --------
+    RichTextEditor.prototype._dialogInsertDocument = function () {
+        var self = this;
+        var tabs = el('div', { class: 'rte-tabs' });
+        var tabUpload = el('button', { type: 'button', class: 'rte-tab rte-tab-active', text: 'Upload File' });
+        var tabUrl = el('button', { type: 'button', class: 'rte-tab', text: 'URL' });
+        tabs.appendChild(tabUpload);
+        tabs.appendChild(tabUrl);
+
+        var paneUpload = el('div', { class: 'rte-form rte-tab-pane rte-tab-pane-active' }, [
+            el('label', { class: 'rte-form-label', text: 'Choose document (PDF, DOC, DOCX, XLS, PPT, TXT)' }),
+            el('input', { type: 'file', class: 'rte-form-input', name: 'file', accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf' }),
+            el('label', { class: 'rte-form-label', text: 'Display name' }),
+            el('input', { type: 'text', class: 'rte-form-input', name: 'label', placeholder: 'e.g. Annual Report 2024' }),
+        ]);
+        var paneUrl = el('div', { class: 'rte-form rte-tab-pane' }, [
+            el('label', { class: 'rte-form-label', text: 'Document URL' }),
+            el('input', { type: 'url', class: 'rte-form-input', name: 'url', placeholder: 'https://example.com/document.pdf' }),
+            el('label', { class: 'rte-form-label', text: 'Display name' }),
+            el('input', { type: 'text', class: 'rte-form-input', name: 'label', placeholder: 'e.g. Annual Report 2024' }),
+        ]);
+
+        tabUpload.addEventListener('click', function () {
+            tabUpload.classList.add('rte-tab-active'); tabUrl.classList.remove('rte-tab-active');
+            paneUpload.classList.add('rte-tab-pane-active'); paneUrl.classList.remove('rte-tab-pane-active');
+        });
+        tabUrl.addEventListener('click', function () {
+            tabUrl.classList.add('rte-tab-active'); tabUpload.classList.remove('rte-tab-active');
+            paneUrl.classList.add('rte-tab-pane-active'); paneUpload.classList.remove('rte-tab-pane-active');
+        });
+
+        var body = el('div', null, [tabs, paneUpload, paneUrl]);
+        openModal({
+            title: 'Insert Document',
+            body: body,
+            confirmLabel: 'Insert',
+            onConfirm: function () {
+                if (paneUpload.classList.contains('rte-tab-pane-active')) {
+                    var fileInput = paneUpload.querySelector('[name=file]');
+                    var labelInput = paneUpload.querySelector('[name=label]');
+                    var f = fileInput.files && fileInput.files[0];
+                    if (!f) return false;
+                    self._uploadFile(f, function (url) {
+                        var name = labelInput.value.trim() || f.name;
+                        var ext = f.name.split('.').pop().toLowerCase();
+                        var icon = self._fileIcon(ext);
+                        self._insertHTML('<a href="' + escapeHtml(url) + '" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f1f3f6;border:1px solid #d6d8dc;border-radius:6px;text-decoration:none;color:#1a1a1a;font-size:14px;margin:4px 0;"><span style="font-size:22px;">' + icon + '</span><span>' + escapeHtml(name) + '</span></a><p><br></p>');
+                    });
+                    return; // async — keep open
+                } else {
+                    var url = paneUrl.querySelector('[name=url]').value.trim();
+                    var label = paneUrl.querySelector('[name=label]').value.trim() || url;
+                    if (!url) return false;
+                    var ext = url.split('.').pop().split('?')[0].toLowerCase();
+                    var icon = self._fileIcon(ext);
+                    self._insertHTML('<a href="' + escapeHtml(url) + '" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f1f3f6;border:1px solid #d6d8dc;border-radius:6px;text-decoration:none;color:#1a1a1a;font-size:14px;margin:4px 0;"><span style="font-size:22px;">' + icon + '</span><span>' + escapeHtml(label) + '</span></a><p><br></p>');
+                }
+            },
+        });
+    };
+
+    RichTextEditor.prototype._fileIcon = function (ext) {
+        var icons = {
+            pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊',
+            ppt: '📽', pptx: '📽', txt: '📃', rtf: '📃',
+            zip: '🗜', rar: '🗜', jpg: '🖼', jpeg: '🖼', png: '🖼', gif: '🖼',
+        };
+        return icons[ext] || '📎';
+    };
+
+    RichTextEditor.prototype._uploadFile = function (file, cb) {
+        var handler = this.config.file_upload_handler;
+        if (typeof handler === 'function') {
+            handler(file, function (url) { cb(url); });
+        } else {
+            var reader = new FileReader();
+            reader.onload = function () { cb(reader.result); };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // -------- Comprehensive Table Editor Popup --------
+    RichTextEditor.prototype._showTableEditorPopup = function (td) {
+        var self = this;
+        this._closeTablePopup();
+        var popup = el('div', { class: 'rte-context-popup rte-table-popup' });
+
+        // Helper to build a section with a title row
+        function section(title, buttons) {
+            var sec = el('div', { class: 'rte-popup-section' });
+            if (title) {
+                sec.appendChild(el('div', { class: 'rte-popup-section-title', text: title }));
+            }
+            var row = el('div', { class: 'rte-popup-row', style: 'flex-wrap:wrap;' });
+            buttons.forEach(function (b) {
+                if (!b) return;
+                var btn = el('button', {
+                    type: 'button', class: 'rte-popup-btn' + (b.wide ? ' rte-popup-btn-wide' : ''),
+                    title: b.title || b.label || '',
+                    html: (b.icon || '') + (b.label || ''),
+                    onclick: b.action,
+                });
+                row.appendChild(btn);
+            });
+            sec.appendChild(row);
+            return sec;
+        }
+
+        // ---- Helpers ----
+        function getTable() { return td.closest('table'); }
+        function getRow() { return td.parentElement; }
+        function getAllRows() { var t = getTable(); return t ? Array.from(t.rows) : []; }
+        function getColIdx() { return td.cellIndex; }
+        function getRowIdx() { return getRow() ? getRow().rowIndex : 0; }
+        function getAllCols(tr) { return Array.from(tr.cells); }
+
+        // ---- Toggle Table Header (make first row <th>) ----
+        function toggleHeader() {
+            var t = getTable();
+            if (!t) return;
+            var firstRow = t.rows[0];
+            var isHeader = firstRow && firstRow.cells[0] && firstRow.cells[0].tagName === 'TH';
+            for (var c = 0; c < firstRow.cells.length; c++) {
+                var cell = firstRow.cells[c];
+                var tag = isHeader ? 'TD' : 'TH';
+                var newCell = document.createElement(tag);
+                newCell.innerHTML = cell.innerHTML;
+                newCell.style.cssText = cell.style.cssText;
+                firstRow.insertBefore(newCell, cell);
+                firstRow.removeChild(cell);
+            }
+            self._syncSource();
+        }
+
+        // ---- Row ops ----
+        function insertRowAbove() {
+            var t = getTable(); var rIdx = getRowIdx();
+            if (!t) return;
+            var newRow = t.insertRow(rIdx);
+            var refRow = t.rows[rIdx + 1];
+            for (var c = 0; c < (refRow ? refRow.cells.length : 1); c++) {
+                var nc = newRow.insertCell();
+                nc.innerHTML = '\u00a0';
+                nc.style.cssText = (refRow && refRow.cells[c]) ? refRow.cells[c].style.cssText : 'border:1px solid #ccc;padding:6px;';
+            }
+            self._syncSource();
+        }
+        function insertRowBelow() {
+            var t = getTable(); var rIdx = getRowIdx();
+            if (!t) return;
+            var newRow = t.insertRow(rIdx + 1);
+            var refRow = t.rows[rIdx];
+            for (var c = 0; c < (refRow ? refRow.cells.length : 1); c++) {
+                var nc = newRow.insertCell();
+                nc.innerHTML = '\u00a0';
+                nc.style.cssText = (refRow && refRow.cells[c]) ? refRow.cells[c].style.cssText : 'border:1px solid #ccc;padding:6px;';
+            }
+            self._syncSource();
+        }
+        function deleteRow() {
+            var t = getTable(); var rIdx = getRowIdx();
+            if (!t || t.rows.length <= 1) {
+                Swal.fire({ title: 'Tidak Bisa Hapus', text: 'Tabel harus memiliki minimal 1 baris.', icon: 'warning', confirmButtonText: 'OK' });
+                return;
+            }
+            Swal.fire({
+                title: 'Hapus Baris?',
+                text: 'Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors',
+                    cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors',
+                },
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    t.deleteRow(rIdx);
+                    self._closeTablePopup();
+                    self._syncSource();
+                }
+            });
+        }
+
+        // ---- Column ops ----
+        function insertColLeft() {
+            var t = getTable(); if (!t) return;
+            var cIdx = getColIdx();
+            for (var r = 0; r < t.rows.length; r++) {
+                var nc = t.rows[r].insertCell(cIdx);
+                nc.innerHTML = '\u00a0';
+                nc.style.cssText = t.rows[r].cells[cIdx + 1] ? t.rows[r].cells[cIdx + 1].style.cssText : 'border:1px solid #ccc;padding:6px;';
+            }
+            self._syncSource();
+        }
+        function insertColRight() {
+            var t = getTable(); if (!t) return;
+            var cIdx = getColIdx();
+            for (var r = 0; r < t.rows.length; r++) {
+                var nc = t.rows[r].insertCell(cIdx + 1);
+                nc.innerHTML = '\u00a0';
+                nc.style.cssText = t.rows[r].cells[cIdx] ? t.rows[r].cells[cIdx].style.cssText : 'border:1px solid #ccc;padding:6px;';
+            }
+            self._syncSource();
+        }
+        function deleteCol() {
+            var t = getTable(); if (!t) return;
+            var cIdx = getColIdx();
+            var firstRow = t.rows[0];
+            if (firstRow && firstRow.cells.length <= 1) {
+                Swal.fire({ title: 'Tidak Bisa Hapus', text: 'Tabel harus memiliki minimal 1 kolom.', icon: 'warning', confirmButtonText: 'OK' });
+                return;
+            }
+            Swal.fire({
+                title: 'Hapus Kolom?',
+                text: 'Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors',
+                    cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors',
+                },
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    for (var r = 0; r < t.rows.length; r++) {
+                        t.rows[r].deleteCell(cIdx);
+                    }
+                    self._closeTablePopup();
+                    self._syncSource();
+                }
+            });
+        }
+
+        // ---- Cell ops ----
+        function mergeCells() {
+            var sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { Swal.fire({ title: 'Gagal', text: 'Pilih beberapa sel terlebih dahulu (klik dan seret untuk memilih sel).', icon: 'warning', confirmButtonText: 'OK' }); return; }
+            try {
+                document.execCommand('mergeCells', false, null);
+            } catch (e) {
+                // Fallback: merge with adjacent cell
+                var nextTd = td.nextElementSibling;
+                if (nextTd && nextTd.tagName === 'TD') {
+                    td.colSpan = td.colSpan + (nextTd.colSpan || 1);
+                    td.innerHTML += nextTd.innerHTML;
+                    nextTd.parentNode.removeChild(nextTd);
+                }
+            }
+            self._syncSource();
+        }
+        function splitCell() {
+            var colspan = td.colSpan || 1;
+            var row = getRow();
+            if (!row) return;
+            var cIdx = getColIdx();
+            for (var i = 0; i < colspan; i++) {
+                var nc = row.insertCell(cIdx + 1);
+                nc.innerHTML = '\u00a0';
+                nc.style.cssText = td.style.cssText;
+                nc.style.border = '1px solid #ccc';
+                nc.style.padding = '6px';
+            }
+            td.colSpan = 1;
+            self._syncSource();
+        }
+        function deleteTable() {
+            // Use SweetAlert2 modal (same style as the rest of the app)
+            Swal.fire({
+                title: 'Hapus Tabel?',
+                text: 'Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors',
+                    cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors',
+                },
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    var t = getTable();
+                    if (t) { t.parentNode.removeChild(t); }
+                    self._closeTablePopup();
+                    self._syncSource();
+                }
+            });
+        }
+
+        // ---- Width presets ----
+        function setTableWidth(pct) {
+            var t = getTable(); if (!t) return;
+            t.style.width = pct;
+            self._syncSource();
+        }
+        function autoSizeTable() {
+            var t = getTable(); if (!t) return;
+            t.style.width = '';
+            self._syncSource();
+        }
+
+        // ---- Color controls ----
+        var ctrlBgColor = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Cell bg:', style: 'min-width:60px;' }),
+            el('input', { type: 'color', value: td.style.backgroundColor || '#ffffff', class: 'rte-popup-color',
+                onchange: function () {
+                    td.style.backgroundColor = this.value;
+                    self._syncSource();
+                }
+            }),
+        ]);
+        var ctrlTextColor = el('div', { class: 'rte-popup-row' }, [
+            el('label', { text: 'Text color:', style: 'min-width:60px;' }),
+            el('input', { type: 'color', value: td.style.color || '#222222', class: 'rte-popup-color',
+                onchange: function () {
+                    td.style.color = this.value;
+                    self._syncSource();
+                }
+            }),
+        ]);
+
+        // ---- Build sections ----
+        popup.appendChild(
+            section('Cell', [
+                { icon: ICON.mergeCells, title: 'Merge cells', action: mergeCells },
+                { icon: ICON.splitCell, title: 'Split cell', action: splitCell },
+                null,
+                { icon: ICON.tableHeader, title: 'Toggle header row', action: toggleHeader },
+            ])
+        );
+        popup.appendChild(ctrlBgColor);
+        popup.appendChild(ctrlTextColor);
+        popup.appendChild(
+            section('Row', [
+                { icon: ICON.insertRowBefore, title: 'Insert row above', action: insertRowAbove },
+                { icon: ICON.insertRowAfter, title: 'Insert row below', action: insertRowBelow },
+                null,
+                { icon: ICON.deleteRow, title: 'Delete row', action: deleteRow, wide: false },
+            ])
+        );
+        popup.appendChild(
+            section('Column', [
+                { icon: ICON.insertColBefore, title: 'Insert column left', action: insertColLeft },
+                { icon: ICON.insertColAfter, title: 'Insert column right', action: insertColRight },
+                null,
+                { icon: ICON.deleteCol, title: 'Delete column', action: deleteCol, wide: false },
+            ])
+        );
+        popup.appendChild(
+            section('Table', [
+                { label: 'Auto', title: 'Auto size', action: autoSizeTable },
+                { label: '100%', title: 'Width 100%', action: function () { setTableWidth('100%'); } },
+                { label: '75%', title: 'Width 75%', action: function () { setTableWidth('75%'); } },
+                { label: '50%', title: 'Width 50%', action: function () { setTableWidth('50%'); } },
+                { label: '25%', title: 'Width 25%', action: function () { setTableWidth('25%'); } },
+            ])
+        );
+        popup.appendChild(
+            section(null, [
+                { icon: ICON.deleteTable, title: 'Delete table', action: deleteTable, wide: false },
+            ])
+        );
+
+        var rect = td.getBoundingClientRect();
+        popup.style.position = 'fixed';
+
+        // Draggable table popup — build drag handle as FIRST child
+        var dragH = el('div', {
+            style: 'cursor:move;padding:3px 8px;margin:-8px -12px 6px -12px;background:#f6f7f9;border-bottom:1px solid #eef0f3;color:#9aa0a6;font-size:11px;user-select:none;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:4px;',
+            html: '<span style="letter-spacing:2px;font-size:14px;line-height:1;">&#9776;</span><span>Drag to move</span>'
+        });
+        popup.insertBefore(dragH, popup.firstChild);
+
+        // Position after popup is in DOM so getBoundingClientRect works
+        document.body.appendChild(popup);
+
+        var popupW = popup.offsetWidth;
+        var popupH = popup.offsetHeight;
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var spaceAbove = rect.top;
+        var useAbove = spaceBelow < popupH + 20 && spaceAbove > popupH + 20;
+        var initLeft = Math.min(Math.max(rect.left, 8), window.innerWidth - popupW - 8);
+        var initTop = useAbove ? Math.max(8, rect.top - popupH - 8) : Math.min(rect.bottom + 8, window.innerHeight - popupH - 8);
+        popup.style.left = initLeft + 'px';
+        popup.style.top = initTop + 'px';
+        this._tablePopup = popup;
+
+        // ---- Draggable ----
+        var isDragging = false, dragOffX = 0, dragOffY = 0;
+
+        function isClickableEl(el) {
+            if (!el) return false;
+            var tag = el.tagName;
+            if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return true;
+            if (el.classList && (el.classList.contains('rte-popup-btn') || el.classList.contains('rte-popup-color'))) return true;
+            return false;
+        }
+
+        function onDragStart(e) {
+            var target = e.target;
+            if (isClickableEl(target)) return; // Don't drag when clicking buttons/inputs
+            // Walk up — if we pass through a clickable element, abort
+            while (target && target !== popup) {
+                if (isClickableEl(target)) return;
+                target = target.parentNode;
+            }
+            if (target !== popup && target !== dragH) return;
+
+            isDragging = true;
+            var cx = e.touches ? e.touches[0].clientX : e.clientX;
+            var cy = e.touches ? e.touches[0].clientY : e.clientY;
+            dragOffX = cx - popup.getBoundingClientRect().left;
+            dragOffY = cy - popup.getBoundingClientRect().top;
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            var cx = e.touches ? e.touches[0].clientX : e.clientX;
+            var cy = e.touches ? e.touches[0].clientY : e.clientY;
+            var newLeft = Math.max(0, Math.min(cx - dragOffX, window.innerWidth - popup.offsetWidth));
+            var newTop = Math.max(0, Math.min(cy - dragOffY, window.innerHeight - popup.offsetHeight));
+            popup.style.left = newLeft + 'px';
+            popup.style.top = newTop + 'px';
+        }
+
+        function onDragEnd() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+        dragH.addEventListener('mousedown', onDragStart);
+        dragH.addEventListener('touchstart', onDragStart, { passive: false });
+
+        // Close popup when clicking outside
+        function closeHandler(e) {
+            if (!popup.contains(e.target)) {
+                self._closeTablePopup();
+            }
+        }
+        setTimeout(function () {
+            document.addEventListener('click', self._tablePopupCloseHandler = closeHandler);
+        }, 0);
+    };
+
+    RichTextEditor.prototype._closeTablePopup = function () {
+        if (this._tablePopup) {
+            if (this._tablePopup.parentNode) this._tablePopup.parentNode.removeChild(this._tablePopup);
+            this._tablePopup = null;
+        }
+        if (this._tablePopupCloseHandler) {
+            document.removeEventListener('click', this._tablePopupCloseHandler);
+            this._tablePopupCloseHandler = null;
+        }
+    };
+
+    RichTextEditor.prototype._setColspan = function (td, count) {
+        var table = td.closest('table');
+        if (!table) return;
+        var rows = table.rows;
+        var colIdx = td.cellIndex;
+        var rowIdx = td.parentNode.rowIndex;
+        for (var r = 0; r < rows.length; r++) {
+            if (r === rowIdx) {
+                td.colSpan = Math.min(count, rows[r].cells.length - colIdx);
+            }
+        }
+        this._syncSource();
+    };
+
     // -------- core operations ---------
     RichTextEditor.prototype._insertHTML = function (html) {
         this._focusContent();
@@ -1394,11 +2090,42 @@
     };
 
     RichTextEditor.prototype._toggleFullscreen = function () {
-        this.wrapper.classList.toggle('rte-fullscreen');
-        if (this.wrapper.classList.contains('rte-fullscreen')) {
-            document.body.classList.add('rte-body-fullscreen');
-        } else {
+        var wrapper = this.wrapper;
+        var isFullscreen = wrapper.classList.contains('rte-fullscreen');
+
+        if (isFullscreen) {
+            // Exit fullscreen: restore original inline styles
+            wrapper.classList.remove('rte-fullscreen');
             document.body.classList.remove('rte-body-fullscreen');
+            if (this._origFullscreenStyle) {
+                wrapper.style.position = this._origFullscreenStyle.position;
+                wrapper.style.top = this._origFullscreenStyle.top;
+                wrapper.style.left = this._origFullscreenStyle.left;
+                wrapper.style.width = this._origFullscreenStyle.width;
+                wrapper.style.height = this._origFullscreenStyle.height;
+                wrapper.style.zIndex = this._origFullscreenStyle.zIndex;
+                this._origFullscreenStyle = null;
+            }
+        } else {
+            // Enter fullscreen: save current styles and switch to fixed overlay
+            this._origFullscreenStyle = {
+                position: wrapper.style.position,
+                top: wrapper.style.top,
+                left: wrapper.style.left,
+                width: wrapper.style.width,
+                height: wrapper.style.height,
+                zIndex: wrapper.style.zIndex,
+            };
+            wrapper.classList.add('rte-fullscreen');
+            document.body.classList.add('rte-body-fullscreen');
+            // The CSS .rte-fullscreen handles viewport dimensions (100vw/vh);
+            // we also explicitly set via style to ensure inline override
+            wrapper.style.position = 'fixed';
+            wrapper.style.top = '0';
+            wrapper.style.left = '0';
+            wrapper.style.width = '100vw';
+            wrapper.style.height = '100vh';
+            wrapper.style.zIndex = '99990';
         }
     };
 
@@ -1458,7 +2185,8 @@
             var node = sel.anchorNode;
             if (!node) return;
             var td = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
-            while (td && td.tagName !== 'TD') td = td.parentElement;
+            while (td && td.tagName !== 'TD' && td.tagName !== 'TH') td = td.parentElement;
+            if (td && td.tagName === 'TH') td = td; // allow TH to also trigger
             if (td && td.closest('table')) {
                 self._showTableEditorPopup(td);
             } else {
