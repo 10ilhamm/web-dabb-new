@@ -813,24 +813,24 @@ body.rte-body-fullscreen {
 .rte-content ol {
     padding-left: 1.8em;
     margin: 0.5em 0;
+    margin: 0.5em 0;
+    counter-reset: item;
 }
+
 .rte-content ol > li {
     position: relative;
     padding-left: 0.2em;
+    counter-increment: item;
 }
 
-/* =========================================================================
- * Toolbar line-height dropdown (custom dropdown, not a standard select)
- * ========================================================================= */
-.rte-tb-lineheight {
-    min-width: 68px;
-    padding: 4px 6px;
-    justify-content: space-between;
-    gap: 4px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    height: 28px;
-    font-size: 13px;
+.rte-content ol > li::before {
+    content: counter(item) '.';
+    position: absolute;
+    left: -1.5em;
+    color: #444;
+    font-size: 1em;
+    line-height: inherit;
+    font-weight: normal;
 }
 
 /* =========================================================================
